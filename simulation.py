@@ -26,7 +26,6 @@ class EV:
         while True:
             if self.idle:
                 idle_time = randint(5, 20)
-                print('EV %s is idle at %s' % (name, env.now))
                 yield env.timeout(idle_time)
                 print('EV %s was idle for %d minutes' % (name, idle_time))
                 self.idle = False
@@ -45,12 +44,12 @@ class EV:
 def car_generator(env, vpp):
     for i in range(NUM_EVS):
         print('EV %s joined the VPP at %s' % (i, env.now))
-        ev = EV(i, env, vpp)
+        ev = EV(env, vpp, i)
         yield env.timeout(1)
 
 
 env = simpy.Environment()
 vpp = VPP(env)
-ev = EV(env, vpp, "1")
-# car_gen = env.process(car_generator(env, vpp))
+# ev = EV(env, vpp, "1")
+car_gen = env.process(car_generator(env, vpp))
 env.run(200)
