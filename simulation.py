@@ -20,9 +20,13 @@ class VPP:
     def monitor_capacity(self, env):
         level = 0
         while True:
-            if level != self.capacity.level:
+            if level < self.capacity.level:
                 level = self.capacity.level
-                self.log('')
+                self.log('is increasing capacity')
+            elif level > self.capacity.level:
+                level = self.capacity.level
+                self.log('is decreasing capacity')
+                
             yield env.timeout(1)
 
 class EV:
