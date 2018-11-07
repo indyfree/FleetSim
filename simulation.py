@@ -16,16 +16,17 @@ class VPP:
         self.mon_proc = env.process(self.monitor_capacity(env))
 
     def log(self, message):
-        print('[%s] - VPP %s [%.2f/%.2f]'% (self.env.now, self.name, self.capacity.level, self.capacity.capacity), message)
+        print('[%s] - VPP-%s(%.2f/%.2f)'% (self.env.now, self.name, self.capacity.level, self.capacity.capacity), message)
     
     def monitor_capacity(self, env):
         level = 0
         while True:
             if level != self.capacity.level:
-                # self.log('has changed %.2f capacity' % (self.capacity.level - level))
+                self.log('Change %.2f capacity' % (self.capacity.level - level))
                 level = self.capacity.level
                 
             yield env.timeout(1)
+
 
 class EV:
     def __init__(self, env, vpp, name):
@@ -33,11 +34,9 @@ class EV:
         self.drive_proc = env.process(self.drive(env, vpp, name))
         self.env = env
         self.name = name
-        
-        self.state = 'I'
-    
+
     def log(self, message):
-        print('[%s] - EV %s [%.2f/%.2f|%s]'% (self.env.now, self.name, self.battery.level, self.battery.capacity, self.state), message)
+        print('[%s] - EV-%s(%.2f/%.2f|%s)'% (self.env.now, self.name, self.battery.level, self.battery.capacity, self.state), message)
     
     def plugged_in(self):
         return random() <= 0.3
@@ -55,6 +54,7 @@ class EV:
                 yield env.process(self.battery_control(env, idle_time))
                 yield vpp.capacity.get(self.battery.level)
             else:
+                self.log('Idle. Waiting for rental...')
                 yield env.timeout(idle_time)
 
             # Driving
@@ -87,7 +87,7 @@ class EV:
                 yield vpp.capacity.put(rest)
                 yield env.timeout(1)
                 self.state = 'I'
-                self.log('Fully charged.')
+                self.log('Fully charged. Waiting for rental...')
                 break
             
     
