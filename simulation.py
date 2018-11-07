@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import simpy
 from random import random, seed, randint
-seed(21)
+#seed(21)
 
 MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
@@ -36,7 +36,7 @@ class EV:
         self.name = name
 
     def log(self, message):
-        print('[%s] - EV-%s(%.2f/%.2f|%s)'% (self.env.now, self.name, self.battery.level, self.battery.capacity, self.state), message)
+        print('[%s] - EV-%s(%.2f/%.2f)'% (self.env.now, self.name, self.battery.level, self.battery.capacity), message)
     
     def plugged_in(self):
         return random() <= 0.3
@@ -44,11 +44,9 @@ class EV:
     def drive(self, env, vpp, name):
         while True:
             # Parking
-            self.state = 'I'
             idle_time = randint(5, 10) # minutes
             
             if self.plugged_in():
-                self.state = 'C'
                 yield vpp.capacity.put(self.battery.level)
                 # Charging
                 yield env.process(self.battery_control(env, idle_time))
@@ -58,7 +56,6 @@ class EV:
                 yield env.timeout(idle_time)
 
             # Driving
-            self.state = 'D'
             avg_speed = randint(30, 60) # km/h
             trip_distance = randint(5, 10) # km
             trip_time = int(trip_distance / avg_speed * 60) # minutes
@@ -81,12 +78,12 @@ class EV:
                 yield self.battery.put(CHARGING_SPEED / 60)
                 yield vpp.capacity.put(CHARGING_SPEED / 60)
                 yield env.timeout(1)
-            else:
-                rest = self.battery.capacity - self.battery.level 
+            elif 0 < self.battery.capacity - self.battery.level < (CHARGING_SPEED / 60):
+                rest = self.battery.capacity - self.battery.level
                 yield self.battery.put(rest)
                 yield vpp.capacity.put(rest)
                 yield env.timeout(1)
-                self.state = 'I'
+            else:
                 self.log('Fully charged. Waiting for rental...')
                 break
             
