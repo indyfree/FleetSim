@@ -5,8 +5,8 @@ from random import random, seed, randint
 
 MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
-CHARGING_SPEED=3.6    # kWh per hour
-NUM_EVS=2
+CHARGING_SPEED=300.6    # 3.6 kWh per hour
+NUM_EVS=1
 
 class VPP:
     def __init__(self, env, name):
@@ -61,32 +61,29 @@ class EV:
                 
             # Parking
             self.state = 'I'
-            idle_time = randint(5, 60) # minutes
+            idle_time = randint(5, 10) # minutes
             self.log('is idle for %d minutes' % idle_time)
-            if self.plugged_in():
-                self.state = 'C'
-                yield vpp.capacity.put(self.battery.level)
-                # Charging
-                charging = env.process(self.battery_control(env))
-                yield vpp.capacity.get(self.battery.level)
+            self.state = 'C'
+            yield vpp.capacity.put(self.battery.level)
+            # Charging
+            charging = env.process(self.battery_control(env, idle_time))
+            yield vpp.capacity.get(self.battery.level)
                 
-            parking = yield env.timeout(idle_time)
+            parking = env.timeout(idle_time)
             yield parking & charging
-            self.log('was idle for %d minutes' % idle_time)
             
 
-        def battery_control(self, env):
-            charging_time = randint(5, 60)
-            self.log('is at a charging station for %d minutes' % charging_time)
-            for i in range(charging_time):
-                if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
-                    self.log('is charging')
-                    yield self.battery.put(CHARGING_SPEED / 60)
-                    yield vpp.capacity.put(CHARGING_SPEED / 60)
-                    yield env.timeout(1)
-                else:
-                    self.log('is already fully charged')
-                    yield env.timeout(1)
+    def battery_control(self, env, charging_time):
+        self.log('is at a charging station for %d minutes' % charging_time)
+        for i in range(charging_time):
+            if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
+                self.log('is charging')
+                yield self.battery.put(CHARGING_SPEED / 60)
+                yield vpp.capacity.put(CHARGING_SPEED / 60)
+                yield env.timeout(1)
+            else:
+                self.log('is already fully charged')
+                yield env.timeout(1)
             
     
 def car_generator(env, vpp):
@@ -99,4 +96,4 @@ def car_generator(env, vpp):
 env = simpy.Environment()
 vpp = VPP(env, 1)
 car_gen = env.process(car_generator(env, vpp))
-env.run(200)
+env.run(100)
