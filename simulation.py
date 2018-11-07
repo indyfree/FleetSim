@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import simpy
 from random import random, seed, randint
-# seed(21)
+seed(21)
 
 MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
-CHARGING_SPEED=300.6    # 3.6 kWh per hour
+CHARGING_SPEED=80.6    # 3.6 kWh per hour
 NUM_EVS=1
 
 class VPP:
@@ -22,7 +22,7 @@ class VPP:
         level = 0
         while True:
             if level != self.capacity.level:
-                self.log('has changed %.2f capacity' % (self.capacity.level - level))
+                # self.log('has changed %.2f capacity' % (self.capacity.level - level))
                 level = self.capacity.level
                 
             yield env.timeout(1)
@@ -44,6 +44,19 @@ class EV:
 
     def drive(self, env, vpp, name):
         while True:
+            # Parking
+            self.state = 'I'
+            idle_time = randint(5, 10) # minutes
+            
+            if self.plugged_in():
+                self.state = 'C'
+                yield vpp.capacity.put(self.battery.level)
+                # Charging
+                yield env.process(self.battery_control(env, idle_time))
+                yield vpp.capacity.get(self.battery.level)
+            else:
+                yield env.timeout(idle_time)
+
             # Driving
             self.state = 'D'
             avg_speed = randint(30, 60) # km/h
@@ -52,38 +65,30 @@ class EV:
             trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
 
             if self.battery.level > trip_capacity:
-                self.log('starts driving')
+                self.log('Customer arrived. Start driving.')
                 yield env.timeout(trip_time)
                 yield self.battery.get(trip_capacity)
-                self.log('drove %d kilometers in %d minutes and consumed %.2f kWh'% (trip_distance, trip_time, trip_capacity))
+                self.log('Drove %d kilometers in %d minutes and consumed %.2f kWh'% (trip_distance, trip_time, trip_capacity))
             else:
-                self.log('does not have enough battery for the planned trip')
+                self.log('Not enough battery for the planned trip')
                 
-            # Parking
-            self.state = 'I'
-            idle_time = randint(5, 10) # minutes
-            self.log('is idle for %d minutes' % idle_time)
-            self.state = 'C'
-            yield vpp.capacity.put(self.battery.level)
-            # Charging
-            charging = env.process(self.battery_control(env, idle_time))
-            yield vpp.capacity.get(self.battery.level)
                 
-            parking = env.timeout(idle_time)
-            yield parking & charging
             
-
     def battery_control(self, env, charging_time):
-        self.log('is at a charging station for %d minutes' % charging_time)
+        self.log('At a charging station! Charging...')
         for i in range(charging_time):
             if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
-                self.log('is charging')
                 yield self.battery.put(CHARGING_SPEED / 60)
                 yield vpp.capacity.put(CHARGING_SPEED / 60)
                 yield env.timeout(1)
             else:
-                self.log('is already fully charged')
+                rest = self.battery.capacity - self.battery.level 
+                yield self.battery.put(rest)
+                yield vpp.capacity.put(rest)
                 yield env.timeout(1)
+                self.state = 'I'
+                self.log('Fully charged.')
+                break
             
     
 def car_generator(env, vpp):
