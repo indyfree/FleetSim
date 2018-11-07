@@ -44,55 +44,51 @@ class EV:
 
     def drive(self, env, vpp, name):
         while True:
-            # Charging
-            if self.state == 'C':
-                self.log('is at a charging station')
-                # Add capacity from VPP
-                yield vpp.capacity.put(self.battery.level)
-                idle_time = randint(5, 20) # minutes
-
-                for i in range(idle_time):
-                    if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
-                        self.log('is charging')
-                        yield self.battery.put(CHARGING_SPEED / 60)
-                        yield vpp.capacity.put(CHARGING_SPEED / 60)
-                        yield env.timeout(1)
-                    else:
-                        self.log('is already fully charged')
-                        yield env.timeout(1)
-                
-                yield vpp.capacity.get(self.battery.level)
-                self.state = 'D'
-            
             # Driving
-            elif self.state == 'D':
-                avg_speed = randint(30, 60) # km/h
-                trip_distance = randint(5, 10) # km
-                trip_time = int(trip_distance / avg_speed * 60) # minutes
-                trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
-                
-                if self.battery.level > trip_capacity:
-                    self.log('starts driving')
-                    yield env.timeout(trip_time)
-                    yield self.battery.get(trip_capacity)
-                    self.log('drove %d kilometers in %d minutes and consumed %.2f kWh'% (trip_distance, trip_time, trip_capacity))
-                else:
-                    self.log('does not have enough battery for the planned trip')
-                
-                self.state = 'I'
+            self.state = 'D'
+            avg_speed = randint(30, 60) # km/h
+            trip_distance = randint(5, 10) # km
+            trip_time = int(trip_distance / avg_speed * 60) # minutes
+            trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
 
-            # Idle
-            elif self.state == 'I':
-                if self.plugged_in():
-                    self.state = 'C'
-                else:
-                    self.log('is idle')
-                    idle_time = randint(5, 20) # minutes
-                    yield env.timeout(idle_time)
-                    self.log('was idle for %d minutes' % idle_time)
-                    self.state = 'D'
-    
+            if self.battery.level > trip_capacity:
+                self.log('starts driving')
+                yield env.timeout(trip_time)
+                yield self.battery.get(trip_capacity)
+                self.log('drove %d kilometers in %d minutes and consumed %.2f kWh'% (trip_distance, trip_time, trip_capacity))
+            else:
+                self.log('does not have enough battery for the planned trip')
                 
+            # Parking
+            self.state = 'I'
+            idle_time = randint(5, 60) # minutes
+            self.log('is idle for %d minutes' % idle_time)
+            if self.plugged_in():
+                self.state = 'C'
+                yield vpp.capacity.put(self.battery.level)
+                # Charging
+                charging = env.process(self.battery_control(env))
+                yield vpp.capacity.get(self.battery.level)
+                
+            parking = yield env.timeout(idle_time)
+            yield parking & charging
+            self.log('was idle for %d minutes' % idle_time)
+            
+
+        def battery_control(self, env):
+            charging_time = randint(5, 60)
+            self.log('is at a charging station for %d minutes' % charging_time)
+            for i in range(charging_time):
+                if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
+                    self.log('is charging')
+                    yield self.battery.put(CHARGING_SPEED / 60)
+                    yield vpp.capacity.put(CHARGING_SPEED / 60)
+                    yield env.timeout(1)
+                else:
+                    self.log('is already fully charged')
+                    yield env.timeout(1)
+            
+    
 def car_generator(env, vpp):
     for i in range(NUM_EVS):
         # print('[%s] - EV %s joined the fleet' % (env.now, i))
