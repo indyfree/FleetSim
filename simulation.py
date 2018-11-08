@@ -7,6 +7,7 @@ MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
 CHARGING_SPEED=3.6    # 3.6 kWh per hour
 NUM_EVS=1
+RUNTIME=2000
 
 class VPP:
     def __init__(self, env, name):
@@ -22,10 +23,10 @@ class VPP:
         level = 0
         while True:
             if level != self.capacity.level:
-                self.log('Change %.2f capacity' % (self.capacity.level - level))
+                # self.log('Change %.2f capacity' % (self.capacity.level - level))
                 level = self.capacity.level
 
-            yield env.timeout(1)
+            yield env.timeout(10)
 
 
 class EV:
@@ -50,25 +51,26 @@ class EV:
 
     def charge(self, env):
         self.log('At a charging station! Charging...')
+        yield self.vpp.capacity.put(self.battery.level)
         while True:
             try:
-                # yield self.vpp.capacity.put(self.battery.level)
                 if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
                     yield self.battery.put(CHARGING_SPEED / 60)
-                    # yield self.vpp.capacity.put(CHARGING_SPEED / 60)
+                    yield self.vpp.capacity.put(CHARGING_SPEED / 60)
                     yield env.timeout(1)
                 elif 0 < self.battery.capacity - self.battery.level < (CHARGING_SPEED / 60):
                     rest = self.battery.capacity - self.battery.level
                     yield self.battery.put(rest)
-                    # yield self.vpp.capacity.put(rest)
+                    yield self.vpp.capacity.put(rest)
                     yield env.timeout(1)
                 else:
                     self.log('Fully charged. Waiting for rental...')
                     break
             except simpy.Interrupt as i:
-                # yield self.vpp.capacity.get(self.battery.level)
                 self.log('Charging interrupted! %s' % i.cause)
                 break
+
+        yield self.vpp.capacity.get(self.battery.level)
 
 
     def drive(self, env):
@@ -111,4 +113,4 @@ def lifecycle(env, vpp):
 env = simpy.Environment()
 vpp = VPP(env, 1)
 life = env.process(lifecycle(env, vpp))
-env.run(2000)
+env.run(RUNTIME)
