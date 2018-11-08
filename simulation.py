@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import simpy
 from random import random, seed, randint
-#seed(20)
+seed(21)
 
 MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
-CHARGING_SPEED=300.6    # 3.6 kWh per hour
+CHARGING_SPEED=3.6    # 3.6 kWh per hour
 NUM_EVS=1
 
 class VPP:
@@ -52,16 +52,15 @@ class EV:
         self.log('At a charging station! Charging...')
         while True:
             try:
-                yield self.vpp.capacity.put(self.battery.level)
+                # yield self.vpp.capacity.put(self.battery.level)
                 if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
                     yield self.battery.put(CHARGING_SPEED / 60)
-                    yield self.vpp.capacity.put(CHARGING_SPEED / 60)
-                    self.log('Charging...')
+                    # yield self.vpp.capacity.put(CHARGING_SPEED / 60)
                     yield env.timeout(1)
                 elif 0 < self.battery.capacity - self.battery.level < (CHARGING_SPEED / 60):
                     rest = self.battery.capacity - self.battery.level
                     yield self.battery.put(rest)
-                    yield self.vpp.capacity.put(rest)
+                    # yield self.vpp.capacity.put(rest)
                     yield env.timeout(1)
                 else:
                     self.log('Fully charged. Waiting for rental...')
@@ -69,11 +68,12 @@ class EV:
             except simpy.Interrupt as i:
                 # yield self.vpp.capacity.get(self.battery.level)
                 self.log('Charging interrupted! %s' % i.cause)
+                break
 
 
     def drive(self, env):
         avg_speed = randint(30, 60) # km/h
-        trip_distance = randint(5, 10) # km
+        trip_distance = randint(2, 5) # km
         trip_time = int(trip_distance / avg_speed * 60) # minutes
         trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
 
@@ -95,6 +95,7 @@ def lifecycle(env, vpp):
     ev = EV(env, vpp, 1)
 
     while True:
+        # print('Process %s, triggered: %s' % (ev.action, ev.action.triggered))
         if ev.action.triggered:
             if (random() <= 0.5):
                 ev.action = env.process(ev.idle(env))
@@ -102,7 +103,7 @@ def lifecycle(env, vpp):
                 ev.action = env.process(ev.charge(env))
 
         # Wait for customer
-        yield env.timeout(randint(60,360))
+        yield env.timeout(randint(60, 120))
 
         yield env.process(ev.drive(env))
 
@@ -110,4 +111,4 @@ def lifecycle(env, vpp):
 env = simpy.Environment()
 vpp = VPP(env, 1)
 life = env.process(lifecycle(env, vpp))
-env.run(3000)
+env.run(2000)
