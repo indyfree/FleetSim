@@ -54,14 +54,13 @@ class EV:
         yield self.vpp.capacity.put(self.battery.level)
         while True:
             try:
-                if self.battery.level < self.battery.capacity - (CHARGING_SPEED / 60):
-                    yield self.battery.put(CHARGING_SPEED / 60)
-                    yield self.vpp.capacity.put(CHARGING_SPEED / 60)
-                    yield env.timeout(1)
-                elif 0 < self.battery.capacity - self.battery.level < (CHARGING_SPEED / 60):
+                if self.battery.level < self.battery.capacity:
+                    increment = CHARGING_SPEED / 60
                     rest = self.battery.capacity - self.battery.level
-                    yield self.battery.put(rest)
-                    yield self.vpp.capacity.put(rest)
+                    if rest < increment:
+                        increment = rest
+                    yield self.battery.put(increment)
+                    yield self.vpp.capacity.put(increment)
                     yield env.timeout(1)
                 else:
                     self.log('Fully charged. Waiting for rental...')
