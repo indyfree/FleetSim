@@ -4,8 +4,8 @@ from random import random, seed, randint
 import simpy
 
 
-START_DATE = datetime(2016, 1, 1, tzinfo=timezone.utc)
-END_DATE = datetime(2016, 1, 1, 8, tzinfo=timezone.utc)
+START_DATE = datetime(2016, 1, 1)
+END_DATE = datetime(2016, 1, 1, 8)
 MAX_EV_CAPACITY = 16.5  # kWh
 MAX_EV_RANGE = 20       # km
 CHARGING_SPEED = 3.6    # 3.6 kWh per hour
