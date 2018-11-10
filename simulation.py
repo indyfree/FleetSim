@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+import time
+from datetime import datetime, timezone
 import simpy
 from random import random, seed, randint
 seed(21)
 
+START_DATE=datetime(2016, 1, 1, tzinfo=timezone.utc)
+END_DATE=datetime(2016, 1, 1, 8, tzinfo=timezone.utc)
 MAX_EV_CAPACITY=16.5  # kWh
 MAX_EV_RANGE=20       # km
 CHARGING_SPEED=3.6    # 3.6 kWh per hour
@@ -17,16 +21,12 @@ class VPP:
         self.mon_proc = env.process(self.monitor_capacity(env))
 
     def log(self, message):
-        print('[%s] - VPP-%s(%.2f/%.2f)'% (self.env.now, self.name, self.capacity.level, self.capacity.capacity), message)
+        print('[%s] - VPP-%s(%.2f/%.2f)'% (datetime.fromtimestamp(self.env.now), self.name, self.capacity.level, self.capacity.capacity), message)
 
     def monitor_capacity(self, env):
-        level = 0
         while True:
-            if level != self.capacity.level:
-                # self.log('Change %.2f capacity' % (self.capacity.level - level))
-                level = self.capacity.level
-
-            yield env.timeout(10)
+            self.log('Capacity')
+            yield env.timeout(10 * 60)
 
 
 class EV:
@@ -38,13 +38,13 @@ class EV:
         self.action = env.process(self.idle(env))
 
     def log(self, message):
-        print('[%s] - EV-%s(%.2f/%.2f)'% (self.env.now, self.name, self.battery.level, self.battery.capacity), message)
+        print('[%s] - EV-%s(%.2f/%.2f)'% (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
         while True:
             try:
-                yield env.timeout(1)
+                yield env.timeout(5 * 60)
             except simpy.Interrupt as i:
                 self.log('Idle interrupted! %s' % i.cause)
                 break
@@ -61,7 +61,7 @@ class EV:
                         increment = rest
                     yield self.battery.put(increment)
                     yield self.vpp.capacity.put(increment)
-                    yield env.timeout(1)
+                    yield env.timeout(5 * 60)
                 else:
                     self.log('Fully charged. Waiting for rental...')
                     break
@@ -74,8 +74,8 @@ class EV:
 
     def drive(self, env):
         avg_speed = randint(30, 60) # km/h
-        trip_distance = randint(2, 5) # km
-        trip_time = int(trip_distance / avg_speed * 60) # minutes
+        trip_distance = randint(5, 15) # km
+        trip_time = int((trip_distance / avg_speed) * 60 * 60) # seconds
         trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
 
         if self.battery.level > trip_capacity:
@@ -87,7 +87,7 @@ class EV:
 
             yield env.timeout(trip_time)
             yield self.battery.get(trip_capacity)
-            self.log('Drove %d kilometers in %d minutes and consumed %.2f kWh'% (trip_distance, trip_time, trip_capacity))
+            self.log('Drove %d kilometers in %.2f minutes and consumed %.2f kWh'% (trip_distance, trip_time/60, trip_capacity))
         else:
             self.log('Not enough battery for the planned trip')
 
@@ -104,12 +104,13 @@ def lifecycle(env, vpp):
                 ev.action = env.process(ev.charge(env))
 
         # Wait for customer
-        yield env.timeout(randint(60, 120))
+        yield env.timeout(randint(10, 30) * 60)
 
         yield env.process(ev.drive(env))
 
 
-env = simpy.Environment()
+
+env = simpy.Environment(START_DATE.timestamp())
 vpp = VPP(env, 1)
 life = env.process(lifecycle(env, vpp))
-env.run(RUNTIME)
+env.run(END_DATE.timestamp())
