@@ -3,7 +3,7 @@
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
-PROJECT_NAME = ev-simulation
+PROJECT_NAME = vppsim
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VENV_DIR =  $(PROJECT_DIR)/env
 # JUPYTER_DIR =  $(VENV_DIR)/share/jupyter
@@ -20,10 +20,7 @@ PIP = $(VENV_DIR)/bin/pip
 #################################################################################
 ## Simulation
 simulate:
-	$(PYTHON_INTERPRETER) simulation.py
-
-example:
-	$(PYTHON_INTERPRETER) example.py
+	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation/simulation.py
 
 
 ## Install Python Dependencies
@@ -42,7 +39,7 @@ clean:
 
 ## Lint using flake8
 lint:
-	@$(PYTHON_INTERPRETER) -m flake8 --config=$(PROJECT_DIR)/.flake8 simulation.py ev.py
+	@$(PYTHON_INTERPRETER) -m flake8 --config=$(PROJECT_DIR)/.flake8 src
 
 ## Install virtual environment
 venv:
