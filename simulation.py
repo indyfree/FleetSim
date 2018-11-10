@@ -22,7 +22,6 @@ def lifecycle(env, vpp):
     ev = EV(env, vpp, 1)
 
     while True:
-        # print('Process %s, triggered: %s' % (EV.action, EV.action.triggered))
         if ev.action.triggered:
             if (random() <= 0.5):
                 ev.action = env.process(ev.idle(env))
