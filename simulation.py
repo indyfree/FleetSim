@@ -2,25 +2,26 @@
 from datetime import datetime, timezone
 from random import random, seed, randint
 import simpy
-seed(21)
 
-START_DATE=datetime(2016, 1, 1, tzinfo=timezone.utc)
-END_DATE=datetime(2016, 1, 1, 8, tzinfo=timezone.utc)
-MAX_EV_CAPACITY=16.5  # kWh
-MAX_EV_RANGE=20       # km
-CHARGING_SPEED=3.6    # 3.6 kWh per hour
-NUM_EVS=1
-RUNTIME=2000
+
+START_DATE = datetime(2016, 1, 1, tzinfo=timezone.utc)
+END_DATE = datetime(2016, 1, 1, 8, tzinfo=timezone.utc)
+MAX_EV_CAPACITY = 16.5  # kWh
+MAX_EV_RANGE = 20       # km
+CHARGING_SPEED = 3.6    # 3.6 kWh per hour
+NUM_EVS = 1
+RUNTIME = 2000
+
 
 class VPP:
     def __init__(self, env, name):
-        self.capacity = simpy.Container(env, init=0, capacity=MAX_EV_CAPACITY*NUM_EVS)
+        self.capacity = simpy.Container(env, init=0, capacity=MAX_EV_CAPACITY * NUM_EVS)
         self.env = env
         self.name = name
         self.mon_proc = env.process(self.monitor_capacity(env))
 
     def log(self, message):
-        print('[%s] - VPP-%s(%.2f/%.2f)'% (datetime.fromtimestamp(self.env.now), self.name, self.capacity.level, self.capacity.capacity), message)
+        print('[%s] - VPP-%s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.capacity.level, self.capacity.capacity), message)
 
     def monitor_capacity(self, env):
         while True:
@@ -37,7 +38,7 @@ class EV:
         self.action = env.process(self.idle(env))
 
     def log(self, message):
-        print('[%s] - EV-%s(%.2f/%.2f)'% (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
+        print('[%s] - EV-%s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
@@ -70,12 +71,11 @@ class EV:
 
         yield self.vpp.capacity.get(self.battery.level)
 
-
     def drive(self, env):
-        avg_speed = randint(30, 60) # km/h
-        trip_distance = randint(5, 15) # km
-        trip_time = int((trip_distance / avg_speed) * 60 * 60) # seconds
-        trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance # kWh
+        avg_speed = randint(30, 60)                                     # km/h
+        trip_distance = randint(5, 15)                                  # km
+        trip_time = int((trip_distance / avg_speed) * 60 * 60)          # seconds
+        trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance  # kWh
 
         if self.battery.level > trip_capacity:
             self.log('Start driving.')
@@ -86,7 +86,7 @@ class EV:
 
             yield env.timeout(trip_time)
             yield self.battery.get(trip_capacity)
-            self.log('Drove %d kilometers in %.2f minutes and consumed %.2f kWh'% (trip_distance, trip_time/60, trip_capacity))
+            self.log('Drove %d kilometers in %.2f minutes and consumed %.2f kWh' % (trip_distance, trip_time / 60, trip_capacity))
         else:
             self.log('Not enough battery for the planned trip')
 
@@ -108,7 +108,7 @@ def lifecycle(env, vpp):
         yield env.process(ev.drive(env))
 
 
-
+seed(21)
 env = simpy.Environment(START_DATE.timestamp())
 vpp = VPP(env, 1)
 life = env.process(lifecycle(env, vpp))
