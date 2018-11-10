@@ -1,0 +1,9 @@
+[flake8]
+ignore = H101, H202, E501, C901
+exclude =
+    .git,
+    __pycache__,
+    data/raw,
+    env,
+    notebooks/jupyter_notebook_config.py,
+max-complexity = 10
