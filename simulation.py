@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-import time
 from datetime import datetime, timezone
-import simpy
 from random import random, seed, randint
+import simpy
 seed(21)
 
 START_DATE=datetime(2016, 1, 1, tzinfo=timezone.utc)
