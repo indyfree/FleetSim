@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from datetime import datetime, timezone
+from datetime import datetime
 from random import random, seed, randint
 import simpy
 

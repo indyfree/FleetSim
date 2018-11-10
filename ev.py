@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from datetime import datetime, timezone
-from random import random, seed, randint
+from datetime import datetime
+from random import randint
 import simpy
 
 MAX_EV_CAPACITY = 16.5  # kWh
 MAX_EV_RANGE = 20       # km
 CHARGING_SPEED = 3.6    # 3.6 kWh per hour
+
 
 class EV:
     def __init__(self, env, vpp, name):
