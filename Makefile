@@ -42,7 +42,7 @@ clean:
 
 ## Lint using flake8
 lint:
-	@$(PYTHON_INTERPRETER) -m flake8 --config=$(PROJECT_DIR)/.flake8 simulation.py
+	@$(PYTHON_INTERPRETER) -m flake8 --config=$(PROJECT_DIR)/.flake8 simulation.py ev.py
 
 ## Install virtual environment
 venv:
