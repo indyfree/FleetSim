@@ -1,6 +1,2 @@
-# local package
--e .
-
-# external dependencies
 simpy
 flake8
