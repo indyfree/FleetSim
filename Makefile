@@ -20,7 +20,7 @@ JUPYTER = $(VENV_DIR)/bin/jupyter
 #################################################################################
 ## Simulation
 simulate:
-	@$(PIP) install -e . &> /dev/null
+	@# @$(PIP) install -e . &> /dev/null
 	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation.py
 
 
