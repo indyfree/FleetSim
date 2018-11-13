@@ -47,10 +47,10 @@ class EV:
 
         yield self.vpp.capacity.get(self.battery.level)
 
-    def drive(self, env):
-        avg_speed = randint(30, 60)                             # km/h
-        trip_distance = randint(5, 15)                          # km
-        trip_time = int((trip_distance / avg_speed) * 60 * 60)  # seconds
+    def drive(self, env, duration):
+        avg_speed = randint(30, 60)    # km/h
+        trip_distance = randint(5, 15) # km
+        trip_time =  duration          # seconds
         trip_capacity = (vppsim.MAX_EV_CAPACITY / vppsim.MAX_EV_RANGE) * trip_distance  # kWh
 
         self.log('Customer arrived.')
