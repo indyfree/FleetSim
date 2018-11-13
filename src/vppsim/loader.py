@@ -12,7 +12,11 @@ def main():
 
 
 def load():
-    return pd.read_csv(CAR2GO_PATH, sep=';')
+    df = pd.read_csv(CAR2GO_PATH, sep=';')
+    df['time'] = pd.to_datetime(df['time'])
+    return df
+
+
 
 
 if __name__ == '__main__':
