@@ -9,7 +9,7 @@ class VPP:
         self.capacity = simpy.Container(env, init=0, capacity=vppsim.MAX_EV_CAPACITY * num_evs)
         self.env = env
         self.name = name
-        self.mon_proc = env.process(self.monitor_capacity(env))
+        # self.mon_proc = env.process(self.monitor_capacity(env))
 
     def log(self, message):
         print('[%s] - VPP-%s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.capacity.level, self.capacity.capacity), message)
