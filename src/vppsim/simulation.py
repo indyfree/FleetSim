@@ -27,6 +27,7 @@ def main():
     env = simpy.Environment(START_DATE.timestamp())
     vpp = VPP(env, 1, NUM_EVS)
     env.process(lifecycle(env, vpp))
+    print('Starting Simulation...')
     env.run(END_DATE.timestamp())
 
 
