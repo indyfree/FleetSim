@@ -4,8 +4,8 @@ from datetime import datetime
 from random import random, seed, randint
 import simpy
 
-from ev import EV
-from vpp import VPP
+from vppsim import EV
+from vppsim import VPP
 
 
 # SIMULATION CONSTANTS
@@ -16,6 +16,11 @@ MAX_EV_RANGE = 20       # km
 CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 RUNTIME = 2000
 NUM_EVS = 1
+
+# PHYSICAL CONSTANTS
+MAX_EV_CAPACITY = 16.5  # kWh
+MAX_EV_RANGE = 20       # km
+CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 
 def lifecycle(env, vpp):
