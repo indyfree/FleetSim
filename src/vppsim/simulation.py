@@ -26,7 +26,7 @@ def main():
     seed(21)
     env = simpy.Environment(START_DATE.timestamp())
     vpp = VPP(env, 1, NUM_EVS)
-    life = env.process(lifecycle(env, vpp))
+    env.process(lifecycle(env, vpp))
     env.run(END_DATE.timestamp())
 
 
