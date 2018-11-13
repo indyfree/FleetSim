@@ -22,6 +22,14 @@ MAX_EV_RANGE = 20       # km
 CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 
+def main():
+    seed(21)
+    env = simpy.Environment(START_DATE.timestamp())
+    vpp = VPP(env, 1, NUM_EVS)
+    life = env.process(lifecycle(env, vpp))
+    env.run(END_DATE.timestamp())
+
+
 def lifecycle(env, vpp):
     ev = EV(env, vpp, 1)
 
@@ -38,8 +46,6 @@ def lifecycle(env, vpp):
         yield env.process(ev.drive(env))
 
 
-seed(21)
-env = simpy.Environment(START_DATE.timestamp())
-vpp = VPP(env, 1, NUM_EVS)
-life = env.process(lifecycle(env, vpp))
-env.run(END_DATE.timestamp())
+if __name__ == '__main__':
+    main()
+
