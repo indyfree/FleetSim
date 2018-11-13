@@ -4,6 +4,9 @@ from datetime import datetime
 from random import random, seed, randint
 import simpy
 
+from vppsim.vpp import VPP
+from vppsim.ev import EV
+
 # SIMULATION CONSTANTS
 START_DATE = datetime(2016, 1, 1)
 END_DATE = datetime(2016, 1, 1, 8)
