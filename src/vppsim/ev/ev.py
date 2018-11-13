@@ -53,15 +53,16 @@ class EV:
         trip_time = int((trip_distance / avg_speed) * 60 * 60)  # seconds
         trip_capacity = (vppsim.MAX_EV_CAPACITY / vppsim.MAX_EV_RANGE) * trip_distance  # kWh
 
+        self.log('Customer arrived.')
         if self.battery.level > trip_capacity:
             self.log('Start driving.')
 
             # Interrupt Charging or Parking
             if not self.action.triggered:
-                self.action.interrupt('Customer arrived')
+                self.action.interrupt("")
 
             yield env.timeout(trip_time)
             yield self.battery.get(trip_capacity)
             self.log('Drove %d kilometers in %.2f minutes and consumed %.2f kWh' % (trip_distance, trip_time / 60, trip_capacity))
         else:
-            self.log('Not enough battery for the planned trip')
+            self.log('Not enough battery for the planned trip.')
