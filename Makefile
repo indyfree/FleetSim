@@ -21,7 +21,7 @@ PIP = $(VENV_DIR)/bin/pip
 ## Simulation
 simulate:
 	@$(PIP) install -e .
-	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation/simulation.py
+	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation.py
 
 
 ## Install Python Dependencies
