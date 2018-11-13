@@ -6,15 +6,15 @@ import vppsim
 
 
 class EV:
-    def __init__(self, env, vpp, name):
-        self.battery = simpy.Container(env, init=vppsim.MAX_EV_CAPACITY, capacity=vppsim.MAX_EV_CAPACITY)
+    def __init__(self, env, vpp, soc, name):
+        self.battery = simpy.Container(env, init=(soc/100)*vppsim.MAX_EV_CAPACITY, capacity=vppsim.MAX_EV_CAPACITY)
         self.env = env
         self.name = name
         self.vpp = vpp
         self.action = env.process(self.idle(env))
 
     def log(self, message):
-        print('[%s] - EV-%s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
+        print('[%s] - %s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
