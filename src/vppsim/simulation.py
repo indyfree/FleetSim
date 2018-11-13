@@ -4,8 +4,7 @@ from datetime import datetime
 from random import random, seed, randint
 import simpy
 
-from vppsim.vpp import VPP
-from vppsim.ev import EV
+from vppsim.entities import EV, VPP
 
 # SIMULATION CONSTANTS
 START_DATE = datetime(2016, 1, 1)
@@ -23,7 +22,7 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 
 def main():
-    seed(21)
+    seed(19)
     env = simpy.Environment(START_DATE.timestamp())
     vpp = VPP(env, 1, NUM_EVS)
     env.process(lifecycle(env, vpp))
