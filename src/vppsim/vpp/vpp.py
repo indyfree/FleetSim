@@ -4,13 +4,12 @@ from datetime import datetime
 from random import randint
 import simpy
 
-
-MAX_EV_CAPACITY = 16.5  # kWh
+import vppsim
 
 
 class VPP:
     def __init__(self, env, name, num_evs):
-        self.capacity = simpy.Container(env, init=0, capacity=MAX_EV_CAPACITY * num_evs)
+        self.capacity = simpy.Container(env, init=0, capacity=vppsim.MAX_EV_CAPACITY * num_evs)
         self.env = env
         self.name = name
         self.mon_proc = env.process(self.monitor_capacity(env))

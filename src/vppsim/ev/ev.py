@@ -4,14 +4,12 @@ from datetime import datetime
 from random import randint
 import simpy
 
-MAX_EV_CAPACITY = 16.5  # kWh
-MAX_EV_RANGE = 20       # km
-CHARGING_SPEED = 3.6    # 3.6 kWh per hour
+import vppsim
 
 
 class EV:
     def __init__(self, env, vpp, name):
-        self.battery = simpy.Container(env, init=MAX_EV_CAPACITY, capacity=MAX_EV_CAPACITY)
+        self.battery = simpy.Container(env, init=vppsim.MAX_EV_CAPACITY, capacity=vppsim.MAX_EV_CAPACITY)
         self.env = env
         self.name = name
         self.vpp = vpp
@@ -35,7 +33,7 @@ class EV:
         while True:
             try:
                 if self.battery.level < self.battery.capacity:
-                    increment = CHARGING_SPEED / 60
+                    increment = vppsim.CHARGING_SPEED / 60
                     rest = self.battery.capacity - self.battery.level
                     if rest < increment:
                         increment = rest
@@ -52,10 +50,10 @@ class EV:
         yield self.vpp.capacity.get(self.battery.level)
 
     def drive(self, env):
-        avg_speed = randint(30, 60)                                     # km/h
-        trip_distance = randint(5, 15)                                  # km
-        trip_time = int((trip_distance / avg_speed) * 60 * 60)          # seconds
-        trip_capacity = MAX_EV_CAPACITY / MAX_EV_RANGE * trip_distance  # kWh
+        avg_speed = randint(30, 60)                             # km/h
+        trip_distance = randint(5, 15)                          # km
+        trip_time = int((trip_distance / avg_speed) * 60 * 60)  # seconds
+        trip_capacity = (vppsim.MAX_EV_CAPACITY / vppsim.MAX_EV_RANGE) * trip_distance  # kWh
 
         if self.battery.level > trip_capacity:
             self.log('Start driving.')
