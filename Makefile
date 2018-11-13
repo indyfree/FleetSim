@@ -20,7 +20,7 @@ PIP = $(VENV_DIR)/bin/pip
 #################################################################################
 ## Simulation
 simulate:
-	@$(PIP) install -e .
+	@$(PIP) install -e . &> /dev/null
 	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation.py
 
 
