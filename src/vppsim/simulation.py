@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-from datetime import datetime
-from random import random, seed, randint
-import pandas as pd
 import simpy
 
 from vppsim.entities import EV, VPP
@@ -40,7 +37,7 @@ def lifecycle(env, vpp, df):
     # TODO: Use itetuples for speed improvement
     for i, rental in df.iterrows():
 
-        yield env.timeout(rental.start_time - prev_time) # sec
+        yield env.timeout(rental.start_time - prev_time)  # sec
 
         if rental.EV not in evs:
             print('%s has been added to the fleet' % rental.EV)
@@ -58,8 +55,5 @@ def lifecycle(env, vpp, df):
                 ev.action = env.process(ev.idle(env))
 
 
-
-
 if __name__ == '__main__':
     main()
-

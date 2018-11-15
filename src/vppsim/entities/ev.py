@@ -7,7 +7,7 @@ import vppsim
 
 class EV:
     def __init__(self, env, vpp, name, soc):
-        self.battery = simpy.Container(env, init=(soc/100)*vppsim.MAX_EV_CAPACITY, capacity=vppsim.MAX_EV_CAPACITY)
+        self.battery = simpy.Container(env, init=vppsim.MAX_EV_CAPACITY * soc / 100, capacity=vppsim.MAX_EV_CAPACITY)
         self.env = env
         self.name = name
         self.vpp = vpp
@@ -48,9 +48,8 @@ class EV:
         yield self.vpp.capacity.get(self.battery.level)
 
     def drive(self, env, duration):
-        avg_speed = randint(30, 60)    # km/h
-        trip_distance = randint(5, 15) # km
-        trip_time =  duration * 60     # seconds
+        trip_distance = randint(5, 15)  # km
+        trip_time = duration * 60       # seconds
         trip_capacity = (vppsim.MAX_EV_CAPACITY / vppsim.MAX_EV_RANGE) * trip_distance  # kWh
 
         self.log('Customer arrived.')
