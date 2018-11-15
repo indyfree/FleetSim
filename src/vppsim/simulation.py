@@ -5,13 +5,6 @@ import simpy
 from vppsim.entities import EV, VPP
 from vppsim import loader
 
-# SIMULATION CONSTANTS
-MAX_EV_CAPACITY = 16.5  # kWh
-MAX_EV_RANGE = 20       # km
-CHARGING_SPEED = 3.6    # 3.6 kWh per hour
-RUNTIME = 2000
-NUM_EVS = 1
-
 # PHYSICAL CONSTANTS
 MAX_EV_CAPACITY = 16.5  # kWh
 MAX_EV_RANGE = 20       # km
@@ -20,9 +13,11 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 def main():
     df = loader.load()
+    sim_start_time = df.start_time.min()
+    num_evs = len(df.EV.unique())
 
-    env = simpy.Environment(df.start_time.min())
-    vpp = VPP(env, 1, NUM_EVS)
+    env = simpy.Environment(sim_start_time)
+    vpp = VPP(env, 1, num_evs)
     env.process(lifecycle(env, vpp, df))
     print('Starting Simulation...')
     env.run()
