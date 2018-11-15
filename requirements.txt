@@ -1,7 +1,9 @@
 flake8
-pandas
-simpy
 jupyter
 jupyter-contrib-nbextensions
 jupyter-nbextensions-configurator
 matplotlib
+pandas
+seaborn
+sklearn
+simpy
