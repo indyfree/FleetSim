@@ -25,7 +25,7 @@ def main():
     vpp = VPP(env, 1, NUM_EVS)
     env.process(lifecycle(env, vpp, df))
     print('Starting Simulation...')
-    env.run(df.end_time.max())
+    env.run()
 
 
 def lifecycle(env, vpp, df):
@@ -39,15 +39,16 @@ def lifecycle(env, vpp, df):
 
         yield env.timeout(rental.start_time - prev_time)  # sec
 
+        print('\n ---------- RENTAL %d ----------' % i)
         if rental.EV not in evs:
             print('%s has been added to the fleet' % rental.EV)
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
 
-        yield env.process(ev.drive(env, rental.trip_duration))
+        yield env.process(ev.drive(env, rental.trip_duration,
+                                   (rental.start_soc - rental.end_soc) * MAX_EV_CAPACITY / 100))
 
-        print(ev.action)
         if ev.action.triggered:
             if bool(rental.end_charging):
                 ev.action = env.process(ev.charge(env))
