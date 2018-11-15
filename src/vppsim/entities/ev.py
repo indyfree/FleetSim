@@ -27,7 +27,7 @@ class EV:
 
     def charge(self, env):
         self.log('At a charging station! Charging...')
-        yield self.vpp.capacity.put(self.battery.level)
+        # yield self.vpp.capacity.put(self.battery.level)
         while True:
             try:
                 if self.battery.level < self.battery.capacity:
@@ -35,8 +35,8 @@ class EV:
                     rest = self.battery.capacity - self.battery.level
                     if rest < increment:
                         increment = rest
-                    yield self.battery.put(increment)
-                    yield self.vpp.capacity.put(increment)
+                    # yield self.battery.put(increment)
+                    # yield self.vpp.capacity.put(increment)
                     yield env.timeout(5 * 60)
                 else:
                     self.log('Fully charged. Waiting for rental...')
@@ -45,15 +45,13 @@ class EV:
                 self.log('Charging interrupted! %s' % i.cause)
                 break
 
-        yield self.vpp.capacity.get(self.battery.level)
+        # yield self.vpp.capacity.get(self.battery.level)
 
-    def drive(self, env, duration):
-        trip_distance = randint(5, 15)  # km
+    def drive(self, env, duration, trip_charge):
         trip_time = duration * 60       # seconds
-        trip_capacity = (vppsim.MAX_EV_CAPACITY / vppsim.MAX_EV_RANGE) * trip_distance  # kWh
 
         self.log('Customer arrived.')
-        if self.battery.level > trip_capacity:
+        if self.battery.level > trip_charge:
             self.log('Start driving.')
 
             # Interrupt Charging or Parking
