@@ -61,7 +61,15 @@ class EV:
                 self.action.interrupt("")
 
             yield env.timeout(trip_time)
-            yield self.battery.get(trip_capacity)
-            self.log('Drove %d kilometers in %.2f minutes and consumed %.2f kWh' % (trip_distance, trip_time / 60, trip_capacity))
+
+            if trip_charge > 0:
+                yield self.battery.get(trip_charge)
+            elif trip_charge < 0:
+                self.log('WARNING: Battery has been charged on the trip')
+                yield self.battery.put(-trip_charge)
+            else:
+                self.log('WARNING: No battery has been consumed on the trip')
+
+            self.log('Drove for %.2f minutes and consumed %.2f kWh' % (trip_time / 60, trip_charge))
         else:
             self.log('Not enough battery for the planned trip.')
