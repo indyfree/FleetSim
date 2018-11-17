@@ -1,5 +1,4 @@
 from datetime import datetime
-from random import randint
 import simpy
 
 import vppsim
