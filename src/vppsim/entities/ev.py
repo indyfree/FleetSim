@@ -6,7 +6,7 @@ import vppsim
 
 class EV:
     def __init__(self, env, vpp, name, soc):
-        self.battery = simpy.Container(env, init=vppsim.MAX_EV_CAPACITY * soc / 100, capacity=vppsim.MAX_EV_CAPACITY)
+        self.battery = simpy.Container(env, init=soc , capacity=100)
         self.env = env
         self.name = name
         self.vpp = vpp
@@ -14,7 +14,7 @@ class EV:
         self.soc = soc
 
     def log(self, message):
-        print('[%s] - %s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
+        print('[%s] - %s(%s/%s)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
@@ -38,11 +38,10 @@ class EV:
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
 
-                # TODO: Put self.soc FIX negative?
-                amount = (vppsim.MAX_EV_CAPACITY * self.soc/100) - self.battery.level
-                if amount > 0:
-                    yield self.battery.put(amount)
-                    self.log('Charged %f kWh' % amount)
+                charged_amount = self.soc - self.battery.level
+                if charged_amount > 0:
+                    yield self.battery.put(charged_amount)
+                    self.log('Charged %s%% charge' % charged_amount)
 
                 break
 
@@ -50,7 +49,7 @@ class EV:
         # yield self.vpp.capacity.get(self.battery.level)
         # self.vpp.log('Removed capacity %s' % self.battery.level)
 
-    def drive(self, env, rental, duration, trip_charge, start_soc, end_charging):
+    def drive(self, env, rental, duration, trip_charge, start_soc, dest_charging_station):
         trip_time = duration * 60  # seconds
 
         if self.battery.level > trip_charge:
@@ -65,7 +64,7 @@ class EV:
             yield env.timeout(trip_time)
 
             print('\n -------- END RENTAL %d --------' % rental)
-            self.log('Drove for %.2f minutes and consumed %.2f kWh' % (trip_time / 60, trip_charge))
+            self.log('Drove for %.2f minutes and consumed %s%% charge' % (trip_time / 60, trip_charge))
 
             if trip_charge > 0:
                 self.log('Trying to adjust battery level')
@@ -80,7 +79,7 @@ class EV:
         else:
             self.log('WARNING: Not enough battery for the planned trip.')
 
-        if bool(end_charging):
+        if bool(dest_charging_station):
             self.action = env.process(self.charge(self.env))
         else:
             self.action = env.process(self.idle(self.env))

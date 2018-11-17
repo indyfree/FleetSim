@@ -19,6 +19,7 @@ def main():
     env = simpy.Environment(sim_start_time)
     vpp = VPP(env, 1, num_evs)
     env.process(lifecycle(env, vpp, df))
+
     print('Starting Simulation...')
     env.run()
 
@@ -30,7 +31,7 @@ def lifecycle(env, vpp, df):
     # TODO: Use itetuples for speed improvement
     for i, rental in df.iterrows():
 
-        # Wait untill next rental
+        # Wait until next rental
         yield env.timeout(rental.start_time - previous.start_time)  # sec
 
         if rental.EV not in evs:
@@ -39,7 +40,7 @@ def lifecycle(env, vpp, df):
 
         ev = evs[rental.EV]
         env.process(ev.drive(env, i, rental.trip_duration,
-                             (rental.start_soc - rental.end_soc) * MAX_EV_CAPACITY / 100,
+                             rental.start_soc - rental.end_soc,
                              rental.start_soc, rental.end_charging))
         previous = rental
 
