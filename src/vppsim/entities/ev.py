@@ -11,6 +11,7 @@ class EV:
         self.name = name
         self.vpp = vpp
         self.action = env.process(self.idle(env))
+        self.soc = soc
 
     def log(self, message):
         print('[%s] - %s(%.2f/%.2f)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
@@ -52,9 +53,8 @@ class EV:
     def drive(self, env, rental, duration, trip_charge, start_soc, end_charging):
         trip_time = duration * 60  # seconds
 
-        self.log('Customer arrived.')
         if self.battery.level > trip_charge:
-            self.log('Start driving.')
+            print('\n ---------- RENTAL %d ----------' % rental)
 
             # Interrupt Charging or Parking
             if not self.action.triggered:
@@ -64,15 +64,19 @@ class EV:
 
             yield env.timeout(trip_time)
 
+            print('\n -------- END RENTAL %d --------' % rental)
+            self.log('Drove for %.2f minutes and consumed %.2f kWh' % (trip_time / 60, trip_charge))
+
             if trip_charge > 0:
+                self.log('Trying to adjust battery level')
                 yield self.battery.get(trip_charge)
+                self.log('Battery level has been adjusted')
             elif trip_charge < 0:
                 self.log('WARNING: Battery has been charged on the trip')
                 yield self.battery.put(-trip_charge)
             else:
                 self.log('WARNING: No battery has been consumed on the trip')
 
-            self.log('Drove for %.2f minutes and consumed %.2f kWh' % (trip_time / 60, trip_charge))
         else:
             self.log('WARNING: Not enough battery for the planned trip.')
 
