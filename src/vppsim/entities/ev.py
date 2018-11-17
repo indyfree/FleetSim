@@ -34,14 +34,17 @@ class EV:
 
         while True:
             try:
-                yield env.timeout(5 * 60)
+                # TODO: Investigate timeout
+                yield env.timeout(1)
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
 
+                self.log('Last SoC: %s%%, current SoC: %s%%' % (self.battery.level, self.soc))
                 charged_amount = self.soc - self.battery.level
-                if charged_amount > 0:
+                # TODO: Fix SoC
+                if charged_amount != 0:
                     yield self.battery.put(charged_amount)
-                    self.log('Charged %s%% charge' % charged_amount)
+                    self.log('Charged battery for %s%%' % charged_amount)
 
                 break
 
@@ -61,6 +64,9 @@ class EV:
                 self.soc = start_soc
                 self.action.interrupt("Start driving")
 
+            if self.battery.level != start_soc:
+                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%' % (start_soc, self.battery.level))
+
             yield env.timeout(trip_time)
 
             print('\n -------- END RENTAL %d --------' % rental)
@@ -69,10 +75,11 @@ class EV:
             if trip_charge > 0:
                 self.log('Trying to adjust battery level')
                 yield self.battery.get(trip_charge)
-                self.log('Battery level has been adjusted')
+                self.log('Battery level has been decreased by %s%%' % trip_charge)
             elif trip_charge < 0:
                 self.log('WARNING: Battery has been charged on the trip')
                 yield self.battery.put(-trip_charge)
+                self.log('Battery level has been increased by %s%%' % -trip_charge)
             else:
                 self.log('WARNING: No battery has been consumed on the trip')
 
