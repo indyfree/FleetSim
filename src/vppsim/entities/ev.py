@@ -53,8 +53,6 @@ class EV:
         # self.vpp.log('Removed capacity %s' % self.battery.level)
 
     def drive(self, env, rental, duration, trip_charge, start_soc, dest_charging_station):
-        trip_time = duration * 60  # seconds
-
         if self.battery.level > trip_charge:
             print('\n ---------- RENTAL %d ----------' % rental)
 
@@ -67,10 +65,10 @@ class EV:
             if self.battery.level != start_soc:
                 self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%' % (start_soc, self.battery.level))
 
-            yield env.timeout(trip_time)
+            yield env.timeout(duration * 60)  # seconds
 
             print('\n -------- END RENTAL %d --------' % rental)
-            self.log('Drove for %.2f minutes and consumed %s%% charge' % (trip_time / 60, trip_charge))
+            self.log('Drove for %.2f minutes and consumed %s%% charge' % (duration, trip_charge))
 
             if trip_charge > 0:
                 self.log('Trying to adjust battery level')
