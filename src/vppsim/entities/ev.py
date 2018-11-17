@@ -62,10 +62,18 @@ class EV:
                 self.soc = start_soc
                 self.action.interrupt("Start driving")
 
+            yield env.timeout(1)  # seconds
             if self.battery.level != start_soc:
-                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%' % (start_soc, self.battery.level))
+                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting..' % (start_soc, self.battery.level))
+                diff = start_soc - self.battery.level
+                if diff < 0:
+                    yield self.battery.get(-diff)
+                    self.log('EV lost %s%% battery while beeing idle. How much can a EV loose standing around?' % diff)
+                else:
+                    yield self.battery.put(diff)
+                    self.log('EV gained %s%% battery while beeing idle. At charging station?' % diff)
 
-            yield env.timeout(duration * 60)  # seconds
+            yield env.timeout((duration * 60) - 1)  # seconds
 
             print('\n -------- END RENTAL %d --------' % rental)
             self.log('Drove for %.2f minutes and consumed %s%% charge' % (duration, trip_charge))
