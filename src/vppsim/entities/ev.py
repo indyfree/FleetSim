@@ -26,7 +26,11 @@ class EV:
 
     def charge(self, env):
         self.log('At a charging station! Charging...')
+
+        # self.vpp.log('Adding capacity %s' % self.battery.level)
         # yield self.vpp.capacity.put(self.battery.level)
+        # self.vpp.log('Added capacity %s' % self.battery.level)
+
         while True:
             try:
                 if self.battery.level < self.battery.capacity:
@@ -44,7 +48,9 @@ class EV:
                 self.log('Charging interrupted! %s' % i.cause)
                 break
 
+        # self.vpp.log('Removing capacity %s' % self.battery.level)
         # yield self.vpp.capacity.get(self.battery.level)
+        # self.vpp.log('Removed capacity %s' % self.battery.level)
 
     def drive(self, env, duration, trip_charge):
         trip_time = duration * 60       # seconds
