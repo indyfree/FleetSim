@@ -24,31 +24,24 @@ def main():
 
 
 def lifecycle(env, vpp, df):
-
     evs = {}
-
-    prev_time = df.start_time.min()
+    previous = df.iloc[0,:]
 
     # TODO: Use itetuples for speed improvement
     for i, rental in df.iterrows():
 
-        yield env.timeout(rental.start_time - prev_time)  # sec
+        # Wait untill next rental
+        yield env.timeout(rental.start_time - previous.start_time)  # sec
 
-        print('\n ---------- RENTAL %d ----------' % i)
         if rental.EV not in evs:
-            print('%s has been added to the fleet' % rental.EV)
+            print('\n ---------- NEW EV %d ----------' % i)
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
-
-        yield env.process(ev.drive(env, rental.trip_duration,
-                                   (rental.start_soc - rental.end_soc) * MAX_EV_CAPACITY / 100))
-
-        if ev.action.triggered:
-            if bool(rental.end_charging):
-                ev.action = env.process(ev.charge(env))
-            else:
-                ev.action = env.process(ev.idle(env))
+        env.process(ev.drive(env, i, rental.trip_duration,
+                             (rental.start_soc - rental.end_soc) * MAX_EV_CAPACITY / 100,
+                             rental.start_soc, rental.end_charging))
+        previous = rental
 
 
 if __name__ == '__main__':
