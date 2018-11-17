@@ -33,27 +33,24 @@ class EV:
 
         while True:
             try:
-                if self.battery.level < self.battery.capacity:
-                    increment = vppsim.CHARGING_SPEED / 60
-                    rest = self.battery.capacity - self.battery.level
-                    if rest < increment:
-                        increment = rest
-                    # yield self.battery.put(increment)
-                    # yield self.vpp.capacity.put(increment)
-                    yield env.timeout(5 * 60)
-                else:
-                    self.log('Fully charged. Waiting for rental...')
-                    break
+                yield env.timeout(5 * 60)
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
+
+                # TODO: Put self.soc FIX negative?
+                amount = (vppsim.MAX_EV_CAPACITY * self.soc/100) - self.battery.level
+                if amount > 0:
+                    yield self.battery.put(amount)
+                    self.log('Charged %f kWh' % amount)
+
                 break
 
         # self.vpp.log('Removing capacity %s' % self.battery.level)
         # yield self.vpp.capacity.get(self.battery.level)
         # self.vpp.log('Removed capacity %s' % self.battery.level)
 
-    def drive(self, env, duration, trip_charge):
-        trip_time = duration * 60       # seconds
+    def drive(self, env, rental, duration, trip_charge, start_soc, end_charging):
+        trip_time = duration * 60  # seconds
 
         self.log('Customer arrived.')
         if self.battery.level > trip_charge:
@@ -61,7 +58,9 @@ class EV:
 
             # Interrupt Charging or Parking
             if not self.action.triggered:
-                self.action.interrupt("")
+                # HACK: Pass value how much is charged
+                self.soc = start_soc
+                self.action.interrupt("Start driving")
 
             yield env.timeout(trip_time)
 
@@ -75,4 +74,9 @@ class EV:
 
             self.log('Drove for %.2f minutes and consumed %.2f kWh' % (trip_time / 60, trip_charge))
         else:
-            self.log('Not enough battery for the planned trip.')
+            self.log('WARNING: Not enough battery for the planned trip.')
+
+        if bool(end_charging):
+            self.action = env.process(self.charge(self.env))
+        else:
+            self.action = env.process(self.idle(self.env))
