@@ -19,7 +19,7 @@ def main():
     df = loader.load()
 
     env = simpy.Environment(initial_time=df.start_time.min())
-    vpp = VPP(env, 1, num_evs=len(df.EV.unique()))
+    vpp = VPP(env, 'VPP-1', num_evs=len(df.EV.unique()))
     env.process(lifecycle(logger, env, vpp, df))
 
     logger.info('[%s] - ---- STARTING SIMULATION -----' % datetime.fromtimestamp(env.now))

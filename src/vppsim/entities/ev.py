@@ -39,7 +39,7 @@ class EV:
     def charge(self, env):
         self.log('At a charging station! Charging...')
 
-        capacity = int(vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100) - 2
+        capacity = vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100
         self.vpp.log('Adding EV %s to VPP: Increase capacity by %skWh...' % (self.name, capacity))
         yield self.vpp.capacity.put(capacity)
         self.vpp.log('Added capacity %skWh' % capacity)

@@ -18,8 +18,6 @@ class VPP:
         self.logger.info('[%s] - %s(%.2f/%.2f) %s' % (datetime.fromtimestamp(self.env.now),
                                                    self.name, self.capacity.level,
                                                    self.capacity.capacity, message))
-        self.logger.info(self.capacity.put_queue)
-        self.logger.info(self.capacity.get_queue)
 
     def monitor_capacity(self, env):
         while True:
