@@ -54,12 +54,15 @@ class EV:
 
     def drive(self, env, rental, duration, trip_charge, start_soc, dest_charging_station):
         if self.battery.level > trip_charge:
+
+            # Remeber SoC on the begging of rental. Used to fix inconsistencies between
+            # simulated SoC and the the data.
+            self.soc = start_soc
+
             print('\n ---------- RENTAL %d ----------' % rental)
 
             # Interrupt Charging or Parking
             if not self.action.triggered:
-                # HACK: Pass value how much is charged
-                self.soc = start_soc
                 self.action.interrupt("Start driving")
 
             yield env.timeout(1)  # seconds
