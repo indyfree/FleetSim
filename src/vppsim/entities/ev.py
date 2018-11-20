@@ -41,14 +41,12 @@ class EV:
 
         while True:
             try:
-                # TODO: Investigate timeout
                 yield env.timeout(1)
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
 
                 self.log('Last SoC: %s%%, current SoC: %s%%' % (self.battery.level, self.soc))
                 charged_amount = self.soc - self.battery.level
-                # TODO: Fix SoC
                 if charged_amount > 0:
                     yield self.battery.put(charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
