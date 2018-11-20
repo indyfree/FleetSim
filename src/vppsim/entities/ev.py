@@ -17,10 +17,14 @@ class EV:
         self.soc = soc
 
     def log(self, message):
-        self.logger.info('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity, message))
+        self.logger.info('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now),
+                                                  self.name, self.battery.level,
+                                                  self.battery.capacity, message))
 
     def warning(self, message):
-        self.logger.warning('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity, message))
+        self.logger.warning('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now),
+                                                     self.name, self.battery.level,
+                                                     self.battery.capacity, message))
 
 
     def idle(self, env):
@@ -51,11 +55,11 @@ class EV:
                     yield self.battery.put(charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
                 elif charged_amount < 0:
-                    self.warning('Data inconsistency. SoC is > %s%%, but should have been charging. Adjusting...' % self.battery.level)
+                    self.warning('Data inconsistency. Battery lost %s%%, but should have been charging. Adjusting...' % charged_amount)
                     yield self.battery.get(-charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
                 else:
-                    self.warning('Battery has been charged on the trip')
+                    self.warning('Battery level did not change, but should have been charging.')
 
                 break
 
@@ -72,7 +76,7 @@ class EV:
 
         # Interrupt Charging or Parking
         if not self.action.triggered:
-            self.action.interrupt("Start driving")
+            self.action.interrupt("Customer starts driving.")
 
         # Adjust changes in SoC while beeing idle
         yield env.timeout(1)  # seconds
