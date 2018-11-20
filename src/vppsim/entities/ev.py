@@ -77,7 +77,7 @@ class EV:
         # Adjust changes in SoC while beeing idle
         yield env.timeout(1)  # seconds
         if self.battery.level != start_soc:
-            self.warning('Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting...' % (start_soc, self.battery.level))
+            self.warning('SoC is %s%% at start of trip %d, but should be %s%% based on previous trip. Adjusting...' % (start_soc, rental, self.battery.level))
             diff = start_soc - self.battery.level
             if diff < 0:
                 yield self.battery.get(-diff)
@@ -88,7 +88,7 @@ class EV:
 
 
         if self.battery.level < trip_charge:
-            self.error('Not enough battery for the planned trip.')
+            self.error('Not enough battery for the planned trip %d!' % rental)
             # TODO: Previous action
             # self.action =
             return
@@ -98,17 +98,17 @@ class EV:
 
         # Adjust SoC
         self.logger.info('[%s] - --------- END RENTAL %d --------' % (datetime.fromtimestamp(self.env.now), rental))
-        self.log('Drove for %.2f minutes and consumed %s%% charge' % (duration, trip_charge))
+        self.log('Drove for %.2f minutes and consumed %s%% charge.' % (duration, trip_charge))
         if trip_charge > 0:
-            self.log('Trying to adjust battery level')
+            self.log('Adjusting battery level...')
             yield self.battery.get(trip_charge)
-            self.log('Battery level has been decreased by %s%%' % trip_charge)
+            self.log('Battery level has been decreased by %s%%.' % trip_charge)
         elif trip_charge < 0:
-            self.warning('Battery has been charged on the trip')
+            self.warning('Battery has been charged for %s%% on trip %d which lasted %s minutes.' % (-trip_charge, rental, duration))
             yield self.battery.put(-trip_charge)
-            self.log('Battery level has been increased by %s%%' % -trip_charge)
+            self.log('Battery level has been increased by %s%%.' % -trip_charge)
         else:
-            self.warning('No battery has been consumed on the trip')
+            self.warning('No battery has been consumed on trip %d which lasted %s minutes.' % (rental, duration))
 
         if bool(dest_charging_station):
             self.action = env.process(self.charge(self.env))
