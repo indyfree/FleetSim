@@ -39,17 +39,18 @@ class EV:
     def charge(self, env):
         self.log('At a charging station! Charging...')
 
-        # self.vpp.log('Adding capacity %s' % self.battery.level)
-        # yield self.vpp.capacity.put(self.battery.level)
-        # self.vpp.log('Added capacity %s' % self.battery.level)
+        # capacity = int(vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100) - 2
+        # self.vpp.log('Adding EV %s to VPP: Increase capacity by %skWh...' % (self.name, capacity))
+        # yield self.vpp.capacity.put(capacity)
+        # self.vpp.log('Added capacity %skWh' % capacity)
 
         while True:
             try:
                 yield env.timeout(1)
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
-
                 self.log('Last SoC: %s%%, current SoC: %s%%' % (self.battery.level, self.soc))
+
                 charged_amount = self.soc - self.battery.level
                 if charged_amount > 0:
                     yield self.battery.put(charged_amount)
@@ -63,9 +64,10 @@ class EV:
 
                 break
 
-        # self.vpp.log('Removing capacity %s' % self.battery.level)
-        # yield self.vpp.capacity.get(self.battery.level)
-        # self.vpp.log('Removed capacity %s' % self.battery.level)
+        # TODO: Adjust VPP capacity during charging?
+        # self.vpp.log('Removing EV %s from VPP: Decrease capacity by %skWh' % (self.name, capacity))
+        # yield self.vpp.capacity.get(capacity)
+        # self.vpp.log('Removed capacity %skWh' % capacity)
 
     def drive(self, env, rental, duration, trip_charge, start_soc, dest_charging_station):
         # Remeber SoC on the begging of rental to fix inconsistencies
