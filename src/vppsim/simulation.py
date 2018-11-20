@@ -13,15 +13,14 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 def main():
     df = loader.load()
-    sim_start_time = df.start_time.min()
     num_evs = len(df.EV.unique())
 
-    env = simpy.Environment(sim_start_time)
+    env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, 1, num_evs)
     env.process(lifecycle(env, vpp, df))
 
     print('Starting Simulation...')
-    env.run()
+    env.run(until=df.end_time.max())
 
 
 def lifecycle(env, vpp, df):
