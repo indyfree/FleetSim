@@ -28,7 +28,7 @@ def main():
 
 def lifecycle(logger, env, vpp, df):
     evs = {}
-    previous = df.iloc[0,:]
+    previous = df.iloc[0, :]
 
     for rental in df.itertuples():
 
@@ -51,9 +51,9 @@ def setup_logger():
 
     # Log to file
     logging.basicConfig(level=logging.DEBUG,
-                    format='%(name)-10s: %(levelname)-7s %(message)s',
-                    filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
-                    filemode='w')
+                        format='%(name)-10s: %(levelname)-7s %(message)s',
+                        filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
+                        filemode='w')
     logger = logging.getLogger('vppsim')
 
     # Also log to stdout

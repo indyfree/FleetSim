@@ -9,7 +9,8 @@ class EV:
     def __init__(self, env, vpp, name, soc):
         self.logger = logging.getLogger('vppsim.ev')
 
-        self.battery = simpy.Container(env, init=soc , capacity=100)
+        # Battery capacity in percent
+        self.battery = simpy.Container(env, init=soc, capacity=100)
         self.env = env
         self.name = name
         self.vpp = vpp
@@ -25,7 +26,6 @@ class EV:
         self.logger.warning('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now),
                                                      self.name, self.battery.level,
                                                      self.battery.capacity, message))
-
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
@@ -92,7 +92,6 @@ class EV:
             else:
                 yield self.battery.put(diff)
                 self.warning('EV gained %s%% battery while beeing idle. At charging station?' % diff)
-
 
         if self.battery.level < trip_charge:
             self.error('Not enough battery for the planned trip %d!' % rental)
