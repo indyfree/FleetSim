@@ -74,14 +74,15 @@ class EV:
         # between simulated SoC and the the data.
         self.soc = start_soc
 
-        self.logger.info('[%s] - ----------- RENTAL %d ----------' % (datetime.fromtimestamp(self.env.now), rental))
+        self.logger.info('[%s] - --------- RENTAL %d of %s--------' % (datetime.fromtimestamp(self.env.now), rental, self.name))
 
         # Interrupt Charging or Parking
         if not self.action.triggered:
             self.action.interrupt("Customer starts driving.")
 
-        # Adjust changes in SoC while beeing idle
-        yield env.timeout(1)  # seconds
+        # Pause 1 second to allow charging station to adjust battery levels before we correct based on data
+        yield env.timeout(1)
+        # Fix battery levels based on real data
         if self.battery.level != start_soc:
             self.warning('SoC is %s%% at start of trip %d, but should be %s%% based on previous trip. Adjusting...' % (start_soc, rental, self.battery.level))
             diff = start_soc - self.battery.level
