@@ -65,9 +65,10 @@ class EV:
             if not self.action.triggered:
                 self.action.interrupt("Start driving")
 
+            # Timeout a second to let the charging station adjust SoC first
             yield env.timeout(1)  # seconds
             if self.battery.level != start_soc:
-                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting..' % (start_soc, self.battery.level))
+                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting...' % (start_soc, self.battery.level))
                 diff = start_soc - self.battery.level
                 if diff < 0:
                     yield self.battery.get(-diff)
