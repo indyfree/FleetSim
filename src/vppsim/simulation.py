@@ -28,18 +28,17 @@ def lifecycle(env, vpp, df):
     evs = {}
     previous = df.iloc[0,:]
 
-    # TODO: Use itetuples for speed improvement
-    for i, rental in df.iterrows():
+    for rental in df.itertuples():
 
         # Wait until next rental
         yield env.timeout(rental.start_time - previous.start_time)  # sec
 
         if rental.EV not in evs:
-            print('\n ---------- NEW EV %d ----------' % i)
+            print('\n ---------- NEW EV %d ----------' % rental.Index)
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
-        env.process(ev.drive(env, i, rental.trip_duration,
+        env.process(ev.drive(env, rental.Index, rental.trip_duration,
                              rental.start_soc - rental.end_soc,
                              rental.start_soc, rental.end_charging))
         previous = rental
