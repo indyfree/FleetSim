@@ -100,11 +100,12 @@ class EV:
             return
 
         # Drive for the trip duration
-        yield env.timeout((duration * 60) - 1)  # seconds
+        yield env.timeout((duration * 60) - 2)  # seconds
 
         # Adjust SoC
         self.logger.info('[%s] - --------- END RENTAL %d --------' % (datetime.fromtimestamp(self.env.now), rental))
-        self.log('Drove for %.2f minutes and consumed %s%% charge.' % (duration, trip_charge))
+        self.log('Drove for %.2f minutes on trip %s and consumed %s%% charge.' %
+                 (duration, rental, trip_charge))
         if trip_charge > 0:
             self.log('Adjusting battery level...')
             yield self.battery.get(trip_charge)
