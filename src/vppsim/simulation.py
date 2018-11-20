@@ -25,24 +25,6 @@ def main():
     logger.info('[%s] - ---- STARTING SIMULATION -----' % datetime.fromtimestamp(env.now))
     env.run(until=df.end_time.max())
 
-def setup_logger():
-    os.makedirs('./logs', exist_ok=True)
-
-    # Log to file
-    logging.basicConfig(level=logging.DEBUG,
-                    format='%(name)-10s: %(levelname)-7s %(message)s',
-                    filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
-                    filemode='w')
-    logger = logging.getLogger('vppsim')
-
-    # Also log to stdout
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(logging.Formatter('%(levelname)-8s: %(message)s'))
-    logging.getLogger('').addHandler(console)
-
-    return logger
-
 
 def lifecycle(logger, env, vpp, df):
     evs = {}
@@ -62,6 +44,25 @@ def lifecycle(logger, env, vpp, df):
                              rental.start_soc - rental.end_soc,
                              rental.start_soc, rental.end_charging))
         previous = rental
+
+
+def setup_logger():
+    os.makedirs('./logs', exist_ok=True)
+
+    # Log to file
+    logging.basicConfig(level=logging.DEBUG,
+                    format='%(name)-10s: %(levelname)-7s %(message)s',
+                    filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
+                    filemode='w')
+    logger = logging.getLogger('vppsim')
+
+    # Also log to stdout
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter('%(levelname)-8s: %(message)s'))
+    logging.getLogger('').addHandler(console)
+
+    return logger
 
 
 if __name__ == '__main__':
