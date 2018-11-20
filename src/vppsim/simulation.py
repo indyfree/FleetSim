@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+from datetime import datetime
+import logging
 import simpy
+import os
 
 from vppsim.entities import EV, VPP
 from vppsim import loader
@@ -12,18 +15,27 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 
 def main():
+    os.makedirs('./logs', exist_ok=True)
+
+    logging.basicConfig(level=logging.DEBUG,
+                    format='%(name)-10s: %(levelname)-7s %(message)s',
+                    filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
+                    filemode='w')
+    logger = logging.getLogger('vppsim')
+
+
     df = loader.load()
     num_evs = len(df.EV.unique())
 
     env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, 1, num_evs)
-    env.process(lifecycle(env, vpp, df))
+    env.process(lifecycle(logger, env, vpp, df))
 
-    print('Starting Simulation...')
+    logger.info('[%s] - ---- STARTING SIMULATION -----' % datetime.fromtimestamp(env.now))
     env.run(until=df.end_time.max())
 
 
-def lifecycle(env, vpp, df):
+def lifecycle(logger, env, vpp, df):
     evs = {}
     previous = df.iloc[0,:]
 
@@ -33,7 +45,7 @@ def lifecycle(env, vpp, df):
         yield env.timeout(rental.start_time - previous.start_time)  # sec
 
         if rental.EV not in evs:
-            print('\n ---------- NEW EV %d ----------' % rental.Index)
+            logger.info('[%s] - ---------- NEW EV %d ----------' % (datetime.fromtimestamp(env.now), rental.Index))
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]

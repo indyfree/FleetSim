@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import simpy
 
 import vppsim
@@ -6,6 +7,8 @@ import vppsim
 
 class EV:
     def __init__(self, env, vpp, name, soc):
+        self.logger = logging.getLogger('vppsim.ev')
+
         self.battery = simpy.Container(env, init=soc , capacity=100)
         self.env = env
         self.name = name
@@ -14,7 +17,11 @@ class EV:
         self.soc = soc
 
     def log(self, message):
-        print('[%s] - %s(%s/%s)' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity), message)
+        self.logger.info('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity, message))
+
+    def warning(self, message):
+        self.logger.warning('[%s] - %s(%s/%s) %s' % (datetime.fromtimestamp(self.env.now), self.name, self.battery.level, self.battery.capacity, message))
+
 
     def idle(self, env):
         self.log('At a parking lot. Waiting for rental...')
@@ -46,11 +53,11 @@ class EV:
                     yield self.battery.put(charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
                 elif charged_amount < 0:
-                    self.log('WARNING: Data inconsistency. SoC is > %s%%, but should have been charging. Adjusting...' % self.battery.level)
+                    self.warning('Data inconsistency. SoC is > %s%%, but should have been charging. Adjusting...' % self.battery.level)
                     yield self.battery.get(-charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
                 else:
-                    self.log('WARNING: Battery has been charged on the trip')
+                    self.warning('Battery has been charged on the trip')
 
                 break
 
@@ -65,7 +72,7 @@ class EV:
             # simulated SoC and the the data.
             self.soc = start_soc
 
-            print('\n ---------- RENTAL %d ----------' % rental)
+            self.logger.info('[%s] - ----------- RENTAL %d ----------' % (datetime.fromtimestamp(self.env.now), rental))
 
             # Interrupt Charging or Parking
             if not self.action.triggered:
@@ -74,7 +81,7 @@ class EV:
             # Timeout a second to let the charging station adjust SoC first
             yield env.timeout(1)  # seconds
             if self.battery.level != start_soc:
-                self.log('WARNING: Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting...' % (start_soc, self.battery.level))
+                self.warning('Data inconsistency. SoC is %s%%, but should be %s%%. Adjusting...' % (start_soc, self.battery.level))
                 diff = start_soc - self.battery.level
                 if diff < 0:
                     yield self.battery.get(-diff)
@@ -85,7 +92,7 @@ class EV:
 
             yield env.timeout((duration * 60) - 1)  # seconds
 
-            print('\n -------- END RENTAL %d --------' % rental)
+            self.logger.info('[%s] - --------- END RENTAL %d --------' % (datetime.fromtimestamp(self.env.now), rental))
             self.log('Drove for %.2f minutes and consumed %s%% charge' % (duration, trip_charge))
 
             if trip_charge > 0:
@@ -93,14 +100,14 @@ class EV:
                 yield self.battery.get(trip_charge)
                 self.log('Battery level has been decreased by %s%%' % trip_charge)
             elif trip_charge < 0:
-                self.log('WARNING: Battery has been charged on the trip')
+                self.warning('Battery has been charged on the trip')
                 yield self.battery.put(-trip_charge)
                 self.log('Battery level has been increased by %s%%' % -trip_charge)
             else:
-                self.log('WARNING: No battery has been consumed on the trip')
+                self.warning('No battery has been consumed on the trip')
 
         else:
-            self.log('WARNING: Not enough battery for the planned trip.')
+            self.warning('Not enough battery for the planned trip.')
 
         if bool(dest_charging_station):
             self.action = env.process(self.charge(self.env))
