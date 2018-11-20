@@ -15,24 +15,33 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 
 def main():
+    logger = setup_logger()
+    df = loader.load()
+
+    env = simpy.Environment(initial_time=df.start_time.min())
+    vpp = VPP(env, 1, num_evs=len(df.EV.unique()))
+    env.process(lifecycle(logger, env, vpp, df))
+
+    logger.info('[%s] - ---- STARTING SIMULATION -----' % datetime.fromtimestamp(env.now))
+    env.run(until=df.end_time.max())
+
+def setup_logger():
     os.makedirs('./logs', exist_ok=True)
 
+    # Log to file
     logging.basicConfig(level=logging.DEBUG,
                     format='%(name)-10s: %(levelname)-7s %(message)s',
                     filename='./logs/sim-%s.log' % datetime.now().strftime('%Y%m%d-%H%M%S'),
                     filemode='w')
     logger = logging.getLogger('vppsim')
 
+    # Also log to stdout
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter('%(levelname)-8s: %(message)s'))
+    logging.getLogger('').addHandler(console)
 
-    df = loader.load()
-    num_evs = len(df.EV.unique())
-
-    env = simpy.Environment(initial_time=df.start_time.min())
-    vpp = VPP(env, 1, num_evs)
-    env.process(lifecycle(logger, env, vpp, df))
-
-    logger.info('[%s] - ---- STARTING SIMULATION -----' % datetime.fromtimestamp(env.now))
-    env.run(until=df.end_time.max())
+    return logger
 
 
 def lifecycle(logger, env, vpp, df):
