@@ -58,7 +58,7 @@ def setup_logger():
 
     # Also log to stdout
     console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
+    console.setLevel(logging.WARNING)
     console.setFormatter(logging.Formatter('%(levelname)-8s: %(message)s'))
     logging.getLogger('').addHandler(console)
 
