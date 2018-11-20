@@ -42,9 +42,15 @@ class EV:
                 self.log('Last SoC: %s%%, current SoC: %s%%' % (self.battery.level, self.soc))
                 charged_amount = self.soc - self.battery.level
                 # TODO: Fix SoC
-                if charged_amount != 0:
+                if charged_amount > 0:
                     yield self.battery.put(charged_amount)
                     self.log('Charged battery for %s%%' % charged_amount)
+                elif charged_amount < 0:
+                    self.log('WARNING: Data inconsistency. SoC is > %s%%, but should have been charging. Adjusting...' % self.battery.level)
+                    yield self.battery.get(-charged_amount)
+                    self.log('Charged battery for %s%%' % charged_amount)
+                else:
+                    self.log('WARNING: Battery has been charged on the trip')
 
                 break
 
