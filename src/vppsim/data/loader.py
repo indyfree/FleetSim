@@ -31,14 +31,13 @@ def load_car2go(rebuild=False):
 
     for f in CAR2GO_FILES:
         path = PROCESSED_DATA_PATH + 'trips_' + str(CAR2GO_FILES.index(f)) + '.pkl'
-        if rebuild is False or os.path.isfile(path):
-            break
-        df = pd.read_csv(CAR2GO_PATH + f)
-        logger.info('Processing %s...' % f)
-        df = data.process_car2go(df)
-        df.to_csv(path + '.csv')
-        pd.to_pickle(df, path)
-        logger.info('Saved processed %s to disk.' % f)
+        if rebuild is True or os.path.isfile(path) is False:
+            df = pd.read_csv(CAR2GO_PATH + f)
+            logger.info('Processing %s...' % f)
+            df = data.process_car2go(df)
+            df.to_csv(path + '.csv')
+            pd.to_pickle(df, path)
+            logger.info('Saved processed %s to disk.' % f)
 
     if rebuild is True or os.path.isfile(PROCESSED_DATA_FILE) is False:
         pkls = []
