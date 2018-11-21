@@ -4,17 +4,14 @@ import pandas as pd
 import logging
 logger = logging.getLogger(__name__)
 
-def process_car2go(df, path):
-    logger.info('Processing Car2Go data..')
-
+def process_car2go(df):
     df_trips = pd.DataFrame()
     for car in df['name'].unique():
         df_car = df[df['name'] == car]
         # TODO: Append with .loc
         df_trips = df_trips.append(calculate_trips(df_car))
 
-    pd.to_pickle(df_trips, path)
-    logger.info('Saved processed data to disk.')
+    return df_trips.sort_values('start_time').reset_index().drop('index', axis = 1)
 
 def calculate_trips(df_car):
     trips = list()
