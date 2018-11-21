@@ -3,7 +3,6 @@ import pandas as pd
 
 
 def process_car2go(df, path):
-    logger = logging.getLogger('vppsim.data')
     logger.info('Processing Car2Go data..')
 
     df_trips = pd.DataFrame()
