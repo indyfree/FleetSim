@@ -32,7 +32,7 @@ requirements: venv
 
 ## Make Dataset
 data:
-	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/loader.py
+	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/data/loader.py
 
 ## Delete all compiled Python files
 clean:
