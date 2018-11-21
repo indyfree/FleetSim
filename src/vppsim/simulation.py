@@ -6,7 +6,7 @@ import simpy
 import os
 
 from vppsim.entities import EV, VPP
-from vppsim import loader
+from vppsim.data import loader
 
 # PHYSICAL CONSTANTS
 MAX_EV_CAPACITY = 16.5  # kWh
@@ -16,7 +16,7 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 def main():
     logger = setup_logger()
-    df = loader.load()
+    df = loader.load_car2go()
 
     env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, 'VPP-1', num_evs=len(df.EV.unique()))
