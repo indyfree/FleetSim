@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 
+import logging
+logger = logging.getLogger(__name__)
 
 def process_car2go(df, path):
     logger.info('Processing Car2Go data..')
