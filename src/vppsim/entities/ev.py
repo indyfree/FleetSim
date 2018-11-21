@@ -14,7 +14,7 @@ class EV:
         self.env = env
         self.name = name
         self.vpp = vpp
-        self.action = env.process(self.idle(env))
+        self.action = env.process(self.idle())
         self.soc = soc
 
     def log(self, message):
@@ -27,16 +27,16 @@ class EV:
                                                      self.name, self.battery.level,
                                                      self.battery.capacity, message))
 
-    def idle(self, env):
+    def idle(self):
         self.log('At a parking lot. Waiting for rental...')
         while True:
             try:
-                yield env.timeout(5 * 60)
+                yield self.env.timeout(5 * 60)
             except simpy.Interrupt as i:
                 self.log('Idle interrupted! %s' % i.cause)
                 break
 
-    def charge(self, env):
+    def charge(self):
         self.log('At a charging station! Charging...')
 
         capacity = vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100
@@ -46,7 +46,7 @@ class EV:
 
         while True:
             try:
-                yield env.timeout(1)
+                yield self.env.timeout(1)
             except simpy.Interrupt as i:
                 self.log('Charging interrupted! %s' % i.cause)
                 self.log('Last SoC: %s%%, current SoC: %s%%' % (self.battery.level, self.soc))
@@ -69,7 +69,7 @@ class EV:
         yield self.vpp.capacity.get(capacity)
         self.vpp.log('Removed capacity %skWh' % capacity)
 
-    def drive(self, env, rental, duration, trip_charge, start_soc, dest_charging_station):
+    def drive(self, rental, duration, trip_charge, start_soc, dest_charging_station):
         # Remeber SoC on the begging of rental to fix inconsistencies
         # between simulated SoC and the the data.
         self.soc = start_soc
@@ -81,7 +81,7 @@ class EV:
             self.action.interrupt("Customer starts driving.")
 
         # Pause 1 second to allow charging station to adjust battery levels before we correct based on data
-        yield env.timeout(1)
+        yield self.env.timeout(1)
         # Fix battery levels based on real data
         if self.battery.level != start_soc:
             self.warning('SoC is %s%% at start of trip %d, but should be %s%% based on previous trip. Adjusting...' % (start_soc, rental, self.battery.level))
@@ -95,12 +95,10 @@ class EV:
 
         if self.battery.level < trip_charge:
             self.error('Not enough battery for the planned trip %d!' % rental)
-            # TODO: Previous action
-            # self.action =
             return
 
         # Drive for the trip duration
-        yield env.timeout((duration * 60) - 2)  # seconds
+        yield self.env.timeout((duration * 60) - 2)  # seconds
 
         # Adjust SoC
         self.logger.info('[%s] - --------- END RENTAL %d --------' % (datetime.fromtimestamp(self.env.now), rental))
@@ -118,6 +116,6 @@ class EV:
             self.warning('No battery has been consumed on trip %d which lasted %s minutes.' % (rental, duration))
 
         if bool(dest_charging_station):
-            self.action = env.process(self.charge(self.env))
+            self.action = self.env.process(self.charge())
         else:
-            self.action = env.process(self.idle(self.env))
+            self.action = self.env.process(self.idle())

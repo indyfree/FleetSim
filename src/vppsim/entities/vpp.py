@@ -19,7 +19,7 @@ class VPP:
                                                       self.name, self.capacity.level,
                                                       self.capacity.capacity, message))
 
-    def monitor_capacity(self, env):
+    def monitor_capacity(self):
         while True:
             self.log('Capacity')
-            yield env.timeout(10 * 60)
+            yield self.env.timeout(10 * 60)

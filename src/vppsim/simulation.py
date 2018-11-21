@@ -40,7 +40,7 @@ def lifecycle(logger, env, vpp, df):
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
-        env.process(ev.drive(env, rental.Index, rental.trip_duration,
+        env.process(ev.drive(rental.Index, rental.trip_duration,
                              rental.start_soc - rental.end_soc,
                              rental.start_soc, rental.end_charging))
         previous = rental
