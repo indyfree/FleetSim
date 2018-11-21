@@ -40,9 +40,10 @@ class EV:
         self.log('At a charging station! Charging...')
 
         capacity = vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100
-        self.vpp.log('Adding EV %s to VPP: Increase capacity by %skWh...' % (self.name, capacity))
-        yield self.vpp.capacity.put(capacity)
-        self.vpp.log('Added capacity %skWh' % capacity)
+        if capacity != 0:
+            self.vpp.log('Adding EV %s to VPP: Increase capacity by %skWh...' % (self.name, capacity))
+            yield self.vpp.capacity.put(capacity)
+            self.vpp.log('Added capacity %skWh' % capacity)
 
         while True:
             try:
@@ -65,9 +66,10 @@ class EV:
                 break
 
         # TODO: Adjust VPP capacity during charging?
-        self.vpp.log('Removing EV %s from VPP: Decrease capacity by %skWh' % (self.name, capacity))
-        yield self.vpp.capacity.get(capacity)
-        self.vpp.log('Removed capacity %skWh' % capacity)
+        if capacity != 0:
+            self.vpp.log('Removing EV %s from VPP: Decrease capacity by %skWh' % (self.name, capacity))
+            yield self.vpp.capacity.get(capacity)
+            self.vpp.log('Removed capacity %skWh' % capacity)
 
     def drive(self, rental, duration, trip_charge, start_soc, dest_charging_station):
         # Remeber SoC on the begging of rental to fix inconsistencies
