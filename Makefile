@@ -13,7 +13,7 @@ PIP = $(VENV_DIR)/bin/pip
 IPYTHON = $(VENV_DIR)/bin/ipython
 JUPYTER = $(VENV_DIR)/bin/jupyter
 
-# NOTEBOOK_DIR =  $(PROJECT_DIR)/notebooks
+NOTEBOOK_DIR = $(PROJECT_DIR)/notebooks
 
 #################################################################################
 # COMMANDS                                                                      #

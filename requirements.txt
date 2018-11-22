@@ -1,3 +1,4 @@
+autopep8
 flake8
 jupyter
 jupyter-contrib-nbextensions
@@ -5,5 +6,5 @@ jupyter-nbextensions-configurator
 matplotlib
 pandas
 seaborn
-sklearn
+scikit-learn
 simpy
