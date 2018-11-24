@@ -23,7 +23,6 @@ def main():
 def load_car2go(rebuild=False):
     '''Loads processed data into a dataframe, process again if needed'''
 
-
     if not os.path.exists(PROCESSED_DATA_PATH):
         os.makedirs(PROCESSED_DATA_PATH)
 
@@ -37,7 +36,7 @@ def load_car2go(rebuild=False):
             pd.to_pickle(df, path)
             logger.info('Saved processed %s to disk.' % f)
         else:
-            logger.info('Processed %s already found on disk' %f)
+            logger.info('Processed %s already found on disk' % f)
 
     if rebuild is True or os.path.isfile(PROCESSED_DATA_FILE) is False:
         pkls = []
