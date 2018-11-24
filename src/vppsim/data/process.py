@@ -25,3 +25,11 @@ def calculate_trips(df_car):
 
     return pd.DataFrame(trips, columns=['EV', 'start_time', 'start_address', 'start_lat', 'start_lon', 'start_soc', 'end_time',
                                          'end_address', 'end_lat', 'end_lon', 'end_soc', 'end_charging', 'trip_duration'])
+
+# TODO: Clean trips
+# - Date
+# - Trips > 2d
+# - Trips where charged?
+def clean_trips(df):
+    return df
+
