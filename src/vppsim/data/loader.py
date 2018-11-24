@@ -14,8 +14,7 @@ PROJECT_DIR = str(Path(__file__).resolve().parents[3])
 CAR2GO_PATH = PROJECT_DIR + '/data/raw/car2go/'
 PROCESSED_DATA_PATH = PROJECT_DIR + '/data/processed/'
 PROCESSED_DATA_FILE = PROCESSED_DATA_PATH + '/trips.pkl'
-CAR2GO_FILES = ['stuttgart.2016.12.01-2017.02.22.csv', 'stuttgart.2017.02.23-2017-05-01.csv', 'stuttgart.2017.05.01-2017.10.31.csv', 'stuttgart.2017.11.01-2018.01.31.csv']
-# CAR2GO_FILES = ['stuttgart.2016.12.01-2017.02.22.csv', 'stuttgart.2017.02.23-2017-05-01.csv']
+CAR2GO_FILES = ['stuttgart.2016.03.22-2016.11.30.csv', 'stuttgart.2016.12.01-2017.02.22.csv', 'stuttgart.2017.02.23-2017-05-01.csv', 'stuttgart.2017.05.01-2017.10.31f.csv', 'stuttgart.2017.11.01-2018.01.31.csv']
 
 
 def main():
