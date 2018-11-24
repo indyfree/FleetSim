@@ -3,12 +3,11 @@
 import os
 import pandas as pd
 from pathlib import Path
-
 import logging
-logger = logging.getLogger(__name__)
 
 from vppsim import data
 
+logger = logging.getLogger(__name__)
 
 PROJECT_DIR = str(Path(__file__).resolve().parents[3])
 CAR2GO_PATH = PROJECT_DIR + '/data/raw/car2go/'
