@@ -16,7 +16,7 @@ CHARGING_SPEED = 3.6    # 3.6 kWh per hour
 
 def main():
     logger = setup_logger()
-    df = loader.load_car2go()
+    df = loader.load_car2go_trips()
 
     env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, 'VPP-1', num_evs=len(df.EV.unique()))

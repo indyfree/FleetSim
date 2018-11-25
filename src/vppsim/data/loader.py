@@ -17,10 +17,10 @@ CAR2GO_FILES = ['stuttgart.2016.03.22-2016.11.30.csv', 'stuttgart.2016.12.01-201
 
 
 def main():
-    print(load_car2go(rebuild=True))
+    print(load_car2go_trips(rebuild=True))
 
 
-def load_car2go(rebuild=False):
+def load_car2go_trips(rebuild=False):
     '''Loads processed data into a dataframe, process again if needed'''
 
     if not os.path.exists(PROCESSED_DATA_PATH):
