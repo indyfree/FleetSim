@@ -31,7 +31,6 @@ def calculate_car2go_demand(df):
         lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
     )
 
-
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
         evs_start = set(df[df["start_time"] == t].EV)
