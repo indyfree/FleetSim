@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+import logging
 import os
 import pandas as pd
 from pathlib import Path
-import logging
 
 from vppsim import data
 
@@ -26,32 +26,36 @@ def main():
 def load_car2go_trips(rebuild=False):
     '''Loads processed trip data into a dataframe, process again if needed'''
 
+    # Return early if processed files is present
+    if rebuild is False and os.path.isfile(PROCESSED_TRIPS_FILE):
+        return pd.read_pickle(PROCESSED_TRIPS_FILE)
+
     if not os.path.exists(PROCESSED_DATA_PATH):
         os.makedirs(PROCESSED_DATA_PATH)
 
     for f in CAR2GO_FILES:
         path = PROCESSED_DATA_PATH + 'trips.' + f.strip('stuttgart.').strip('.csv') + '.pkl'
-        if rebuild is True or os.path.isfile(path) is False:
-            logger.info('Processing %s...' % f)
-            df = pd.read_csv(CAR2GO_PATH + f)
-            df = data.process_car2go(df)
-            df.to_csv(path + '.csv')
-            pd.to_pickle(df, path)
-            logger.info('Saved processed %s to disk.' % f)
-        else:
+        if rebuild is False and os.path.isfile(path):
             logger.info('Processed %s already found on disk' % f)
+            continue
 
-    if rebuild is True or os.path.isfile(PROCESSED_TRIPS_FILE) is False:
-        pkls = []
-        logger.info('Concatening all files together...')
-        for f in CAR2GO_FILES:
-            path = PROCESSED_DATA_PATH + 'trips.' + f.strip('stuttgart.').strip('.csv') + '.pkl'
-            pkls.append(pd.read_pickle(path))
+        logger.info('Processing %s...' % f)
+        df = pd.read_csv(CAR2GO_PATH + f)
+        df = data.process_car2go(df)
+        df.to_csv(path + '.csv')
+        pd.to_pickle(df, path)
+        logger.info('Saved processed %s to disk.' % f)
 
-        df = pd.concat(pkls).sort_values(['start_time']).reset_index()
-        df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
-        pd.to_pickle(df, PROCESSED_TRIPS_FILE)
-        logger.info('Wrote all processed trips files to %s' % PROCESSED_TRIPS_FILE)
+    pkls = []
+    logger.info('Concatening all files together...')
+    for f in CAR2GO_FILES:
+        path = PROCESSED_DATA_PATH + 'trips.' + f.strip('stuttgart.').strip('.csv') + '.pkl'
+        pkls.append(pd.read_pickle(path))
+
+    df = pd.concat(pkls).sort_values(['start_time']).reset_index()
+    df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
+    pd.to_pickle(df, PROCESSED_TRIPS_FILE)
+    logger.info('Wrote all processed trips files to %s' % PROCESSED_TRIPS_FILE)
 
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
 
@@ -59,14 +63,14 @@ def load_car2go_demand(rebuild=False):
     '''Loads processed demand data into a dataframe, process again if needed'''
     df_trips = load_car2go_trips()
 
-    if rebuild is True or os.path.isfile(PROCESSED_DEMAND_FILE) is False:
+    if rebuild is False and os.path.isfile(PROCESSED_DEMAND_FILE):
+        return pd.read_pickle(PROCESSED_DEMAND_FILE)
 
-        logger.info('Processing %s...' % f)
-        df = data.calculate_car2go_demand(df_trips)
-        df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
-        pd.to_pickle(df, PROCESSED_TRIPS_FILE)
-        logger.info('Wrote calculated car2go demand to %s' % PROCESSED_DEMAND_FILE)
-
+    logger.info('Processing %s...' % PROCESSED_DEMAND_FILE)
+    df = data.calculate_car2go_demand(df_trips)
+    df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
+    pd.to_pickle(df, PROCESSED_TRIPS_FILE)
+    logger.info('Wrote calculated car2go demand to %s' % PROCESSED_DEMAND_FILE)
     return pd.read_pickle(PROCESSED_DEMAND_FILE)
 
 if __name__ == '__main__':
