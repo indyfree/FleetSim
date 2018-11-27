@@ -19,7 +19,7 @@ NOTEBOOK_DIR = $(PROJECT_DIR)/notebooks
 # COMMANDS                                                                      #
 #################################################################################
 ## Simulation
-simulate:
+simulation:
 	@# @$(PIP) install -e . &> /dev/null
 	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation.py
 
