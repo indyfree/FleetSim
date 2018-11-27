@@ -49,7 +49,10 @@ def calculate_car2go_demand(df):
 
     df_charging = pd.DataFrame(df_charging, columns=['timestamp', 'ev_available', 'ev_charging',
                                                      'ev_charging_soc_avg', 'total_ev'])
+
+    # TODO: Don't take seconds into account seconds
     df_charging.timestamp = df_charging.timestamp.apply(lambda x: datetime.fromtimestamp(x))
+
     df_charging['capacity_available_kwh'] = (df_charging['ev_charging'] * vppsim.MAX_EV_CAPACITY
                                              * (100 - df_charging['ev_charging_soc_avg']) / 100)
     df_charging = df_charging.set_index('timestamp').sort_index()
@@ -61,14 +64,23 @@ def calculate_trips(df_car):
     prev = df_car.iloc[0]
     for row in df_car.itertuples():
         if row.address != prev.address:
+
+            # TODO: Don't take seconds into account
             trips.append([prev.name, prev.timestamp, prev.address, prev.coordinates_lat, prev.coordinates_lon, prev.fuel,
                           row.timestamp, row.address, row.coordinates_lat, row.coordinates_lon, row.fuel, row.charging,
-                          int((row.timestamp - prev.timestamp) / 60)])
+                          int((row.timestamp - prev.timestamp) / 60), trip_distance(prev.fuel - row.fuel)])
         prev = row
 
     return pd.DataFrame(trips, columns=['EV', 'start_time', 'start_address', 'start_lat', 'start_lon', 'start_soc', 'end_time',
-                                        'end_address', 'end_lat', 'end_lon', 'end_soc', 'end_charging', 'trip_duration'])
+                                        'end_address', 'end_lat', 'end_lon', 'end_soc', 'end_charging', 'trip_duration', 'trip_distance'])
 
+def trip_distance(trip_charge):
+    MAX_DISTANCE = 106  # km
+
+    if trip_charge < 0:
+        return 0
+
+    return (MAX_DISTANCE / 100) * trip_charge
 
 # TODO: Clean trips
 def clean_trips(df):
