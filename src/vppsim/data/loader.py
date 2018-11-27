@@ -52,6 +52,19 @@ def load_car2go_trips(rebuild=False):
 
     return pd.read_pickle(PROCESSED_DATA_FILE)
 
+def load_car2go_demand(rebuild=False):
+    '''Loads processed demand data into a dataframe, process again if needed'''
+    df_trips = load_car2go_trips()
+
+    if rebuild is True or os.path.isfile(PROCESSED_DEMAND_FILE) is False:
+
+        logger.info('Processing %s...' % f)
+        df = data.calculate_car2go_demand(df_trips)
+        df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
+        pd.to_pickle(df, PROCESSED_TRIPS_FILE)
+        logger.info('Wrote calculated car2go demand to %s' % PROCESSED_DEMAND_FILE)
+
+    return pd.read_pickle(PROCESSED_DEMAND_FILE)
 
 if __name__ == '__main__':
     main()
