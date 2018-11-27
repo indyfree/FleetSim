@@ -125,8 +125,9 @@ def calculate_trips(df_car):
 def trip_distance(trip_charge):
     MAX_DISTANCE = 106  # km
 
+    # EV has been charged on the trip. Not possible to infer distance
     if trip_charge < 0:
-        return 0
+        return np.nan
 
     return (MAX_DISTANCE / 100) * trip_charge
 
