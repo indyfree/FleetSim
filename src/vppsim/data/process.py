@@ -24,6 +24,14 @@ def calculate_car2go_demand(df):
     total = set()
     df_charging = list()
 
+    df["start_time"] = df["start_time"].apply(
+        lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
+    )
+    df["end_time"] = df["end_time"].apply(
+        lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
+    )
+
+
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
         evs_start = set(df[df["start_time"] == t].EV)
@@ -59,11 +67,6 @@ def calculate_car2go_demand(df):
         ],
     )
 
-    # TODO: Don't take seconds into account seconds
-    df_charging.timestamp = df_charging.timestamp.apply(
-        lambda x: datetime.fromtimestamp(x)
-    )
-
     df_charging["capacity_available_kwh"] = (
         df_charging["ev_charging"]
         * vppsim.MAX_EV_CAPACITY
@@ -79,8 +82,6 @@ def calculate_trips(df_car):
     prev = df_car.iloc[0]
     for row in df_car.itertuples():
         if row.address != prev.address:
-
-            # TODO: Don't take seconds into account
             trips.append(
                 [
                     prev.name,
