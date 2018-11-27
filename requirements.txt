@@ -1,5 +1,6 @@
 autopep8
 flake8
+flake8-bugbear
 jupyter
 jupyter-contrib-nbextensions
 jupyter-nbextensions-configurator
