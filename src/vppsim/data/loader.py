@@ -68,8 +68,8 @@ def load_car2go_demand(rebuild=False):
 
     logger.info('Processing %s...' % PROCESSED_DEMAND_FILE)
     df = data.calculate_car2go_demand(df_trips)
-    df.to_csv(PROCESSED_TRIPS_FILE.strip('.pkl') + '.csv')
-    pd.to_pickle(df, PROCESSED_TRIPS_FILE)
+    df.to_csv(PROCESSED_DEMAND_FILE.strip('.pkl') + '.csv')
+    pd.to_pickle(df, PROCESSED_DEMAND_FILE)
     logger.info('Wrote calculated car2go demand to %s' % PROCESSED_DEMAND_FILE)
     return pd.read_pickle(PROCESSED_DEMAND_FILE)
 
