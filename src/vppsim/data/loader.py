@@ -25,7 +25,8 @@ CAR2GO_FILES = [
 
 
 def main():
-    print(load_car2go_demand(rebuild=True))
+    load_car2go_trips(rebuild=True)
+    load_car2go_demand(rebuild=True)
 
 
 def load_car2go_trips(rebuild=False):
