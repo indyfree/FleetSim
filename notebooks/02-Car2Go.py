@@ -2,11 +2,11 @@
 # coding: utf-8
 
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li><li><span><a href="#Calculate-connected-EVs-and-accumulated-SoC" data-toc-modified-id="Calculate-connected-EVs-and-accumulated-SoC-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Calculate connected EVs and accumulated SoC</a></span></li><li><span><a href="#Weekly-Pattern-of-connected-EVS" data-toc-modified-id="Weekly-Pattern-of-connected-EVS-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Weekly Pattern of connected EVS</a></span></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li><li><span><a href="#Yearly-rental-patterns" data-toc-modified-id="Yearly-rental-patterns-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Yearly rental patterns</a></span></li><li><span><a href="#Weekly-Pattern-of-connected-EVS" data-toc-modified-id="Weekly-Pattern-of-connected-EVS-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Weekly Pattern of connected EVS</a></span></li><li><span><a href="#Daily-Pattern-of-connected-EVS" data-toc-modified-id="Daily-Pattern-of-connected-EVS-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Daily Pattern of connected EVS</a></span></li></ul></div>
 
 # ## Imports and Data loading
 
-# In[6]:
+# In[1]:
 
 
 # Display plots inline
@@ -17,100 +17,77 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
+# In[2]:
+
+
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+from vppsim.data import load_car2go_demand
+
+
+# In[5]:
+
+
+df = load_car2go_demand()
+
+
 # In[7]:
 
 
-import pandas as pd
-from datetime import datetime
-
-from vppsim.data import load_car2go
+df_charging = df
 
 
-# In[194]:
+# In[26]:
 
 
-df = load_car2go()
-
-
-# In[10]:
-
-
-df.head(50)
-
-
-# ## Calculate connected EVs and accumulated SoC
-
-# In[193]:
-
-
-charging = {}
-total = {}
-
-df_charging = list()
-
-df_start = df.sort_values(by=['start_time'])
-
-for rental in df.sort_values(by=['end_time']).itertuples():
-    total[rental.EV] = rental.EV
-    if rental.end_charging:
-        charging[rental.EV] = rental.end_charging
+def apply_smoother(df, days):
+    DAY = 12*24
     
-    if df_start.iloc[df_start['timestamp'] == rental.timestamp, :].EV in charging:
-        del charging[rental.EV]
-        
-    df_charging.append((rental.end_time, len(charging), len(total)))
+    df['ev_available_avg'] = df['ev_available'].rolling(window=int(days*DAY)).mean()
+    df['ev_charging_avg'] = df['ev_charging'].rolling(window=int(days*DAY)).mean()
+    df['ev_charging_soc_avg_rol'] = df['ev_charging_soc_avg'].rolling(window=int(days*DAY)).mean()
+    df['capacity_avg_kwh'] = df['capacity_available_kwh'].rolling(window=int(days*DAY)).mean()
+    
+    return df
 
-                     
-df_charging = pd.DataFrame(df_charging, columns=['timestamp', 'ev_charging', 'total_ev']) 
-df_charging.timestamp = df_charging.timestamp.apply(lambda x: datetime.fromtimestamp(x))
-df_charging.groupby(['timestamp']).max()
+def plot(df, title, start=datetime(2016, 12, 1), end=datetime(2017, 5, 1)):
+    start_idx = df_charging.index.searchsorted(start)
+    end_idx = df_charging.index.searchsorted(end)
+
+    
+    X = df_charging.iloc[start_idx:end_idx][['ev_available_avg', 'ev_charging_avg', 'ev_charging_soc_avg_rol', 'capacity_avg_kwh']]
+    return X.plot(figsize=(12,4), title=title)
 
 
-# In[ ]:
+# ## Yearly rental patterns
+
+# In[17]:
 
 
-available = {}
-charging = {}
-connected = list()
-total = {}
-
-df_trips = df.sort_values(by=['end_time'])
-for rental in df_trips.itertuples():
-    if rental.EV in available:
-        del available[rental.EV]
-    if rental.EV in charging:
-        del charging[rental.EV]
-    if rental.end_charging:
-        charging[rental.EV] = rental.end_soc
-    total[rental.EV] = rental.end_soc
-    available[rental.EV] = rental.EV
-    connected.append((rental.end_time, len(charging), len(total), len(available)))
-
-df_trips = pd.DataFrame(connected, columns=['timestamp', 'ev_charging', 'total_ev', 'available_ev']) 
-df_trips.timestamp = df_trips.timestamp.apply(lambda x: datetime.fromtimestamp(x))
-df_trips = df_trips.set_index(['timestamp'])
+df = apply_smoother(df, days=3)
+plot(df, "Yearly rental patterns")
 
 
 # ## Weekly Pattern of connected EVS
 
-# In[174]:
+# In[27]:
 
 
-start = df_trips.index.searchsorted(datetime(2017, 10, 10))
-end = df_trips.index.searchsorted(datetime(2017, 10, 17))
-
-df_trips['ev_charging_avg'] = df_trips['ev_charging'].rolling(window=12*6).mean()
-df_trips.iloc[start:end].loc[:,['ev_charging', 'ev_charging_avg']].plot();
+df = apply_smoother(df, days=0.5)
+plot(df, "Weekly rental patterns", start=datetime(2017, 1, 1), end=datetime(2017, 1, 7))
 
 
-# In[22]:
+# ## Daily Pattern of connected EVS
+
+# In[28]:
 
 
-df.groupby(['end_time']).sum()
+start = df_charging.index.searchsorted(datetime(2017, 1, 4))
+end = df_charging.index.searchsorted(datetime(2017, 1, 5))
 
-
-# In[ ]:
-
-
-
+df = apply_smoother(df, days=1/24)
+plot(df, "Daily rental patterns", start=datetime(2017, 1, 4), end=datetime(2017, 1, 5))
 
