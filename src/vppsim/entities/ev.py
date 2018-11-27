@@ -79,7 +79,8 @@ class EV:
                     self.log("Charged battery for %s%%" % charged_amount)
                 elif charged_amount < 0:
                     self.warning(
-                        "Data inconsistency. Battery lost %s%%, but should have been charging. Adjusting..."
+                        "Data inconsistency."
+                        " Battery lost %s%% but should have been charging. Adjusting..."
                         % charged_amount
                     )
                     yield self.battery.get(-charged_amount)
@@ -114,19 +115,22 @@ class EV:
         if not self.action.triggered:
             self.action.interrupt("Customer starts driving.")
 
-        # Pause 1 second to allow charging station to adjust battery levels before we correct based on data
+        # Pause 1 second to allow charging station to adjust battery levels
+        # before we correct based on data
         yield self.env.timeout(1)
         # Fix battery levels based on real data
         if self.battery.level != start_soc:
             self.warning(
-                "SoC is %s%% at start of trip %d, but should be %s%% based on previous trip. Adjusting..."
+                "SoC is %s%% at start of trip %d."
+                "It should be %s%% based on previous trip. Adjusting..."
                 % (start_soc, rental, self.battery.level)
             )
             diff = start_soc - self.battery.level
             if diff < 0:
                 yield self.battery.get(-diff)
                 self.warning(
-                    "EV lost %s%% battery while beeing idle. How much can a EV loose standing around?"
+                    "EV lost %s%% battery while beeing idle."
+                    "How much can a EV loose standing around?"
                     % diff
                 )
             else:
