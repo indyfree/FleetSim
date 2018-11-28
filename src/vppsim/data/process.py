@@ -9,13 +9,16 @@ logger = logging.getLogger(__name__)
 
 
 def process_car2go(df):
-    df_trips = pd.DataFrame()
-    for car in df["name"].unique():
-        df_car = df[df["name"] == car]
-        # TODO: Append with .loc
-        df_trips = df_trips.append(calculate_trips(df_car))
+    trips = []
 
-    return df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
+    df.sort_values("timestamp", inplace=True)
+    for car in df["name"].unique():
+        ev_trips = calculate_trips(df[df["name"] == car])
+        trips.append(ev_trips)
+
+    df_trips = pd.concat(trips)
+    df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
+    return df_trips
 
 
 def calculate_car2go_demand(df):
