@@ -1,0 +1,18 @@
+#+TITLE: Extensive TODO List of this Simulation
+* Inbox
+** TODO Adjust VPP capacity during charging?
+    def charge(self):
+
+[[file:~/uni/ev-simulation/src/vppsim/entities/ev.py::def%20charge(self):]]
+** TODO Move constants to package
+PROJECT_DIR = str(Path(__file__).resolve().parents[3])
+CAR2GO_PATH = PROJECT_DIR + "/data/raw/car2go/"
+PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed/"
+PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
+PROCESSED_DEMAND_FILE = PROCESSED_DATA_PATH + "/demand.pkl"
+
+[[file:~/uni/ev-simulation/src/vppsim/data/loader.py::PROJECT_DIR%20=%20str(Path(__file__).resolve().parents%5B3%5D)%20CAR2GO_PATH%20=%20PROJECT_DIR%20+%20"/data/raw/car2go/"%20PROCESSED_DATA_PATH%20=%20PROJECT_DIR%20+%20"/data/processed/"%20PROCESSED_TRIPS_FILE%20=%20PROCESSED_DATA_PATH%20+%20"/trips.pkl"%20PROCESSED_DEMAND_FILE%20=%20PROCESSED_DATA_PATH%20+%20"/demand.pkl"]]
+** TODO SoC are off when cleaning trips
+def clean_trips(df):
+
+[[file:~/uni/ev-simulation/src/vppsim/data/process.py::def%20clean_trips(df):]]

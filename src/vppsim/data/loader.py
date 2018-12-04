@@ -9,7 +9,6 @@ from vppsim import data
 
 logger = logging.getLogger(__name__)
 
-# TODO: Move Consts
 PROJECT_DIR = str(Path(__file__).resolve().parents[3])
 CAR2GO_PATH = PROJECT_DIR + "/data/raw/car2go/"
 PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed/"

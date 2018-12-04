@@ -92,7 +92,6 @@ class EV:
 
                 break
 
-        # TODO: Adjust VPP capacity during charging?
         if capacity != 0:
             self.vpp.log(
                 "Removing EV %s from VPP: Decrease capacity by %skWh"
@@ -130,8 +129,7 @@ class EV:
                 yield self.battery.get(-diff)
                 self.warning(
                     "EV lost %s%% battery while beeing idle."
-                    "How much can a EV loose standing around?"
-                    % diff
+                    "How much can a EV loose standing around?" % diff
                 )
             else:
                 yield self.battery.put(diff)
