@@ -1,0 +1,58 @@
+
+# Display plots inline
+%matplotlib inline
+
+# Autoreload all package before excecuting a call
+%load_ext autoreload
+%autoreload 2
+
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+df_old = pd.read_csv('../data/raw/balancing/old/old.csv', sep=';', index_col=False,
+                     dayfirst=True, parse_dates=[0, 1], infer_datetime_format=True, decimal=',')
+df_old = df_old.drop(['ZUSCHLAG', 'KERNANTEILSKENNZEICHNUNG'], axis=1)
+
+df_new = pd.read_csv('../data/raw/balancing/new/new.csv', sep=';', index_col=False,
+                     dayfirst=True, parse_dates=[0, 1], infer_datetime_format=True, decimal=',')
+
+# Don't look at Austrian trades that are not part of the auction
+df_new = df_new.loc[df_new['ANGEBOTE_AUS_AT'] != 'X']
+df_new = df_new.drop(['BEZUSCHLAGTE_LEISTUNG [MW]', 'ANGEBOTE_AUS_AT'], axis=1)
+
+df = pd.concat([df_old, df_new])
+df.columns = ['from', 'till', 'product', 'capacity_price',
+              'energy_price', 'payment_direction', 'capacity_offered']
+df['payment_direction'] = df['payment_direction'].replace(
+    ['Netz an Anbieter', 'Anbieter an Netz'], ['GP', 'PG'])
+
+df.to_csv('../data/raw/balancing/balancing.csv', index=False)
+
+df = pd.read_csv('../data/raw/balancing/balancing.csv', parse_dates=[0, 1], infer_datetime_format=True)
+df['product'] = df['product'].astype('category')
+df['payment_direction'] = df['payment_direction'].astype('category')
+df = df.loc[(df['product'] == 'NEG_HT') | (df['product'] == 'NEG_NT')]
+
+df[df["from"] == "2016-06-06"].sort_values('energy_price')
+
+sns.lmplot(x="capacity_offered", y="energy_price", data=df, fit_reg=False, hue='product', legend=True, scatter_kws={'alpha':0.3, 's': 20})
+
+df_results = pd.read_csv("~/data/balancing/results_2016_2017.csv", sep=';', index_col=False,
+                         dayfirst=True, parse_dates=[0, 1], infer_datetime_format=True, decimal=',')
+
+#df_results[df_results["DATE_FROM"] == "2016-6-6"].sort_values('ENERGY_PRICE_[EUR/MWh]')
+
+df_activated = pd.read_csv("~/data/balancing/activated_secondary_reserve_2016_2017.csv", sep=';', index_col=False,
+                         dayfirst=True, infer_datetime_format=True, decimal=',')
+df_activated.dtypes
+
+
+# df.columns = ['date', 'from', 'till', 'amount_pos', 'amount_neg',
+#              'energy_price', 'payment_direction', 'capacity_offered']
+
+
+
+
