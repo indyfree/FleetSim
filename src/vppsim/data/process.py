@@ -18,6 +18,8 @@ def process_car2go(df):
 
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
+
+    df_trips = clean_trips(df_trips)
     return df_trips
 
 
@@ -135,9 +137,20 @@ def trip_distance(trip_charge):
     return (MAX_DISTANCE / 100) * trip_charge
 
 
-# TODO: Clean trips
 def clean_trips(df):
-    # - Date
-    # - Trips > 2d
-    # - Trips where charged?
-    return df
+    # Trips longer than 2 days are service trips
+    df_trips = df.loc[df["trip_duration"] < (2 * 24 * 60)]
+    logger.info(
+        "Removed %s%% trips that were longer than 2 days"
+        % ((len(df) - len(df_trips)) / len(df))
+    )
+
+    trips = len(df_trips)
+    # Trips where no distance could be determined have been charged on a trip
+    df_trips = df_trips.loc[df["trip_distance"].notna()]
+    logger.info(
+        "Removed %s%% trips that were charged on a trip"
+        % ((trips - len(df_trips)) / len(df))
+    )
+
+    return df_trips
