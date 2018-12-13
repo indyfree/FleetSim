@@ -1,5 +1,11 @@
 #+TITLE: Extensive TODO List of this Simulation
 * Inbox
+** TODO Calculate List of charging stations based on GPS or previous chared places
+                rental.end_charging,
+
+[[file:~/uni/ev-simulation/src/vppsim/simulation.py::rental.end_charging,]]
+** TODO Regelleistung activated capacity Betr. vs Qual. amounts
+
 ** TODO Adjust VPP capacity during charging?
     def charge(self):
 
@@ -16,3 +22,5 @@ PROCESSED_DEMAND_FILE = PROCESSED_DATA_PATH + "/demand.pkl"
 def clean_trips(df):
 
 [[file:~/uni/ev-simulation/src/vppsim/data/process.py::def%20clean_trips(df):]]
+** TODO Check balancing market areas (All only DE or also DE_AUS?)
+* WIP
