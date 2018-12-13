@@ -24,7 +24,7 @@ def calculate_clearing_prices(df_results, df_activated_control_reserve):
 
         clearing_prices.append(cp)
 
-    df = df_activated_control_reserve.drop(["neg_mw"], axis=1)
+    df = df_activated_control_reserve.drop(["pos_mw"], axis=1)
     df.columns = ["from", "to", "capacity_mw"]
 
     df["clearing_price"] = pd.Series(clearing_prices).values

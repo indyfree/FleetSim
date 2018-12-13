@@ -34,7 +34,7 @@ PROCESSED_CLEARING_PRICE_FILE = PROCESSED_DATA_PATH + "/clearing_prices.csv"
 def main():
     # load_car2go_trips(rebuild=True)
     # load_car2go_demand(rebuild=True)
-    print(load_balancing_data(rebuild=False))
+    print(load_balancing_data(rebuild=True))
 
 
 def load_car2go_trips(rebuild=False):
@@ -141,7 +141,7 @@ def load_balancing_data(rebuild=False):
         )
 
     if rebuild is False and os.path.isfile(PROCESSED_CLEARING_PRICE_FILE):
-        return pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
+        return pd.read_csv(PROCESSED_CLEARING_PRICE_FILE)
     else:
         df = data.calculate_clearing_prices(df_results, df_activated_srl)
         df.to_csv(PROCESSED_CLEARING_PRICE_FILE, index=False)
