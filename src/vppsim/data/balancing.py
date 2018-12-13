@@ -5,8 +5,30 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_clearing_prices(df_results, df_activated_control_reserve):
+    clearing_prices = list()
 
-    return df_results
+    for t in df_activated_control_reserve.itertuples():
+        day = pd.to_datetime(t[1])
+        # Find out product time
+        product_time = "HT" if 8 <= day.hour < 20 else "NT"
+        # We are only interested in negative control reserve clearing prices
+        product_type = "NEG"
+
+        cp = df_results.loc[
+            (df_results["to"] >= pd.Timestamp(day.date()))
+            & (df_results["from"] <= pd.Timestamp(day.date()))
+            & (df_results["product_time"] == product_time)
+            & (df_results["product_type"] == product_type)
+            & (df_results["cumsum_allocated_mw"] >= t.neg_mw)
+        ].iloc[0]["energy_price_mwh"]
+
+        clearing_prices.append(cp)
+
+    df = df_activated_control_reserve.drop(["neg_mw"], axis=1)
+    df.columns = ["from", "to", "capacity_mw"]
+
+    df["clearing_price"] = pd.Series(clearing_prices).values
+    return df
 
 
 def process_tender_results(df):

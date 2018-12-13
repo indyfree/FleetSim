@@ -28,12 +28,13 @@ ACTIVATED_CONTROL_RESERVE_FILE = (
 TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/results_2016_2017.csv"
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
 PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/results.csv"
+PROCESSED_CLEARING_PRICE_FILE = PROCESSED_DATA_PATH + "/clearing_prices.csv"
 
 
 def main():
     # load_car2go_trips(rebuild=True)
     # load_car2go_demand(rebuild=True)
-    print(load_balancing_data(rebuild=True))
+    print(load_balancing_data(rebuild=False))
 
 
 def load_car2go_trips(rebuild=False):
@@ -139,7 +140,17 @@ def load_balancing_data(rebuild=False):
             % PROCESSED_CONTROL_RESERVE_FILE
         )
 
-    return pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
+    if rebuild is False and os.path.isfile(PROCESSED_CLEARING_PRICE_FILE):
+        return pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
+    else:
+        df = data.calculate_clearing_prices(df_results, df_activated_srl)
+        df.to_csv(PROCESSED_CLEARING_PRICE_FILE, index=False)
+        logger.info(
+            "Wrote processed activated control reserve to %s"
+            % PROCESSED_CLEARING_PRICE_FILE
+        )
+
+    return df
 
 
 if __name__ == "__main__":
