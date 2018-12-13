@@ -54,6 +54,10 @@ ifeq ($(wildcard $(JUPYTER_DIR)/nbextensions/table_beautifier/*),)
 	@$(JUPYTER) contrib nbextension install --sys-prefix
 	@$(JUPYTER) nbextensions_configurator enable --sys-prefix
 endif
+ifeq ($(wildcard $(JUPYTER_DIR)/nbextensions/vim_binding/*),)
+	@echo "Installing vim binding extension..."
+	@git clone https://github.com/lambdalisue/jupyter-vim-binding $(JUPYTER_DIR)/nbextensions/vim_binding
+endif
 	@echo "Running jupyter notebook in background..."
 	@JUPYTER_CONFIG_DIR=$(NOTEBOOK_DIR) $(JUPYTER) notebook --notebook-dir=$(NOTEBOOK_DIR)
 

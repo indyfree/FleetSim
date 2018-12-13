@@ -6,7 +6,8 @@
     "collapsible_headings/main": true,
     "hide_input_all/main": false,
     "hide_input/main": false,
-    "toc2/main": true
+    "toc2/main": true,
+    "vim_binding/vim_binding": true
   },
   "toc2": {
     "toc_cell": true,
