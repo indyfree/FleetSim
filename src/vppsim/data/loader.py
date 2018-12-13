@@ -15,17 +15,25 @@ PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed/"
 PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
 PROCESSED_DEMAND_FILE = PROCESSED_DATA_PATH + "/demand.pkl"
 CAR2GO_FILES = [
-    "stuttgart.2016.03.22-2016.11.30.csv",
+    # "stuttgart.2016.03.22-2016.11.30.csv",
     "stuttgart.2016.12.01-2017.02.22.csv",
     "stuttgart.2017.02.23-2017-05-01.csv",
-    "stuttgart.2017.05.01-2017.10.31.csv",
-    "stuttgart.2017.11.01-2018.01.31.csv",
+    # "stuttgart.2017.05.01-2017.10.31.csv",
+    # "stuttgart.2017.11.01-2018.01.31.csv",
 ]
+
+ACTIVATED_CONTROL_RESERVE_FILE = (
+    PROJECT_DIR + "/data/raw/balancing/activated_secondary_reserve_2016_2017.csv"
+)
+TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/results_2016_2017.csv"
+PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
+PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/results.csv"
 
 
 def main():
-    load_car2go_trips(rebuild=True)
-    load_car2go_demand(rebuild=True)
+    # load_car2go_trips(rebuild=True)
+    # load_car2go_demand(rebuild=True)
+    print(load_balancing_data(rebuild=True))
 
 
 def load_car2go_trips(rebuild=False):
@@ -88,6 +96,50 @@ def load_car2go_demand(rebuild=False):
     pd.to_pickle(df, PROCESSED_DEMAND_FILE)
     logger.info("Wrote calculated car2go demand to %s" % PROCESSED_DEMAND_FILE)
     return pd.read_pickle(PROCESSED_DEMAND_FILE)
+
+
+def load_balancing_data(rebuild=False):
+    """Loads processed balancing data into a dataframe, process again if needed"""
+
+    if rebuild is False and os.path.isfile(PROCESSED_TENDER_RESULTS_FILE):
+        df_results = pd.read_csv(PROCESSED_TENDER_RESULTS_FILE)
+    else:
+        df_results = pd.read_csv(
+            TENDER_RESULTS_FILE,
+            sep=";",
+            decimal=",",
+            dayfirst=True,
+            parse_dates=[0, 1],
+            infer_datetime_format=True,
+        )
+
+        df_results = data.process_tender_results(df_results)
+        df_results.to_csv(PROCESSED_TENDER_RESULTS_FILE, index=False)
+        logger.info(
+            "Wrote processed tender results to %s" % PROCESSED_TENDER_RESULTS_FILE
+        )
+
+    if rebuild is False and os.path.isfile(PROCESSED_CONTROL_RESERVE_FILE):
+        df_activated_srl = pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
+    else:
+        df_activated_srl = pd.read_csv(
+            ACTIVATED_CONTROL_RESERVE_FILE,
+            sep=";",
+            decimal=",",
+            thousands=".",
+            dayfirst=True,
+            parse_dates=[0],
+            infer_datetime_format=True,
+        )
+
+        df_activated_srl = data.process_activated_reserve(df_activated_srl)
+        df_activated_srl.to_csv(PROCESSED_CONTROL_RESERVE_FILE, index=False)
+        logger.info(
+            "Wrote processed activated control reserve to %s"
+            % PROCESSED_CONTROL_RESERVE_FILE
+        )
+
+    return pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
 
 
 if __name__ == "__main__":
