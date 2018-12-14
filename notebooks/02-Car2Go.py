@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li><li><span><a href="#Yearly-rental-patterns" data-toc-modified-id="Yearly-rental-patterns-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Yearly rental patterns</a></span></li><li><span><a href="#Weekly-Pattern-of-connected-EVS" data-toc-modified-id="Weekly-Pattern-of-connected-EVS-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Weekly Pattern of connected EVS</a></span></li><li><span><a href="#Daily-Pattern-of-connected-EVS" data-toc-modified-id="Daily-Pattern-of-connected-EVS-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Daily Pattern of connected EVS</a></span></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-0.1"><span class="toc-item-num">0.1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li></ul></li><li><span><a href="#Cleaning-Trip-Data" data-toc-modified-id="Cleaning-Trip-Data-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Cleaning Trip Data</a></span></li><li><span><a href="#Demand-Patterns" data-toc-modified-id="Demand-Patterns-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Demand Patterns</a></span><ul class="toc-item"><li><span><a href="#Yearly-rental-patterns" data-toc-modified-id="Yearly-rental-patterns-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Yearly rental patterns</a></span></li><li><span><a href="#Weekly-Pattern-of-connected-EVS" data-toc-modified-id="Weekly-Pattern-of-connected-EVS-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Weekly Pattern of connected EVS</a></span></li><li><span><a href="#Daily-Pattern-of-connected-EVS" data-toc-modified-id="Daily-Pattern-of-connected-EVS-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Daily Pattern of connected EVS</a></span></li></ul></li></ul></div>
 
 # ## Imports and Data loading
 
@@ -28,13 +28,29 @@ import pandas as pd
 from vppsim.data import load_car2go_demand
 
 
-# In[5]:
+# # Cleaning Trip Data
+
+# In[8]:
+
+
+trips = pd.read_pickle("../data/processed/trips_big.pkl")
+
+
+# In[17]:
+
+
+trips[trips['trip_distance'].notna()]
+
+
+# # Demand Patterns
+
+# In[3]:
 
 
 df = load_car2go_demand()
 
 
-# In[7]:
+# In[4]:
 
 
 df_charging = df
