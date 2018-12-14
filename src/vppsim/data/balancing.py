@@ -56,10 +56,11 @@ def process_tender_results(df):
         axis=1,
     )
 
-    # Make energy prices negative where provider has to pay for energy
-    df.loc[df["payment_direction"] == "PROVIDER_TO_GRID", ["energy_price_mwh"]] = df[
-        "energy_price_mwh"
-    ] * (-1)
+    # Negative prices when grid pays provider for negative control reserve
+    df.loc[
+        (df["payment_direction"] == "GRID_TO_PROVIDER") & (df["product_type"] == "NEG"),
+        ["energy_price_mwh"],
+    ] = df["energy_price_mwh"] * (-1)
     df.drop(["product", "payment_direction"], axis=1, inplace=True)
 
     # Calculate cumulative sums of every timeslot for every product
