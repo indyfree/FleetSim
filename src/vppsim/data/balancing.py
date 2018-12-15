@@ -64,7 +64,12 @@ def process_tender_results(df):
     df.drop(["product", "payment_direction"], axis=1, inplace=True)
 
     # Calculate cumulative sums of every timeslot for every product
-    df = df.sort_values(["from", "product_type", "product_time", "energy_price_mwh"])
+    df = df.sort_values(
+        ["from", "product_type", "product_time", "energy_price_mwh"],
+        # Sort energy prices descending, because System Operator favors to
+        # receive money (positive) instead, of paying to the provider (negative).
+        ascending=[True, True, True, False],
+    )
 
     days = df["from"].unique()
     types = df["product_type"].unique()
