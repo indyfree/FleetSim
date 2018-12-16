@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 
 from vppsim import data
+from vppsim.data import intraday
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +27,19 @@ ACTIVATED_CONTROL_RESERVE_FILE = (
     PROJECT_DIR + "/data/raw/balancing/activated_secondary_reserve_2016_2017.csv"
 )
 TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/results_2016_2017.csv"
+PROCOM_TRADES_FILE = PROJECT_DIR + "/data/raw/intraday/procom_data.csv"
+
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
 PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
-PROCESSED_CLEARING_PRICE_FILE = PROCESSED_DATA_PATH + "/clearing_prices.csv"
+PROCESSED_CLEARING_PRICE_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
+PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
 
 def main():
     # load_car2go_trips(rebuild=True)
     # load_car2go_demand(rebuild=True)
-    print(load_balancing_data(rebuild=True))
+    # load_balancing_data(rebuild=True)
+    print(load_intraday_prices(rebuild=True))
 
 
 def load_car2go_trips(rebuild=False):
@@ -97,6 +102,31 @@ def load_car2go_demand(rebuild=False):
     pd.to_pickle(df, PROCESSED_DEMAND_FILE)
     logger.info("Wrote calculated car2go demand to %s" % PROCESSED_DEMAND_FILE)
     return pd.read_pickle(PROCESSED_DEMAND_FILE)
+
+
+def load_intraday_prices(rebuild=False):
+    """Loads intraday prices, calculate again if needed"""
+
+    if rebuild is False and os.path.isfile(PROCESSED_INTRADAY_PRICES_FILE):
+        return pd.read_csv(PROCESSED_INTRADAY_PRICES_FILE)
+    else:
+        df = pd.read_csv(
+            PROCOM_TRADES_FILE,
+            sep=",",
+            index_col=False,
+            dayfirst=True,
+            parse_dates=[1, 9],
+            infer_datetime_format=True,
+        )
+        df[df["product"] == "H"].to_pickle(PROCESSED_DATA_PATH + "/procom_H.pkl")
+        df[df["product"] == "Q"].to_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
+        df[df["product"] == "B"].to_pickle(PROCESSED_DATA_PATH + "/procom_B.pkl")
+
+        df_q = pd.read_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
+
+        df_q = intraday.calculate_clearing_prices(df_q)
+        df_q.to_csv(PROCESSED_INTRADAY_PRICES_FILE, index=False)
+        return df_q
 
 
 def load_balancing_data(rebuild=False):
