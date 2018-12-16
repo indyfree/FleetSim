@@ -8,7 +8,7 @@ import vppsim
 logger = logging.getLogger(__name__)
 
 
-def process_car2go(df):
+def process(df):
     trips = []
 
     df.sort_values("timestamp", inplace=True)
@@ -23,7 +23,7 @@ def process_car2go(df):
     return df_trips
 
 
-def calculate_car2go_demand(df):
+def calculate_demand(df):
     available = set()
     charging = dict()
     total = set()
