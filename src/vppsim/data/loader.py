@@ -5,8 +5,7 @@ import os
 import pandas as pd
 from pathlib import Path
 
-from vppsim import data
-from vppsim.data import intraday
+from vppsim.data import balancing, car2go, intraday
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def load_car2go_trips(rebuild=False):
 
         logger.info("Processing %s..." % f)
         df = pd.read_csv(CAR2GO_PATH + f)
-        df = data.process_car2go(df)
+        df = car2go.process(df)
         df.to_csv(path + ".csv")
         pd.to_pickle(df, path)
         logger.info("Saved processed %s to disk." % f)
@@ -97,7 +96,7 @@ def load_car2go_demand(rebuild=False):
         return pd.read_pickle(PROCESSED_DEMAND_FILE)
 
     logger.info("Processing %s..." % PROCESSED_DEMAND_FILE)
-    df = data.calculate_car2go_demand(df_trips)
+    df = car2go.calculate_demand(df_trips)
     df.to_csv(PROCESSED_DEMAND_FILE.strip(".pkl") + ".csv")
     pd.to_pickle(df, PROCESSED_DEMAND_FILE)
     logger.info("Wrote calculated car2go demand to %s" % PROCESSED_DEMAND_FILE)
@@ -144,7 +143,7 @@ def load_balancing_data(rebuild=False):
             infer_datetime_format=True,
         )
 
-        df_results = data.process_tender_results(df_results)
+        df_results = balancing.process_tender_results(df_results)
         df_results.to_csv(PROCESSED_TENDER_RESULTS_FILE, index=False)
         logger.info(
             "Wrote processed tender results to %s" % PROCESSED_TENDER_RESULTS_FILE
@@ -163,7 +162,7 @@ def load_balancing_data(rebuild=False):
             infer_datetime_format=True,
         )
 
-        df_activated_srl = data.process_activated_reserve(df_activated_srl)
+        df_activated_srl = balancing.process_activated_reserve(df_activated_srl)
         df_activated_srl.to_csv(PROCESSED_CONTROL_RESERVE_FILE, index=False)
         logger.info(
             "Wrote processed activated control reserve to %s"
@@ -177,7 +176,7 @@ def load_balancing_data(rebuild=False):
             infer_datetime_format=True,
         )
     else:
-        df = data.calculate_clearing_prices(df_results, df_activated_srl)
+        df = balancing.calculate_clearing_prices(df_results, df_activated_srl)
         df.to_csv(PROCESSED_CLEARING_PRICE_FILE, index=False)
         logger.info(
             "Wrote processed activated control reserve to %s"
