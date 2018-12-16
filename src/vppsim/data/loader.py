@@ -125,6 +125,10 @@ def load_intraday_prices(rebuild=False):
 
         df_q = intraday.calculate_clearing_prices(df_q)
         df_q.to_csv(PROCESSED_INTRADAY_PRICES_FILE, index=False)
+        logger.info(
+            "Wrote calculated intraday clearing prices to %s"
+            % PROCESSED_INTRADAY_PRICES_FILE
+        )
         return df_q
 
 
