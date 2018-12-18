@@ -61,21 +61,26 @@ df_charging = df
 
 def apply_smoother(df, days):
     DAY = 12*24
-    
-    df['ev_available_avg'] = df['ev_available'].rolling(window=int(days*DAY)).mean()
-    df['ev_charging_avg'] = df['ev_charging'].rolling(window=int(days*DAY)).mean()
-    df['ev_charging_soc_avg_rol'] = df['ev_charging_soc_avg'].rolling(window=int(days*DAY)).mean()
-    df['capacity_avg_kwh'] = df['capacity_available_kwh'].rolling(window=int(days*DAY)).mean()
-    
+
+    df['ev_available_avg'] = df['ev_available'].rolling(
+        window=int(days*DAY)).mean()
+    df['ev_charging_avg'] = df['ev_charging'].rolling(
+        window=int(days*DAY)).mean()
+    df['ev_charging_soc_avg_rol'] = df['ev_charging_soc_avg'].rolling(
+        window=int(days*DAY)).mean()
+    df['capacity_avg_kwh'] = df['capacity_available_kwh'].rolling(
+        window=int(days*DAY)).mean()
+
     return df
+
 
 def plot(df, title, start=datetime(2016, 12, 1), end=datetime(2017, 5, 1)):
     start_idx = df_charging.index.searchsorted(start)
     end_idx = df_charging.index.searchsorted(end)
 
-    
-    X = df_charging.iloc[start_idx:end_idx][['ev_available_avg', 'ev_charging_avg', 'ev_charging_soc_avg_rol', 'capacity_avg_kwh']]
-    return X.plot(figsize=(12,4), title=title)
+    X = df_charging.iloc[start_idx:end_idx][[
+        'ev_available_avg', 'ev_charging_avg', 'ev_charging_soc_avg_rol', 'capacity_avg_kwh']]
+    return X.plot(figsize=(12, 4), title=title)
 
 
 # ## Yearly rental patterns
@@ -93,7 +98,8 @@ plot(df, "Yearly rental patterns")
 
 
 df = apply_smoother(df, days=0.5)
-plot(df, "Weekly rental patterns", start=datetime(2017, 1, 1), end=datetime(2017, 1, 7))
+plot(df, "Weekly rental patterns", start=datetime(
+    2017, 1, 1), end=datetime(2017, 1, 7))
 
 
 # ## Daily Pattern of connected EVS
@@ -105,5 +111,6 @@ start = df_charging.index.searchsorted(datetime(2017, 1, 4))
 end = df_charging.index.searchsorted(datetime(2017, 1, 5))
 
 df = apply_smoother(df, days=1/24)
-plot(df, "Daily rental patterns", start=datetime(2017, 1, 4), end=datetime(2017, 1, 5))
+plot(df, "Daily rental patterns", start=datetime(
+    2017, 1, 4), end=datetime(2017, 1, 5))
 
