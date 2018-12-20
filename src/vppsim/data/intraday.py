@@ -13,7 +13,11 @@ def calculate_clearing_prices(df):
         + ":"
         + ((time[1].astype(int) - 1) * 15).astype(str)
     )
+
+    # Clearing price is the lowest conducted trade. Bidding above the clearing price
+    # will always be sucessful
     df = df.groupby("delivery_date").min()
+
     # Transform to EUR/MWh
     df.loc[:, "unit_price"] = df["unit_price"] / 100
 
