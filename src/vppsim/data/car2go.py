@@ -43,6 +43,7 @@ def add_charging_stations(df_trips, df_stations):
         how="left",
     )
 
+    df_trips.drop(["coordinates_lat", "coordinates_lon"], axis=1, inplace=True)
     df_trips.rename(columns={"charging": "end_charging"}, inplace=True)
     return df_trips
 
