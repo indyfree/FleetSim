@@ -13,11 +13,11 @@ PROJECT_DIR = str(Path(__file__).resolve().parents[3])
 CAR2GO_PATH = PROJECT_DIR + "/data/raw/car2go/"
 PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed/"
 PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
-PROCESSED_DEMAND_FILE = PROCESSED_DATA_PATH + "/demand.pkl"
+PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
 CAR2GO_FILES = [
     # "stuttgart.2016.03.22-2016.11.30.csv",
     "stuttgart.2016.12.01-2017.02.22.csv",
-    # "stuttgart.2017.02.23-2017-05-01.csv",
+    "stuttgart.2017.02.23-2017-05-01.csv",
     # "stuttgart.2017.05.01-2017.10.31.csv",
     # "stuttgart.2017.11.01-2018.01.31.csv",
 ]
@@ -44,7 +44,7 @@ def main():
     )
 
     print(load_car2go_trips(rebuild=True))
-    print(load_car2go_demand(rebuild=True))
+    print(load_car2go_capacity(rebuild=True))
     # load_balancing_data(rebuild=True)
     # print(load_intraday_prices(rebuild=True))
 
@@ -96,19 +96,19 @@ def load_car2go_trips(rebuild=False):
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
 
 
-def load_car2go_demand(rebuild=False):
-    """Loads processed demand data into a dataframe, process again if needed"""
+def load_car2go_capacity(rebuild=False):
+    """Loads processed capacity data into a dataframe, process again if needed"""
     df_trips = load_car2go_trips()
 
-    if rebuild is False and os.path.isfile(PROCESSED_DEMAND_FILE):
-        return pd.read_pickle(PROCESSED_DEMAND_FILE)
+    if rebuild is False and os.path.isfile(PROCESSED_CAPACITY_FILE):
+        return pd.read_pickle(PROCESSED_CAPACITY_FILE)
 
-    logger.info("Processing %s..." % PROCESSED_DEMAND_FILE)
-    df = car2go.calculate_demand(df_trips)
-    df.to_csv(PROCESSED_DEMAND_FILE.strip(".pkl") + ".csv")
-    pd.to_pickle(df, PROCESSED_DEMAND_FILE)
-    logger.info("Wrote calculated car2go demand to %s" % PROCESSED_DEMAND_FILE)
-    return pd.read_pickle(PROCESSED_DEMAND_FILE)
+    logger.info("Processing %s..." % PROCESSED_CAPACITY_FILE)
+    df = car2go.calculate_capacity(df_trips)
+    df.to_csv(PROCESSED_CAPACITY_FILE.strip(".pkl") + ".csv")
+    pd.to_pickle(df, PROCESSED_CAPACITY_FILE)
+    logger.info("Wrote calculated car2go demand to %s" % PROCESSED_CAPACITY_FILE)
+    return pd.read_pickle(PROCESSED_CAPACITY_FILE)
 
 
 def load_intraday_prices(rebuild=False):

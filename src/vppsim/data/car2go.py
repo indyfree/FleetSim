@@ -58,7 +58,7 @@ def determine_charging_stations(df):
     return df_stations
 
 
-def calculate_demand(df):
+def calculate_capacity(df):
     available = set()
     charging = dict()
     total = set()
