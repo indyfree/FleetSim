@@ -174,7 +174,7 @@ def clean_trips(df):
     # Trips longer than 2 days are service trips
     df_trips = df.loc[df["trip_duration"] < (2 * 24 * 60)]
     logger.info(
-        "Removed %s%% trips that were longer than 2 days"
+        "Removed %.2f%% trips that were longer than 2 days"
         % ((len(df) - len(df_trips)) / len(df))
     )
 
@@ -182,7 +182,7 @@ def clean_trips(df):
     # Trips where no distance could be determined have been charged on a trip
     df_trips = df_trips.loc[df["trip_distance"].notna()]
     logger.info(
-        "Removed %s%% trips that were charged on a trip"
+        "Removed %.2f%% trips that were charged on a trip"
         % ((trips - len(df_trips)) / len(df))
     )
 
