@@ -34,6 +34,28 @@ def process(df):
     return df_trips
 
 
+def add_charging_stations(df_trips, df_stations):
+    df_trips = df_trips.merge(
+        df_stations,
+        left_on=["end_lat", "end_lon"],
+        right_on=["coordinates_lat", "coordinates_lon"],
+        how="left",
+    )
+
+    df_trips.rename(columns={"charging": "end_charging"}, inplace=True)
+    return df_trips
+
+
+def determine_charging_stations(df):
+    """Find charging stations where EV has been charged once (charging==1)."""
+
+    df_stations = df.groupby(["coordinates_lat", "coordinates_lon"])["charging"].max()
+    df_stations = df_stations[df_stations == 1]
+    df_stations = df_stations.reset_index()
+    logger.info("Determined %d charging df_stations in the dataset" % len(df_stations))
+    return df_stations
+
+
 def calculate_demand(df):
     available = set()
     charging = dict()
@@ -110,7 +132,6 @@ def calculate_trips(df_car):
                     row.coordinates_lat,
                     row.coordinates_lon,
                     row.fuel,
-                    row.charging,
                     int((row.timestamp - prev.timestamp) / 60),
                     trip_distance(prev.fuel - row.fuel),
                 ]
@@ -131,7 +152,6 @@ def calculate_trips(df_car):
             "end_lat",
             "end_lon",
             "end_soc",
-            "end_charging",
             "trip_duration",
             "trip_distance",
         ],
