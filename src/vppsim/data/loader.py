@@ -17,7 +17,7 @@ PROCESSED_DEMAND_FILE = PROCESSED_DATA_PATH + "/demand.pkl"
 CAR2GO_FILES = [
     # "stuttgart.2016.03.22-2016.11.30.csv",
     "stuttgart.2016.12.01-2017.02.22.csv",
-    "stuttgart.2017.02.23-2017-05-01.csv",
+    # "stuttgart.2017.02.23-2017-05-01.csv",
     # "stuttgart.2017.05.01-2017.10.31.csv",
     # "stuttgart.2017.11.01-2018.01.31.csv",
 ]
@@ -35,10 +35,18 @@ PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
 
 def main():
-    # load_car2go_trips(rebuild=True)
-    # load_car2go_demand(rebuild=True)
+    # Log to console
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(message)s",
+        datefmt="%%m-%d %H:%M:%S",
+        handlers=[logging.StreamHandler()],
+    )
+
+    print(load_car2go_trips(rebuild=True))
+    print(load_car2go_demand(rebuild=True))
     # load_balancing_data(rebuild=True)
-    print(load_intraday_prices(rebuild=True))
+    # print(load_intraday_prices(rebuild=True))
 
 
 def load_car2go_trips(rebuild=False):
