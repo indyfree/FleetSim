@@ -109,7 +109,7 @@ for price in df_cp.itertuples():
 
 # # Activated Control Reserve from regelleistungen.net
 
-# In[24]:
+# In[7]:
 
 
 df_activated = pd.read_csv("../data/processed/activated_control_reserve.csv",
@@ -121,7 +121,7 @@ df_activated.head(10)
 
 # __Calculated assumed 15-min clearing prices for negative control reserve by looking at actual activated reserve__
 
-# In[36]:
+# In[ ]:
 
 
 from vppsim.data import load_balancing_data
@@ -135,13 +135,20 @@ df_clearing_prices.head()
 
 df_clearing_prices["day"] = df_clearing_prices["from"].dt.weekday
 df_clearing_prices["hour"] = df_clearing_prices["from"].dt.hour
-df_clearing_prices.loc[df_clearing_prices["clearing_price"] < -50, "clearing_price"] = -50
+df_clearing_prices["clearing_price"].clip(-200,200)
+df_clearing_prices["capacity_mw"].clip(-200,1500)
 df_clearing_prices.loc[df_clearing_prices["capacity_mw"] > 1000, "capacity_mw"] = 1000
 
 f, (ax1, ax2) = plt.subplots(1, 2)
 f.set_size_inches(18.5, 10.5)
 sns.violinplot(x="hour", y="capacity_mw", data=df_clearing_prices, ax=ax1)
 sns.violinplot(x="hour", y="clearing_price", data=df_clearing_prices, ax=ax2)
+
+
+# In[ ]:
+
+
+
 
 
 # # Validate Numbers
