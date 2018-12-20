@@ -31,6 +31,7 @@ def process(df):
     df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
 
     df_trips = clean_trips(df_trips)
+    df_trips = add_charging_stations(df_trips, df_stations)
     return df_trips
 
 
