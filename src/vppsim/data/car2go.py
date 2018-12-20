@@ -9,10 +9,21 @@ logger = logging.getLogger(__name__)
 
 
 def process(df):
-    trips = []
+
+    # Preprocesing
+    # GPS accuracy is only guaranteed at a granularity of 10m, round accordingly.
+    # See also: https://wiki.openstreetmap.org/wiki/Precision_of_coordinates.
+    df[["coordinates_lat", "coordinates_lon"]] = df[
+        ["coordinates_lat", "coordinates_lon"]
+    ].round(4)
+    df_stations = determine_charging_stations(df)
 
     df.sort_values("timestamp", inplace=True)
-    for car in df["name"].unique():
+
+    trips = list()
+    cars = df["name"].unique()
+    logger.info("Determining trips of %d cars..." % len(cars))
+    for car in cars:
         ev_trips = calculate_trips(df[df["name"] == car])
         trips.append(ev_trips)
 
