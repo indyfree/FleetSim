@@ -31,7 +31,7 @@ PROCOM_TRADES_FILE = PROJECT_DIR + "/data/raw/intraday/procom_data.csv"
 
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
 PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
-PROCESSED_CLEARING_PRICE_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
+PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
 
@@ -44,9 +44,9 @@ def main():
         handlers=[logging.StreamHandler()],
     )
 
-    print(load_car2go_trips(rebuild=True))
-    print(load_car2go_capacity(rebuild=True))
-    # load_balancing_data(rebuild=True)
+    # print(load_car2go_trips(rebuild=True))
+    # print(load_car2go_capacity(rebuild=True))
+    print(load_balancing_data(rebuild=True))
     # print(load_intraday_prices(rebuild=True))
 
 
@@ -182,18 +182,18 @@ def load_balancing_data(rebuild=False):
             % PROCESSED_CONTROL_RESERVE_FILE
         )
 
-    if rebuild is False and os.path.isfile(PROCESSED_CLEARING_PRICE_FILE):
+    if rebuild is False and os.path.isfile(PROCESSED_BALANCING_PRICES_FILE):
         return pd.read_csv(
-            PROCESSED_CLEARING_PRICE_FILE,
+            PROCESSED_BALANCING_PRICES_FILE,
             parse_dates=[0, 1],
             infer_datetime_format=True,
         )
     else:
         df = balancing.calculate_clearing_prices(df_results, df_activated_srl)
-        df.to_csv(PROCESSED_CLEARING_PRICE_FILE, index=False)
+        df.to_csv(PROCESSED_BALANCING_PRICES_FILE, index=False)
         logger.info(
-            "Wrote processed activated control reserve to %s"
-            % PROCESSED_CLEARING_PRICE_FILE
+            "Wrote processed balancing clearing prices to %s"
+            % PROCESSED_BALANCING_PRICES_FILE
         )
 
     return df
