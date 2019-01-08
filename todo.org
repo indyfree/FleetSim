@@ -1,5 +1,9 @@
 #+TITLE: Extensive TODO List of this Simulation
 * Inbox
+** TODO What if csv headers not there. Why no error??
+        df = pd.read_csv(CAR2GO_PATH + f)
+
+[[file:~/uni/ev-simulation/src/vppsim/data/loader.py::df%20=%20pd.read_csv(CAR2GO_PATH%20+%20f)]]
 ** TODO Calculate List of charging stations based on GPS or previous chared places
                 rental.end_charging,
 
