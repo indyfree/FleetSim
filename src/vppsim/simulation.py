@@ -9,9 +9,9 @@ from vppsim.entities import EV, VPP
 from vppsim.data import loader
 
 # PHYSICAL CONSTANTS
-MAX_EV_CAPACITY = 16.5  # kWh
-MAX_EV_RANGE = 20  # km
-CHARGING_SPEED = 3.6  # 3.6 kWh per hour
+MAX_EV_CAPACITY = 17.6  # kWh
+MAX_EV_RANGE = 160  # km
+CHARGING_SPEED = 4.6  # 4.6 kWh per hour
 
 
 def main():
