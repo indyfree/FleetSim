@@ -54,7 +54,7 @@ def determine_charging_stations(df):
     df_stations = df.groupby(["coordinates_lat", "coordinates_lon"])["charging"].max()
     df_stations = df_stations[df_stations == 1]
     df_stations = df_stations.reset_index()
-    logger.info("Determined %d charging df_stations in the dataset" % len(df_stations))
+    logger.info("Determined %d charging stations in the dataset" % len(df_stations))
     return df_stations
 
 
@@ -106,7 +106,7 @@ def calculate_capacity(df):
         ],
     )
 
-    df_charging["capacity_available_kwh"] = (
+    df_charging["available_battery_capacity_kwh"] = (
         df_charging["ev_charging"]
         * vppsim.MAX_EV_CAPACITY
         * (100 - df_charging["ev_charging_soc_avg"])
