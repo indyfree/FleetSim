@@ -15,3 +15,6 @@ c.ContentsManager.hide_globs = ['nbconfig', 'migrated', '__pycache__',  '*.py', 
 
 # Remove data_rate_limit
 c.NotebookApp.iopub_data_rate_limit = 0
+
+# Default browser
+c.NotebookApp.browser = '/usr/bin/chromium'
