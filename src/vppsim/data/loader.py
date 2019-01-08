@@ -23,9 +23,10 @@ CAR2GO_FILES = [
 ]
 
 ACTIVATED_CONTROL_RESERVE_FILE = (
-    PROJECT_DIR + "/data/raw/balancing/activated_secondary_reserve_2016_2017.csv"
+    PROJECT_DIR + "/data/raw/balancing/activated_control_reserve_2016_2017.csv"
 )
-TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/results_2016_2017.csv"
+TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/tender_results_2016_2017.csv"
+
 PROCOM_TRADES_FILE = PROJECT_DIR + "/data/raw/intraday/procom_data.csv"
 
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
