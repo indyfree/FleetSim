@@ -98,8 +98,11 @@ def calculate_capacity(df):
         # timeslot and thus are available to use as VPP
         trips_available_vpp = trips_end_charging.loc[
             trips_end_charging["end_soc"]
-            <= (vppsim.MAX_EV_CAPACITY - vppsim.TIME_UNIT_CHARGE)
-            / vppsim.MAX_EV_CAPACITY
+            <= (
+                (vppsim.MAX_EV_CAPACITY - vppsim.TIME_UNIT_CHARGE)
+                / vppsim.MAX_EV_CAPACITY
+            )
+            * 100
         ]
         available_vpp.update(set(trips_available_vpp.EV))
 
