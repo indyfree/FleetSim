@@ -84,7 +84,8 @@ def calculate_capacity(df):
         # 1. Each timestep (5min) plugged-in EVs charge linearly
         charging, vpp = _simulate_charge(charging, vpp)
 
-        # 2. Remove EVs from VPP when not enough available battery capacity for next charge
+        # 2. Remove EVs from VPP when not enough available
+        # battery capacity for next charge
         vpp = {k: v for k, v in vpp.items() if v <= max_soc}
 
         # 3. Starting EVs may be new to the fleet. Add to total EVs
