@@ -195,7 +195,7 @@ def calculate_trips(df_car):
 
 def trip_distance(trip_charge):
     # EV has been charged on the trip. Not possible to infer distance
-    if trip_charge < 0:
+    if trip_charge <= 0:
         return np.nan
 
     return (trip_charge / 100) * vppsim.MAX_EV_RANGE
