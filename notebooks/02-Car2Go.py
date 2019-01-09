@@ -25,67 +25,64 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from vppsim.data import load_car2go_demand
+from vppsim.data import load_car2go_capacity
 
 
 # # Cleaning Trip Data
 
-# In[8]:
+# In[3]:
 
 
 trips = pd.read_pickle("../data/processed/trips_big.pkl")
 
 
-# In[17]:
+# In[4]:
 
 
-trips[trips['trip_distance'].notna()]
+trips[trips['trip_distance'] == 0]
 
 
 # # Demand Patterns
 
-# In[3]:
+# In[5]:
 
 
-df = load_car2go_demand()
+df = load_car2go_capacity()
 
 
-# In[4]:
+# In[6]:
 
 
-df_charging = df
+df
 
 
-# In[26]:
+# In[7]:
 
 
 def apply_smoother(df, days):
     DAY = 12*24
 
-    df['ev_available_avg'] = df['ev_available'].rolling(
+    df['ev_available_vpp_avg'] = df['ev_available_vpp'].rolling(
         window=int(days*DAY)).mean()
     df['ev_charging_avg'] = df['ev_charging'].rolling(
         window=int(days*DAY)).mean()
-    df['ev_charging_soc_avg_rol'] = df['ev_charging_soc_avg'].rolling(
+    df['available_battery_capacity_kwh_avg'] = df['available_battery_capacity_kwh'].rolling(
         window=int(days*DAY)).mean()
-    df['capacity_avg_kwh'] = df['capacity_available_kwh'].rolling(
+    df['available_charging_capacity_kw_avg'] = df['available_charging_capacity_kw'].rolling(
         window=int(days*DAY)).mean()
 
     return df
 
 
 def plot(df, title, start=datetime(2016, 12, 1), end=datetime(2017, 5, 1)):
-    start_idx = df_charging.index.searchsorted(start)
-    end_idx = df_charging.index.searchsorted(end)
-
-    X = df_charging.iloc[start_idx:end_idx][[
-        'ev_available_avg', 'ev_charging_avg', 'ev_charging_soc_avg_rol', 'capacity_avg_kwh']]
+    X = df.loc[start:end][[
+        'ev_available_vpp_avg', 'ev_charging_avg', 'available_battery_capacity_kwh_avg', 'available_charging_capacity_kw_avg']]
     return X.plot(figsize=(12, 4), title=title)
 
 
 # ## Yearly rental patterns
 
-# In[17]:
+# In[8]:
 
 
 df = apply_smoother(df, days=3)
@@ -94,7 +91,7 @@ plot(df, "Yearly rental patterns")
 
 # ## Weekly Pattern of connected EVS
 
-# In[27]:
+# In[9]:
 
 
 df = apply_smoother(df, days=0.5)
@@ -104,11 +101,8 @@ plot(df, "Weekly rental patterns", start=datetime(
 
 # ## Daily Pattern of connected EVS
 
-# In[28]:
+# In[10]:
 
-
-start = df_charging.index.searchsorted(datetime(2017, 1, 4))
-end = df_charging.index.searchsorted(datetime(2017, 1, 5))
 
 df = apply_smoother(df, days=1/24)
 plot(df, "Daily rental patterns", start=datetime(
