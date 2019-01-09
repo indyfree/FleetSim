@@ -58,12 +58,55 @@ def determine_charging_stations(df):
     return df_stations
 
 
+def _make_unavailable(evs, rent, charging, vpp):
+    rent.difference_update(set(evs.EV))
+
+    # Starting EVs are not connected to charger anymore
+    for ev in evs:
+        charging.pop(ev, None)
+        vpp.pop(ev, None)
+
+    return (rent, charging, vpp)
+
+
+# TODO: Check eligible condition
+def _make_available(evs, rent, charging, vpp, max_soc):
+    rent.update(set(evs.EV))
+
+    charging_evs = evs.loc[evs["end_charging"] == 1]
+    charging.update(dict(zip(charging_evs.EV, evs.end_soc)))
+
+    # EVs are only eligible for VPP when they have enough available battery capacity
+    vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
+    vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
+
+    return (rent, charging, vpp)
+
+
+# TODO: Stop simulating if full
+def _simulate_charge(charging, vpp):
+    # Increment is the amount of electricity that EVs charge during 5 Minutes
+    increment = 100 * (vppsim.TIME_UNIT_CHARGE / 3) / vppsim.MAX_EV_CAPACITY
+
+    charging.update((k, v + increment) for k, v in charging.items())
+    vpp.update((k, v + increment) for k, v in vpp.items())
+
+    return (charging, vpp)
+
+
 def calculate_capacity(df):
-    available_rent = set()
-    available_vpp = set()
+    rent = set()
+    vpp = dict()
     charging = dict()
     total = set()
     df_charging = list()
+
+    # Maximal SoC of an EV to be eligible for VPP.
+    max_soc = (
+        (vppsim.MAX_EV_CAPACITY - vppsim.TIME_UNIT_CHARGE)
+        / vppsim.MAX_EV_CAPACITY
+        * 100
+    )
 
     df["start_time"] = df["start_time"].apply(
         lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
@@ -74,53 +117,29 @@ def calculate_capacity(df):
 
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
-        evs_start = set(df[df["start_time"] == t].EV)
-        # Starting EVs may be new to the fleet. Add to total EVs
-        total.update(evs_start)
+        # 1. Each timestep (5min) plugged-in EVs charge linearly
+        charging, vpp = _simulate_charge(charging, vpp)
 
-        # Starting EVs are not available for rent or vpp
-        available_rent.difference_update(evs_start)
-        available_vpp.difference_update(evs_start)
+        # 2. Remove EVs from VPP when not enough available battery capacity for next charge
+        vpp = {k: v for k, v in vpp.items() if v <= max_soc}
 
-        # Starting EVs are not charging anymore
-        for ev in evs_start:
-            charging.pop(ev, None)
+        # 3. Starting EVs may be new to the fleet. Add to total EVs
+        starting_evs = df.loc[df["start_time"] == t]
+        total.update(set(starting_evs.EV))
 
-        # EVs end trip so make them available for rent
-        trips_end = df.loc[df["end_time"] == t]
-        available_rent.update(set(trips_end.EV))
+        # 4. Starting EVs are unavailable
+        rent, charging, vpp = _make_unavailable(starting_evs, rent, charging, vpp)
 
-        # Track EVs which parked at a charging station
-        trips_end_charging = trips_end.loc[trips_end["end_charging"] == 1]
-        charging.update(dict(zip(trips_end_charging.EV, trips_end_charging.end_soc)))
-
-        # Track EVs which have enough evailable battery capacity to be charged in a
-        # timeslot and thus are available to use as VPP
-        trips_available_vpp = trips_end_charging.loc[
-            trips_end_charging["end_soc"]
-            <= (
-                (vppsim.MAX_EV_CAPACITY - vppsim.TIME_UNIT_CHARGE)
-                / vppsim.MAX_EV_CAPACITY
-            )
-            * 100
-        ]
-        available_vpp.update(set(trips_available_vpp.EV))
+        # 5. Ending EVs are available
+        ending_evs = df.loc[df["end_time"] == t]
+        rent, charging, vpp = _make_available(ending_evs, rent, charging, vpp, max_soc)
 
         avg_soc = 0
         if len(charging) > 0:
             avg_soc = sum(charging.values()) / len(charging)
 
-        # Save number of available_rent EVs
-        df_charging.append(
-            (
-                t,
-                len(available_rent),
-                len(charging),
-                len(available_vpp),
-                avg_soc,
-                len(total),
-            )
-        )
+        df_charging.append((t, len(rent), len(charging), len(vpp), avg_soc, len(total)))
+        # print(t, len(rent), len(charging), len(vpp), avg_soc, len(total))
 
     df_charging = pd.DataFrame(
         df_charging,
