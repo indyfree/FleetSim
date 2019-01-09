@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def process(df):
+    """Executes all preprocessing steps sequentially"""
 
-    # Preprocesing
     # GPS accuracy is only guaranteed at a granularity of 10m, round accordingly.
     # See also: https://wiki.openstreetmap.org/wiki/Precision_of_coordinates.
     df[["coordinates_lat", "coordinates_lon"]] = df[
@@ -56,42 +56,6 @@ def determine_charging_stations(df):
     df_stations = df_stations.reset_index()
     logger.info("Determined %d charging stations in the dataset" % len(df_stations))
     return df_stations
-
-
-def _make_unavailable(evs, rent, charging, vpp):
-    rent.difference_update(set(evs.EV))
-
-    # Starting EVs are not connected to charger anymore
-    for ev in evs:
-        charging.pop(ev, None)
-        vpp.pop(ev, None)
-
-    return (rent, charging, vpp)
-
-
-# TODO: Check eligible condition
-def _make_available(evs, rent, charging, vpp, max_soc):
-    rent.update(set(evs.EV))
-
-    charging_evs = evs.loc[evs["end_charging"] == 1]
-    charging.update(dict(zip(charging_evs.EV, evs.end_soc)))
-
-    # EVs are only eligible for VPP when they have enough available battery capacity
-    vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
-    vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
-
-    return (rent, charging, vpp)
-
-
-# TODO: Stop simulating if full
-def _simulate_charge(charging, vpp):
-    # Increment is the amount of electricity that EVs charge during 5 Minutes
-    increment = 100 * (vppsim.TIME_UNIT_CHARGE / 3) / vppsim.MAX_EV_CAPACITY
-
-    charging.update((k, v + increment) for k, v in charging.items())
-    vpp.update((k, v + increment) for k, v in vpp.items())
-
-    return (charging, vpp)
 
 
 def calculate_capacity(df):
@@ -166,6 +130,42 @@ def calculate_capacity(df):
 
     df_charging = df_charging.set_index("timestamp").sort_index()
     return df_charging
+
+
+def _make_unavailable(evs, rent, charging, vpp):
+    rent.difference_update(set(evs.EV))
+
+    # Starting EVs are not connected to charger anymore
+    for ev in evs:
+        charging.pop(ev, None)
+        vpp.pop(ev, None)
+
+    return (rent, charging, vpp)
+
+
+# TODO: Check eligible condition
+def _make_available(evs, rent, charging, vpp, max_soc):
+    rent.update(set(evs.EV))
+
+    charging_evs = evs.loc[evs["end_charging"] == 1]
+    charging.update(dict(zip(charging_evs.EV, evs.end_soc)))
+
+    # EVs are only eligible for VPP when they have enough available battery capacity
+    vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
+    vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
+
+    return (rent, charging, vpp)
+
+
+# TODO: Stop simulating if full
+def _simulate_charge(charging, vpp):
+    # Increment is the amount of electricity that EVs charge during 5 Minutes
+    increment = 100 * (vppsim.TIME_UNIT_CHARGE / 3) / vppsim.MAX_EV_CAPACITY
+
+    charging.update((k, v + increment) for k, v in charging.items())
+    vpp.update((k, v + increment) for k, v in vpp.items())
+
+    return (charging, vpp)
 
 
 def calculate_trips(df_car):
