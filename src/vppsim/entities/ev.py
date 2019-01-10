@@ -14,7 +14,7 @@ class EV:
         self.env = env
         self.name = name
         self.vpp = vpp
-        self.action = env.process(self.idle())
+        self.action = None
 
         self.log("Added to fleet!")
 
@@ -54,19 +54,10 @@ class EV:
             )
         )
 
-    def idle(self):
-        self.log("At a parking lot. Waiting for rental...")
-        while True:
-            try:
-                yield self.env.timeout(5 * 60)
-            except simpy.Interrupt as i:
-                self.log("Idle interrupted! %s" % i.cause)
-                break
-
     def at_charger(self):
         self.log("At a charging station!")
 
-        # Only add to VPP if enough battery cpacity to charge next timeslot
+        # Only add to VPP if enough battery capacity to charge next timeslot
         if self.battery.capacity - self.battery.level >= vppsim.CHARGING_STEP_SOC:
             self.vpp.log(
                 "Adding EV %s to VPP: Increase capacity by %skW..."
@@ -108,22 +99,22 @@ class EV:
         self.vpp.log("Removed capacity %skW" % vppsim.CHARGING_SPEED)
 
     def drive(self, rental, duration, trip_charge, end_charger):
-        # Interrupt Charging or Parking
-        if not self.action.triggered:
-            self.action.interrupt("Starting trip %d." % rental)
-        else:
-            self.warning("Did not interrupt previous action")
+
+        self.log("Starting trip %d." % rental)
+        # Interrupt Charging
+        if self.action != None and not self.action.triggered:
+            self.action.interrupt("Customer wants to rent car")
 
         if self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
             return
 
         # Drive for the trip duration
-        yield self.env.timeout((duration * 60) - 2)  # seconds
+        yield self.env.timeout((duration * 60) - 1)  # seconds
 
         # Adjust SoC
         self.log(
-            "End Trip %d : Drove for %.2f minutes and consumed %s%% charge."
+            "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
         )
         self.log("Adjusting battery level...")
@@ -133,5 +124,3 @@ class EV:
         # TODO: Use real bool from data
         if end_charger == 1:
             self.action = self.env.process(self.at_charger())
-        else:
-            self.action = self.env.process(self.idle())
