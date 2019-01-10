@@ -67,10 +67,7 @@ class EV:
         self.log("At a charging station!")
 
         # Only add to VPP if enough battery cpacity to charge next timeslot
-        capacity_left = (
-            (self.battery.capacity - self.battery.level) * vppsim.MAX_EV_CAPACITY / 100
-        )
-        if capacity_left >= vppsim.CHARGING_SPEED / (60 / vppsim.TIME_UNIT_CHARGE):
+        if self.battery.capacity - self.battery.level >= vppsim.CHARGING_STEP_SOC:
             self.vpp.log(
                 "Adding EV %s to VPP: Increase capacity by %skW..."
                 % (self.name, vppsim.CHARGING_SPEED)
@@ -80,17 +77,24 @@ class EV:
         else:
             self.vpp.log(
                 "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
-                % (self.name, capacity_left)
+                % (self.name, self.battery.capacity - self.battery.level)
             )
 
         while True:
             try:
-                # TODO: Charge with timesteps
-                if self.battery.level < 100:
-                    self.battery.put(self.battery.capacity - self.battery.level)
+                yield self.env.timeout(5 * 60)  # 5 Minutes
 
-                # END_TODO
-                yield self.env.timeout(1)
+                if (
+                    self.battery.capacity - self.battery.level
+                    >= vppsim.CHARGING_STEP_SOC
+                ):
+                    self.battery.put(vppsim.CHARGING_STEP_SOC)
+                    self.log("Charged battery for %.2f%%" % vppsim.CHARGING_STEP_SOC)
+                else:
+                    self.battery.put(self.battery.capacity - self.battery.level)
+                    self.log("Battery full")
+                    break
+
             except simpy.Interrupt as i:
                 self.log("Charging interrupted! %s" % i.cause)
                 break
@@ -104,16 +108,11 @@ class EV:
         self.vpp.log("Removed capacity %skW" % vppsim.CHARGING_SPEED)
 
     def drive(self, rental, duration, trip_charge, end_charger):
-        self.logger.info(
-            "[%s] - --------- RENTAL %d of %s--------"
-            % (datetime.fromtimestamp(self.env.now), rental, self.name)
-        )
-
         # Interrupt Charging or Parking
         if not self.action.triggered:
-            self.action.interrupt("Start trip %d.")
+            self.action.interrupt("Starting trip %d." % rental)
         else:
-            self.log.warning("Something weird happened :o")
+            self.warning("Did not interrupt previous action")
 
         if self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
@@ -123,15 +122,10 @@ class EV:
         yield self.env.timeout((duration * 60) - 2)  # seconds
 
         # Adjust SoC
-        self.logger.info(
-            "[%s] - --------- END RENTAL %d --------"
-            % (datetime.fromtimestamp(self.env.now), rental)
-        )
         self.log(
             "End Trip %d : Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
         )
-
         self.log("Adjusting battery level...")
         yield self.battery.get(trip_charge)
         self.log("Battery level has been decreased by %s%%." % trip_charge)
