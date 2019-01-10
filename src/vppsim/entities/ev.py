@@ -97,7 +97,9 @@ class EV:
 
         # Interrupt Charging or Parking
         if not self.action.triggered:
-            self.action.interrupt("Customer starts driving.")
+            self.action.interrupt("Start trip %d.")
+        else:
+            self.log.warning("Something weird happened :o")
 
         if self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
@@ -112,8 +114,8 @@ class EV:
             % (datetime.fromtimestamp(self.env.now), rental)
         )
         self.log(
-            "Drove for %.2f minutes on trip %s and consumed %s%% charge."
-            % (duration, rental, trip_charge)
+            "End Trip %d : Drove for %.2f minutes and consumed %s%% charge."
+            % (rental, duration, trip_charge)
         )
 
         self.log("Adjusting battery level...")
