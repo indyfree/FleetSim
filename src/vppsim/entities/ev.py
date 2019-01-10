@@ -16,9 +16,23 @@ class EV:
         self.vpp = vpp
         self.action = env.process(self.idle())
 
+        self.log("Added to fleet!")
+
+    def error(self, message):
+        self.logger.error(
+            "[%s] - %s(%s/%s) %s"
+            % (
+                datetime.fromtimestamp(self.env.now),
+                self.name,
+                self.battery.level,
+                self.battery.capacity,
+                message,
+            )
+        )
+
     def log(self, message):
         self.logger.info(
-            "[%s] - %s(%s/%s) %s"
+            "[%s] - %s(%.2f/%s) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
                 self.name,
