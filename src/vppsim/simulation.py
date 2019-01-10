@@ -52,7 +52,6 @@ def lifecycle(logger, env, vpp, df):
                 rental.Index,
                 rental.trip_duration,
                 rental.start_soc - rental.end_soc,
-                rental.start_soc,
                 rental.end_charging,
             )
         )
@@ -73,7 +72,7 @@ def setup_logger():
 
     # Also log to stdout
     console = logging.StreamHandler()
-    console.setLevel(logging.WARNING)
+    console.setLevel(logging.DEBUG)
     console.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
     logging.getLogger("").addHandler(console)
 

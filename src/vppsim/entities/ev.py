@@ -15,7 +15,6 @@ class EV:
         self.name = name
         self.vpp = vpp
         self.action = env.process(self.idle())
-        self.soc = soc
 
     def log(self, message):
         self.logger.info(
@@ -50,61 +49,47 @@ class EV:
                 self.log("Idle interrupted! %s" % i.cause)
                 break
 
-    def charge(self):
-        self.log("At a charging station! Charging...")
+    def at_charger(self):
+        self.log("At a charging station!")
 
-        capacity = (
-            vppsim.MAX_EV_CAPACITY * (self.battery.capacity - self.battery.level) / 100
+        # Only add to VPP if enough battery cpacity to charge next timeslot
+        capacity_left = (
+            (self.battery.capacity - self.battery.level) * vppsim.MAX_EV_CAPACITY / 100
         )
-        if capacity != 0:
+        if capacity_left >= vppsim.CHARGING_SPEED / (60 / vppsim.TIME_UNIT_CHARGE):
             self.vpp.log(
-                "Adding EV %s to VPP: Increase capacity by %skWh..."
-                % (self.name, capacity)
+                "Adding EV %s to VPP: Increase capacity by %skW..."
+                % (self.name, vppsim.CHARGING_SPEED)
             )
-            yield self.vpp.capacity.put(capacity)
-            self.vpp.log("Added capacity %skWh" % capacity)
+            yield self.vpp.capacity.put(vppsim.CHARGING_SPEED)
+            self.vpp.log("Added capacity %skWh" % vppsim.CHARGING_SPEED)
+        else:
+            self.vpp.log(
+                "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
+                % (self.name, capacity_left)
+            )
 
         while True:
             try:
+                # TODO: Charge with timesteps
+                if self.battery.level < 100:
+                    self.battery.put(self.battery.capacity - self.battery.level)
+
+                # END_TODO
                 yield self.env.timeout(1)
             except simpy.Interrupt as i:
                 self.log("Charging interrupted! %s" % i.cause)
-                self.log(
-                    "Last SoC: %s%%, current SoC: %s%%" % (self.battery.level, self.soc)
-                )
-
-                charged_amount = self.soc - self.battery.level
-                if charged_amount > 0:
-                    yield self.battery.put(charged_amount)
-                    self.log("Charged battery for %s%%" % charged_amount)
-                elif charged_amount < 0:
-                    self.warning(
-                        "Data inconsistency."
-                        " Battery lost %s%% but should have been charging. Adjusting..."
-                        % charged_amount
-                    )
-                    yield self.battery.get(-charged_amount)
-                    self.log("Charged battery for %s%%" % charged_amount)
-                else:
-                    self.warning(
-                        "Battery level did not change, but should have been charging."
-                    )
-
                 break
 
-        if capacity != 0:
-            self.vpp.log(
-                "Removing EV %s from VPP: Decrease capacity by %skWh"
-                % (self.name, capacity)
-            )
-            yield self.vpp.capacity.get(capacity)
-            self.vpp.log("Removed capacity %skWh" % capacity)
+        # TODO: Check if EV is in VPP, see above condition
+        self.vpp.log(
+            "Removing EV %s from VPP: Decrease capacity by %skW"
+            % (self.name, vppsim.CHARGING_SPEED)
+        )
+        yield self.vpp.capacity.get(vppsim.CHARGING_SPEED)
+        self.vpp.log("Removed capacity %skW" % vppsim.CHARGING_SPEED)
 
-    def drive(self, rental, duration, trip_charge, start_soc, dest_charging_station):
-        # Remeber SoC on the begging of rental to fix inconsistencies
-        # between simulated SoC and the the data.
-        self.soc = start_soc
-
+    def drive(self, rental, duration, trip_charge, end_charger):
         self.logger.info(
             "[%s] - --------- RENTAL %d of %s--------"
             % (datetime.fromtimestamp(self.env.now), rental, self.name)
@@ -113,30 +98,6 @@ class EV:
         # Interrupt Charging or Parking
         if not self.action.triggered:
             self.action.interrupt("Customer starts driving.")
-
-        # Pause 1 second to allow charging station to adjust battery levels
-        # before we correct based on data
-        yield self.env.timeout(1)
-        # Fix battery levels based on real data
-        if self.battery.level != start_soc:
-            self.warning(
-                "SoC is %s%% at start of trip %d."
-                "It should be %s%% based on previous trip. Adjusting..."
-                % (start_soc, rental, self.battery.level)
-            )
-            diff = start_soc - self.battery.level
-            if diff < 0:
-                yield self.battery.get(-diff)
-                self.warning(
-                    "EV lost %s%% battery while beeing idle."
-                    "How much can a EV loose standing around?" % diff
-                )
-            else:
-                yield self.battery.put(diff)
-                self.warning(
-                    "EV gained %s%% battery while beeing idle. At charging station?"
-                    % diff
-                )
 
         if self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
@@ -154,24 +115,12 @@ class EV:
             "Drove for %.2f minutes on trip %s and consumed %s%% charge."
             % (duration, rental, trip_charge)
         )
-        if trip_charge > 0:
-            self.log("Adjusting battery level...")
-            yield self.battery.get(trip_charge)
-            self.log("Battery level has been decreased by %s%%." % trip_charge)
-        elif trip_charge < 0:
-            self.warning(
-                "Battery has been charged for %s%% on trip %d which lasted %s minutes."
-                % (-trip_charge, rental, duration)
-            )
-            yield self.battery.put(-trip_charge)
-            self.log("Battery level has been increased by %s%%." % -trip_charge)
-        else:
-            self.warning(
-                "No battery has been consumed on trip %d which lasted %s minutes."
-                % (rental, duration)
-            )
 
-        if bool(dest_charging_station):
-            self.action = self.env.process(self.charge())
+        self.log("Adjusting battery level...")
+        yield self.battery.get(trip_charge)
+        self.log("Battery level has been decreased by %s%%." % trip_charge)
+
+        if bool(end_charger):
+            self.action = self.env.process(self.at_charger())
         else:
             self.action = self.env.process(self.idle())
