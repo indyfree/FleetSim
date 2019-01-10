@@ -130,7 +130,8 @@ class EV:
         yield self.battery.get(trip_charge)
         self.log("Battery level has been decreased by %s%%." % trip_charge)
 
-        if bool(end_charger):
+        # TODO: Use real bool from data
+        if end_charger == 1:
             self.action = self.env.process(self.at_charger())
         else:
             self.action = self.env.process(self.idle())
