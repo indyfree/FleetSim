@@ -82,7 +82,7 @@ def calculate_capacity(df):
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
         # 1. Each timestep (5min) plugged-in EVs charge linearly
-        charging, vpp = _simulate_charge(charging, vpp)
+        charging, vpp = _simulate_charge(charging, vpp, max_soc)
 
         # 2. Remove EVs from VPP when not enough available
         # battery capacity for next charge
@@ -92,19 +92,18 @@ def calculate_capacity(df):
         starting_evs = df.loc[df["start_time"] == t]
         total.update(set(starting_evs.EV))
 
-        # 4. Starting EVs are unavailable
-        rent, charging, vpp = _make_unavailable(starting_evs, rent, charging, vpp)
-
-        # 5. Ending EVs are available
+        # 4. Trip-Ending EVs are available
         ending_evs = df.loc[df["end_time"] == t]
         rent, charging, vpp = _make_available(ending_evs, rent, charging, vpp, max_soc)
+
+        # 4. Trip-Starting EVs are unavailable
+        rent, charging, vpp = _make_unavailable(starting_evs, rent, charging, vpp)
 
         avg_soc = 0
         if len(charging) > 0:
             avg_soc = sum(charging.values()) / len(charging)
 
         df_charging.append((t, len(rent), len(charging), len(vpp), avg_soc, len(total)))
-        # print(t, len(rent), len(charging), len(vpp), avg_soc, len(total))
 
     df_charging = pd.DataFrame(
         df_charging,
@@ -137,20 +136,18 @@ def _make_unavailable(evs, rent, charging, vpp):
     rent.difference_update(set(evs.EV))
 
     # Starting EVs are not connected to charger anymore
-    for ev in evs:
+    for ev in set(evs.EV):
         charging.pop(ev, None)
         vpp.pop(ev, None)
 
     return (rent, charging, vpp)
 
 
-# TODO: Check eligible condition
 def _make_available(evs, rent, charging, vpp, max_soc):
     rent.update(set(evs.EV))
 
     charging_evs = evs.loc[evs["end_charging"] == 1]
     charging.update(dict(zip(charging_evs.EV, evs.end_soc)))
-
     # EVs are only eligible for VPP when they have enough available battery capacity
     vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
     vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
@@ -158,12 +155,17 @@ def _make_available(evs, rent, charging, vpp, max_soc):
     return (rent, charging, vpp)
 
 
-# TODO: Stop simulating if full
-def _simulate_charge(charging, vpp):
+def _simulate_charge(charging, vpp, max_soc):
     # Increment is the amount of electricity that EVs charge during 5 Minutes
     increment = 100 * (vppsim.TIME_UNIT_CHARGE / 3) / vppsim.MAX_EV_CAPACITY
 
-    charging.update((k, v + increment) for k, v in charging.items())
+    for k in charging:
+        if charging[k] <= max_soc:
+            charging[k] += increment
+        else:
+            charging[k] = 100
+
+    # No condition is needed here since EVs are not part of VPP when fully charged
     vpp.update((k, v + increment) for k, v in vpp.items())
 
     return (charging, vpp)
