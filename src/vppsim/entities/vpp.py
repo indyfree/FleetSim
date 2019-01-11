@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-import simpy
 
 import vppsim
 
@@ -9,26 +8,55 @@ class VPP:
     def __init__(self, env, name, num_evs):
         self.logger = logging.getLogger("vppsim.vpp")
 
-        self.capacity = simpy.Container(
-            env, init=0, capacity=vppsim.MAX_EV_CAPACITY * num_evs
-        )
         self.env = env
+        self.evs = dict()
         self.name = name
-        # self.mon_proc = env.process(self.monitor_capacity(env))
 
     def log(self, message):
         self.logger.info(
-            "[%s] - %s(%.2f/%.2f) %s"
+            "[%s] - %s(%.1fkW) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
                 self.name,
-                self.capacity.level,
-                self.capacity.capacity,
+                self.capacity(),
                 message,
             )
         )
 
-    def monitor_capacity(self):
-        while True:
-            self.log("Capacity")
-            yield self.env.timeout(10 * 60)
+    def log_EVs(self):
+        self.log("Number EVs %d, Mean SoC: %.1f" % (len(self.evs), self.avg_soc()))
+        self.log(dict(zip(self.evs.keys(), self.socs())))
+
+    def socs(self):
+        s = list()
+        for _, v in self.evs.items():
+            s.append(round(v.battery.level, 2))
+
+        return s
+
+    def add(self, ev):
+        if ev.name not in self.evs:
+            self.evs[ev.name] = ev
+            self.log("Adding EV %s to VPP." % ev.name)
+            self.log_EVs()
+        else:
+            raise ValueError("%s is already allocated to VPP." % ev.name)
+
+    def avg_soc(self):
+        return sum(self.socs()) / len(self.evs)
+
+    def capacity(self):
+        return len(self.evs) * vppsim.CHARGING_SPEED
+
+    def contains(self, ev):
+        if ev.name in self.evs:
+            return True
+
+        return False
+
+    def remove(self, ev):
+        if ev.name in self.evs:
+            del self.evs[ev.name]
+            self.log("Removed EV %s from VPP." % ev.name)
+        else:
+            raise ValueError("%s was not allocated to VPP." % ev.name)
