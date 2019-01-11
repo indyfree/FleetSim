@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+import pandas as pd
 import simpy
 import os
 
@@ -38,6 +39,8 @@ def main():
 def lifecycle(logger, env, vpp, df):
     evs = {}
     previous = df.iloc[0, :]
+    stats = []
+    stat_filename = "./logs/stats-%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
 
     for rental in df.itertuples():
 
@@ -63,13 +66,31 @@ def lifecycle(logger, env, vpp, df):
         )
         previous = rental
 
+        stats.append(
+            [
+                datetime.fromtimestamp(env.now),
+                len(vpp.evs),
+                vpp.avg_soc(),
+                vpp.capacity(),
+            ]
+        )
+
+    save_stats(stats, stat_filename, datetime.fromtimestamp(env.now), vpp)
+
+
+def save_stats(stats, filename, timestamp, vpp):
+    df_stats = pd.DataFrame(
+        data=stats, columns=["timestamp", "ev_vpp", "vpp_soc", "vpp_capacity_kw"]
+    )
+    df_stats.to_csv(filename, index=False)
+
 
 def setup_logger():
     os.makedirs("./logs", exist_ok=True)
 
     # Log to file
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(name)-10s: %(levelname)-7s %(message)s",
         filename="./logs/sim-%s.log" % datetime.now().strftime("%Y%m%d-%H%M%S"),
         filemode="w",
@@ -78,7 +99,7 @@ def setup_logger():
 
     # Also log to stdout
     console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
+    console.setLevel(logging.WARNING)
     console.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
     logging.getLogger("").addHandler(console)
 
