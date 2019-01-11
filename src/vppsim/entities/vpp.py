@@ -24,7 +24,7 @@ class VPP:
         )
 
     def log_EVs(self):
-        self.log("Number EVs %d, Mean SoC: %.1f" % (len(self.evs), self.avg_soc()))
+        self.log("Number EVs: %d, Mean SoC: %.1f" % (len(self.evs), self.avg_soc()))
         self.log(dict(zip(self.evs.keys(), self.socs())))
 
     def socs(self):
@@ -37,10 +37,10 @@ class VPP:
     def add(self, ev):
         if ev.name not in self.evs:
             self.evs[ev.name] = ev
-            self.log("Adding EV %s to VPP." % ev.name)
+            self.log("Adding EV '%s' to VPP." % ev.name)
             self.log_EVs()
         else:
-            raise ValueError("%s is already allocated to VPP." % ev.name)
+            raise ValueError("'%s' is already allocated to VPP." % ev.name)
 
     def avg_soc(self):
         return sum(self.socs()) / len(self.evs)
