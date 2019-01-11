@@ -110,13 +110,24 @@ class EV:
         )
 
         self.log("Adjusting battery level...")
+        # Special case: Battery has been charged without appearing in data
         if trip_charge < 0:
-            self.log(
-                "EV as been at charger before. Battery charged to %d%%"
-                % (self.battery.level - trip_charge)
+            self.warning(
+                "EV was already at charging station. Battery level: %d. Trip charge: %d"
+                % (self.battery.level, trip_charge)
             )
-            yield self.battery.put(-trip_charge)
-            self.log("Battery level has been increased by %s%%." % -trip_charge)
+
+            free_battery = self.battery.capacity - self.battery.level
+            if free_battery > 0 and -trip_charge >= free_battery:
+                yield self.battery.put(self.battery.capacity - self.battery.level)
+                self.warning(
+                    "Battery charged more than available space. Filled up to 100."
+                )
+            elif -trip_charge < free_battery:
+                yield self.battery.put(-trip_charge)
+                self.log("Battery level has been increased by %s%%." % -trip_charge)
+            else:
+                self.log("Battery is still full")
         elif trip_charge > 0:
             yield self.battery.get(trip_charge)
             self.log("Battery level has been decreased by %s%%." % trip_charge)
