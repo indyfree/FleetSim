@@ -226,9 +226,6 @@ def trip_distance(trip_charge):
 def clean_trips(df):
     # Trips longer than 2 days are service trips
     df_trips = df.loc[df["trip_duration"] < (2 * 24 * 60)]
-    logger.info(
-        "Removed %.2f%% trips that were longer than 2 days"
-        % ((len(df) - len(df_trips)) / len(df))
-    )
+    logger.info("Removed %d trips that were longer than 2 days" % len(df_trips))
 
     return df_trips
