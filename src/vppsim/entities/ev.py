@@ -70,14 +70,15 @@ class EV:
             try:
                 yield self.env.timeout(5 * 60)  # 5 Minutes
 
-                if (
-                    self.battery.capacity - self.battery.level
-                    >= vppsim.CHARGING_STEP_SOC
-                ):
+                self.log("Charging...")
+                free = self.battery.capacity - self.battery.level
+                if free >= vppsim.CHARGING_STEP_SOC:
                     self.battery.put(vppsim.CHARGING_STEP_SOC)
                     self.log("Charged battery for %.2f%%" % vppsim.CHARGING_STEP_SOC)
                 else:
-                    self.battery.put(self.battery.capacity - self.battery.level)
+                    if free > 0:
+                        self.battery.put(free)
+
                     self.log("Battery full")
                     break
 
@@ -95,7 +96,7 @@ class EV:
         if self.action is not None and not self.action.triggered:
             self.action.interrupt("Customer wants to rent car")
 
-        if self.battery.level < trip_charge:
+        if trip_charge > 0 and self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
             return
 
@@ -107,9 +108,20 @@ class EV:
             "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
         )
+
         self.log("Adjusting battery level...")
-        yield self.battery.get(trip_charge)
-        self.log("Battery level has been decreased by %s%%." % trip_charge)
+        if trip_charge < 0:
+            self.log(
+                "EV as been at charger before. Battery charged to %d%%"
+                % (self.battery.level - trip_charge)
+            )
+            yield self.battery.put(-trip_charge)
+            self.log("Battery level has been increased by %s%%." % -trip_charge)
+        elif trip_charge > 0:
+            yield self.battery.get(trip_charge)
+            self.log("Battery level has been decreased by %s%%." % trip_charge)
+        else:
+            self.log("No consumed charge!")
 
         # TODO: Use real bool from data
         if end_charger == 1:
