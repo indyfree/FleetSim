@@ -74,12 +74,14 @@ class EV:
                 free_battery = self.battery.capacity - self.battery.level
                 if free_battery >= vppsim.CHARGING_STEP_SOC:
                     self.battery.put(vppsim.CHARGING_STEP_SOC)
-                    self.log("Charged battery for %.2f%%" % vppsim.CHARGING_STEP_SOC)
+                    self.log("Charged battery for %.2f%%." % vppsim.CHARGING_STEP_SOC)
+                elif free_battery > 0:
+                    self.battery.put(free_battery)
+                    self.log("Charged battery for %.2f%%." % free_battery)
+                    self.log("Battery full!")
+                    break
                 else:
-                    if free_battery > 0:
-                        self.battery.put(free_battery)
-
-                    self.log("Battery full")
+                    self.log("Battery full!")
                     break
 
             except simpy.Interrupt as i:
