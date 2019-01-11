@@ -43,7 +43,10 @@ class VPP:
             raise ValueError("'%s' is already allocated to VPP." % ev.name)
 
     def avg_soc(self):
-        return sum(self.socs()) / len(self.evs)
+        if len(self.evs) > 0:
+            return sum(self.socs()) / len(self.evs)
+        else:
+            return 0
 
     def capacity(self):
         return len(self.evs) * vppsim.CHARGING_SPEED
