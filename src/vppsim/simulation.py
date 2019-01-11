@@ -26,21 +26,24 @@ def main():
     logger = setup_logger()
     df = loader.load_car2go_trips()
 
+    stats = []
+    stat_filename = "./logs/stats-%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
+
     env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
-    env.process(lifecycle(logger, env, vpp, df))
+    env.process(lifecycle(logger, env, vpp, df, stats))
 
     logger.info(
         "[%s] - ---- STARTING SIMULATION -----" % datetime.fromtimestamp(env.now)
     )
     env.run(until=df.end_time.max())
 
+    save_stats(stats, stat_filename, datetime.fromtimestamp(env.now), vpp)
 
-def lifecycle(logger, env, vpp, df):
+
+def lifecycle(logger, env, vpp, df, stats):
     evs = {}
     previous = df.iloc[0, :]
-    stats = []
-    stat_filename = "./logs/stats-%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
 
     for rental in df.itertuples():
 
@@ -75,14 +78,15 @@ def lifecycle(logger, env, vpp, df):
             ]
         )
 
-    save_stats(stats, stat_filename, datetime.fromtimestamp(env.now), vpp)
-
 
 def save_stats(stats, filename, timestamp, vpp):
     df_stats = pd.DataFrame(
         data=stats, columns=["timestamp", "ev_vpp", "vpp_soc", "vpp_capacity_kw"]
     )
+    df_stats = df_stats.groupby("timestamp").last()
+    df_stats = df_stats.reset_index()
     df_stats.to_csv(filename, index=False)
+    df_stats.to_csv("./logs/stats.csv", index=False)
 
 
 def setup_logger():
