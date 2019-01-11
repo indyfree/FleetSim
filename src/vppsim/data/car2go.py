@@ -231,12 +231,4 @@ def clean_trips(df):
         % ((len(df) - len(df_trips)) / len(df))
     )
 
-    trips = len(df_trips)
-    # Trips where no distance could be determined have been charged on a trip
-    df_trips = df_trips.loc[df["trip_distance"].notna()]
-    logger.info(
-        "Removed %.2f%% trips that were charged on a trip"
-        % ((trips - len(df_trips)) / len(df))
-    )
-
     return df_trips
