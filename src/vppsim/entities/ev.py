@@ -59,12 +59,7 @@ class EV:
 
         # Only add to VPP if enough battery capacity to charge next timeslot
         if self.battery.capacity - self.battery.level >= vppsim.CHARGING_STEP_SOC:
-            self.vpp.log(
-                "Adding EV %s to VPP: Increase capacity by %skW..."
-                % (self.name, vppsim.CHARGING_SPEED)
-            )
-            yield self.vpp.capacity.put(vppsim.CHARGING_SPEED)
-            self.vpp.log("Added capacity %skWh" % vppsim.CHARGING_SPEED)
+            self.vpp.add(self)
         else:
             self.vpp.log(
                 "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
@@ -90,19 +85,14 @@ class EV:
                 self.log("Charging interrupted! %s" % i.cause)
                 break
 
-        # TODO: Check if EV is in VPP, see above condition
-        self.vpp.log(
-            "Removing EV %s from VPP: Decrease capacity by %skW"
-            % (self.name, vppsim.CHARGING_SPEED)
-        )
-        yield self.vpp.capacity.get(vppsim.CHARGING_SPEED)
-        self.vpp.log("Removed capacity %skW" % vppsim.CHARGING_SPEED)
+        if self.vpp.contains(self):
+            self.vpp.remove(self)
 
     def drive(self, rental, duration, trip_charge, end_charger):
 
         self.log("Starting trip %d." % rental)
         # Interrupt Charging
-        if self.action != None and not self.action.triggered:
+        if self.action is not None and not self.action.triggered:
             self.action.interrupt("Customer wants to rent car")
 
         if self.battery.level < trip_charge:
