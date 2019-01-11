@@ -20,7 +20,7 @@ class EV:
 
     def error(self, message):
         self.logger.error(
-            "[%s] - %s(%s/%s) %s"
+            "[%s] - %s(%.2f/%s) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
                 self.name,
@@ -44,7 +44,7 @@ class EV:
 
     def warning(self, message):
         self.logger.warning(
-            "[%s] - %s(%s/%s) %s"
+            "[%s] - %s(%.2f/%s) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
                 self.name,
