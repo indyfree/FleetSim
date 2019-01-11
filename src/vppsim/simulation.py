@@ -26,7 +26,7 @@ def main():
     df = loader.load_car2go_trips()
 
     env = simpy.Environment(initial_time=df.start_time.min())
-    vpp = VPP(env, "VPP-1", num_evs=len(df.EV.unique()))
+    vpp = VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
     env.process(lifecycle(logger, env, vpp, df))
 
     logger.info(
@@ -43,12 +43,13 @@ def lifecycle(logger, env, vpp, df):
 
         # Wait until next rental
         yield env.timeout(rental.start_time - previous.start_time)  # sec
+        if rental.start_time - previous.start_time > 0:
+            logger.info(
+                "[%s] - ---------- TIMESLOT %s ----------"
+                % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
+            )
 
         if rental.EV not in evs:
-            logger.info(
-                "[%s] - ---------- NEW EV %d ----------"
-                % (datetime.fromtimestamp(env.now), rental.Index)
-            )
             evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
