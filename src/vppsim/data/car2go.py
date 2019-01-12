@@ -262,5 +262,5 @@ def _end_charging_previous_trip(df):
 
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop(["index"], axis=1)
-    logger.info("Changed %d trips to end at charging station" % num_trips)
+    logger.info("Changed %d trips to end at a charging station." % num_trips)
     return df_trips
