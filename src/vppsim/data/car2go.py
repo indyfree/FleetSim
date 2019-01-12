@@ -30,8 +30,8 @@ def process(df):
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
 
-    df_trips = clean_trips(df_trips)
     df_trips = add_charging_stations(df_trips, df_stations)
+    df_trips = clean_trips(df_trips)
     return df_trips
 
 
@@ -224,8 +224,46 @@ def trip_distance(trip_charge):
 
 
 def clean_trips(df):
-    # Trips longer than 2 days are service trips
-    df_trips = df.loc[df["trip_duration"] < (2 * 24 * 60)]
-    logger.info("Removed %d trips that were longer than 2 days" % len(df_trips))
+    """
+        Remove service trips (longer than 2 days) from trip data.
+        When EV has been charged on a service trip,
+        end previous trip at charging station.
 
+        Effects on Simulation:
+          - Earlier charging of EV, if it has been parked at a charging
+            station on the service trip.
+          - Higher SoC in Sim than in the real data, since trips has been removed.
+    """
+    df = _end_charging_previous_trip(df)
+
+    df_service = df.loc[df["trip_duration"] > 2 * 24 * 60]
+    df.drop(df_service.index, inplace=True)
+
+    logger.info("Removed %d trips that were longer than 2 days." % len(df_service))
+    return df
+
+
+def _end_charging_previous_trip(df):
+    trips = list()
+
+    num_trips = 0
+    for ev in df["EV"].unique():
+        df_car = df[df["EV"] == ev].reset_index().drop(["index"], axis=1)
+        service_trips_idx = df_car[
+            (df_car["trip_duration"] > 60 * 24 * 2) & df_car["trip_distance"].isna()
+        ].index
+
+        for i in service_trips_idx:
+            if i < 0:
+                df_car.iat[i - 1, df_car.columns.get_loc("end_charging")] = 1
+
+        trips.append(df_car)
+        num_trips += len(service_trips_idx)
+
+    df_trips = pd.concat(trips)
+    df_trips = df_trips.sort_values("start_time").reset_index().drop(["index"], axis=1)
+    logger.info(
+        "Changed %d trips to end at charging station" % num_trips,
+        "because of following service trips.",
+    )
     return df_trips
