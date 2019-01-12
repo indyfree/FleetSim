@@ -254,7 +254,7 @@ def _end_charging_previous_trip(df):
         ].index
 
         for i in service_trips_idx:
-            if i < 0:
+            if i > 0:
                 df_car.iat[i - 1, df_car.columns.get_loc("end_charging")] = 1
 
         trips.append(df_car)
@@ -262,8 +262,5 @@ def _end_charging_previous_trip(df):
 
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop(["index"], axis=1)
-    logger.info(
-        "Changed %d trips to end at charging station" % num_trips,
-        "because of following service trips.",
-    )
+    logger.info("Changed %d trips to end at charging station" % num_trips)
     return df_trips
