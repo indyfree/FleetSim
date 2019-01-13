@@ -250,7 +250,8 @@ def _end_charging_previous_trip(df):
     for ev in df["EV"].unique():
         df_car = df[df["EV"] == ev].reset_index().drop(["index"], axis=1)
         service_trips_idx = df_car[
-            (df_car["trip_duration"] > 60 * 24 * 2) & df_car["end_charging"] == 1
+            (df_car["trip_duration"] > 60 * 24 * 2)
+            & ((df_car["end_charging"] == 1) | (df_car["trip_distance"].isna()))
         ].index
 
         for i in service_trips_idx:
