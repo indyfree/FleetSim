@@ -89,7 +89,12 @@ def load_car2go_trips(rebuild=False):
         )
         pkls.append(pd.read_pickle(path))
 
-    df = pd.concat(pkls).sort_values(["start_time"]).reset_index()
+    df = (
+        pd.concat(pkls)
+        .sort_values(["start_time"])
+        .reset_index()
+        .drop(["index"], axis=1)
+    )
     df.to_csv(PROCESSED_TRIPS_FILE.strip(".pkl") + ".csv")
     pd.to_pickle(df, PROCESSED_TRIPS_FILE)
     logger.info("Wrote all processed trips files to %s" % PROCESSED_TRIPS_FILE)
