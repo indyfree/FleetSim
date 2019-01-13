@@ -226,8 +226,8 @@ def trip_distance(trip_charge):
 def clean_trips(df):
     """
         Remove service trips (longer than 2 days) from trip data.
-        When EV has been charged on a service trip,
-        end previous trip at charging station.
+        When EV ended at a charging station, make
+        previous trip end at charging station.
 
         Effects on Simulation:
           - Earlier charging of EV, if it has been parked at a charging
@@ -250,7 +250,7 @@ def _end_charging_previous_trip(df):
     for ev in df["EV"].unique():
         df_car = df[df["EV"] == ev].reset_index().drop(["index"], axis=1)
         service_trips_idx = df_car[
-            (df_car["trip_duration"] > 60 * 24 * 2) & df_car["trip_distance"].isna()
+            (df_car["trip_duration"] > 60 * 24 * 2) & df_car["end_charging"] == 1
         ].index
 
         for i in service_trips_idx:
