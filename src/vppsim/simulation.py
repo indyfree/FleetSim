@@ -103,7 +103,7 @@ def setup_logger():
 
     # Also log to stdout
     console = logging.StreamHandler()
-    console.setLevel(logging.WARNING)
+    console.setLevel(logging.ERROR)
     console.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
     logging.getLogger("").addHandler(console)
 
