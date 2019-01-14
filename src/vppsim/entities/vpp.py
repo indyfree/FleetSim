@@ -1,12 +1,12 @@
 from datetime import datetime
 import logging
 
-import vppsim
+import evsim
 
 
 class VPP:
     def __init__(self, env, name, num_evs):
-        self.logger = logging.getLogger("vppsim.vpp")
+        self.logger = logging.getLogger("evsim.vpp")
 
         self.env = env
         self.evs = dict()
@@ -49,7 +49,7 @@ class VPP:
             return 0
 
     def capacity(self):
-        return len(self.evs) * vppsim.CHARGING_SPEED
+        return len(self.evs) * evsim.CHARGING_SPEED
 
     def contains(self, ev):
         if ev.name in self.evs:

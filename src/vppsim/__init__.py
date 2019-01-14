@@ -1,6 +1,6 @@
 # flake8: noqa
 
-from vppsim.simulation import (
+from evsim.simulation import (
     CHARGING_SPEED,
     CHARGING_STEP_KWH,
     CHARGING_STEP_SOC,

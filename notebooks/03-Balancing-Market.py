@@ -97,7 +97,7 @@ print('Activated Control Reserve 2016 - Negative : %.2f TWh Positive %.2f TWh' %
 # In[7]:
 
 
-from vppsim.data import load_balancing_data
+from evsim.data import load_balancing_data
 
 df_clearing_prices = load_balancing_data()
 df_clearing_prices.head()

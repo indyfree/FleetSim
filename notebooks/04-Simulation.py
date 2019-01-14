@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from vppsim.data import load_car2go_trips, load_car2go_capacity
+from evsim.data import load_car2go_trips, load_car2go_capacity
 
 
 # In[58]:

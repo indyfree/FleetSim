@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-import vppsim
+import evsim
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +67,8 @@ def calculate_capacity(df):
 
     # Maximal SoC of an EV to be eligible for VPP.
     max_soc = (
-        (vppsim.MAX_EV_CAPACITY - vppsim.TIME_UNIT_CHARGE)
-        / vppsim.MAX_EV_CAPACITY
+        (evsim.MAX_EV_CAPACITY - evsim.TIME_UNIT_CHARGE)
+        / evsim.MAX_EV_CAPACITY
         * 100
     )
 
@@ -119,13 +119,13 @@ def calculate_capacity(df):
 
     df_charging["available_battery_capacity_kwh"] = (
         df_charging["ev_charging"]
-        * vppsim.MAX_EV_CAPACITY
+        * evsim.MAX_EV_CAPACITY
         * (100 - df_charging["ev_charging_soc_avg"])
         / 100
     )
 
     df_charging["available_charging_capacity_kw"] = (
-        df_charging["ev_available_vpp"] * vppsim.CHARGING_SPEED
+        df_charging["ev_available_vpp"] * evsim.CHARGING_SPEED
     )
 
     df_charging = df_charging.set_index("timestamp").sort_index()
@@ -157,7 +157,7 @@ def _make_available(evs, rent, charging, vpp, max_soc):
 
 def _simulate_charge(charging, vpp, max_soc):
     # Increment is the amount of electricity that EVs charge during 5 Minutes
-    increment = 100 * (vppsim.TIME_UNIT_CHARGE / 3) / vppsim.MAX_EV_CAPACITY
+    increment = 100 * (evsim.TIME_UNIT_CHARGE / 3) / evsim.MAX_EV_CAPACITY
 
     for k in charging:
         if charging[k] <= max_soc:
@@ -220,7 +220,7 @@ def trip_distance(trip_charge):
     if trip_charge < 0:
         return np.nan
 
-    return (trip_charge / 100) * vppsim.MAX_EV_RANGE
+    return (trip_charge / 100) * evsim.MAX_EV_RANGE
 
 
 def clean_trips(df):

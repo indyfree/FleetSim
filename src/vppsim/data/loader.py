@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from pathlib import Path
 
-from vppsim.data import balancing, car2go, intraday
+from evsim.data import balancing, car2go, intraday
 
 logger = logging.getLogger(__name__)
 

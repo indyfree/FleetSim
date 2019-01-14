@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from vppsim.data import load_car2go_capacity
+from evsim.data import load_car2go_capacity
 
 
 # # Cleaning Trip Data

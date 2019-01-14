@@ -3,7 +3,7 @@
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
-PROJECT_NAME = vppsim
+PROJECT_NAME = evsim
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VENV_DIR =  $(PROJECT_DIR)/env
 JUPYTER_DIR =  $(VENV_DIR)/share/jupyter

@@ -84,7 +84,7 @@ pd.read_csv("/home/morty/Downloads/stuttgart.csv")
 # In[12]:
 
 
-from vppsim.data import load_car2go_trips, load_car2go_capacity
+from evsim.data import load_car2go_trips, load_car2go_capacity
 
 def determine_charging_stations(df):
     """Find charging stations where EV has been charged once (charging==1)."""

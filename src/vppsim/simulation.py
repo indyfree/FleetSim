@@ -6,8 +6,8 @@ import pandas as pd
 import simpy
 import os
 
-from vppsim.entities import EV, VPP
-from vppsim.data import loader
+from evsim.entities import EV, VPP
+from evsim.data import loader
 
 # PHYSICAL CONSTANTS
 CHARGING_SPEED = 4.6  # 4.6 kWh per hour
@@ -99,7 +99,7 @@ def setup_logger():
         filename="./logs/sim-%s.log" % datetime.now().strftime("%Y%m%d-%H%M%S"),
         filemode="w",
     )
-    logger = logging.getLogger("vppsim")
+    logger = logging.getLogger("evsim")
 
     # Also log to stdout
     console = logging.StreamHandler()

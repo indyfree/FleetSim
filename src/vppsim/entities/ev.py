@@ -2,12 +2,12 @@ from datetime import datetime
 import logging
 import simpy
 
-import vppsim
+import evsim
 
 
 class EV:
     def __init__(self, env, vpp, name, soc):
-        self.logger = logging.getLogger("vppsim.ev")
+        self.logger = logging.getLogger("evsim.ev")
 
         # Battery capacity in percent
         self.battery = simpy.Container(env, init=soc, capacity=100)
@@ -58,7 +58,7 @@ class EV:
         self.log("At a charging station!")
 
         # Only add to VPP if enough battery capacity to charge next timeslot
-        if self.battery.capacity - self.battery.level >= vppsim.CHARGING_STEP_SOC:
+        if self.battery.capacity - self.battery.level >= evsim.CHARGING_STEP_SOC:
             self.vpp.add(self)
         else:
             self.vpp.log(
@@ -72,9 +72,9 @@ class EV:
 
                 self.log("Charging...")
                 free_battery = self.battery.capacity - self.battery.level
-                if free_battery >= vppsim.CHARGING_STEP_SOC:
-                    self.battery.put(vppsim.CHARGING_STEP_SOC)
-                    self.log("Charged battery for %.2f%%." % vppsim.CHARGING_STEP_SOC)
+                if free_battery >= evsim.CHARGING_STEP_SOC:
+                    self.battery.put(evsim.CHARGING_STEP_SOC)
+                    self.log("Charged battery for %.2f%%." % evsim.CHARGING_STEP_SOC)
                 elif free_battery > 0:
                     self.battery.put(free_battery)
                     self.log("Charged battery for %.2f%%." % free_battery)
