@@ -44,10 +44,10 @@ def main():
         handlers=[logging.StreamHandler()],
     )
 
-    # print(load_car2go_trips(rebuild=True))
-    # print(load_car2go_capacity(rebuild=True))
+    print(load_car2go_trips(rebuild=True))
+    print(load_car2go_capacity(rebuild=True))
     print(load_balancing_data(rebuild=True))
-    # print(load_intraday_prices(rebuild=True))
+    print(load_intraday_prices(rebuild=True))
 
 
 def load_car2go_trips(rebuild=False):
@@ -60,43 +60,18 @@ def load_car2go_trips(rebuild=False):
     if not os.path.exists(PROCESSED_DATA_PATH):
         os.makedirs(PROCESSED_DATA_PATH)
 
+    files = []
     for f in CAR2GO_FILES:
-        path = (
-            PROCESSED_DATA_PATH
-            + "trips."
-            + f.strip("stuttgart.").strip(".csv")
-            + ".pkl"
-        )
-        if rebuild is False and os.path.isfile(path):
-            logger.info("Processed %s already found on disk" % f)
-            continue
+        logger.info("Reading %s..." % f)
+        files.append(pd.read_csv(CAR2GO_PATH + f))
+    df = pd.concat(files)
 
-        logger.info("Processing %s..." % f)
-        df = pd.read_csv(CAR2GO_PATH + f)
-        df = car2go.process(df)
-        df.to_csv(path + ".csv")
-        pd.to_pickle(df, path)
-        logger.info("Saved processed %s to disk." % f)
-
-    pkls = []
-    logger.info("Concatening all files together...")
-    for f in CAR2GO_FILES:
-        path = (
-            PROCESSED_DATA_PATH
-            + "trips."
-            + f.strip("stuttgart.").strip(".csv")
-            + ".pkl"
-        )
-        pkls.append(pd.read_pickle(path))
-
-    df = (
-        pd.concat(pkls)
-        .sort_values(["start_time"])
-        .reset_index()
-        .drop(["index"], axis=1)
+    df_trips = car2go.process(df)
+    df_trips = (
+        df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
     )
-    df.to_csv(PROCESSED_TRIPS_FILE.strip(".pkl") + ".csv")
-    pd.to_pickle(df, PROCESSED_TRIPS_FILE)
+    df_trips.to_csv(PROCESSED_TRIPS_FILE.strip(".pkl") + ".csv")
+    pd.to_pickle(df_trips, PROCESSED_TRIPS_FILE)
     logger.info("Wrote all processed trips files to %s" % PROCESSED_TRIPS_FILE)
 
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
