@@ -67,9 +67,7 @@ def calculate_capacity(df):
 
     # Maximal SoC of an EV to be eligible for VPP.
     max_soc = (
-        (evsim.MAX_EV_CAPACITY - evsim.TIME_UNIT_CHARGE)
-        / evsim.MAX_EV_CAPACITY
-        * 100
+        (evsim.MAX_EV_CAPACITY - evsim.TIME_UNIT_CHARGE) / evsim.MAX_EV_CAPACITY * 100
     )
 
     df["start_time"] = df["start_time"].apply(
@@ -175,7 +173,9 @@ def calculate_trips(df_car):
     trips = list()
     prev = df_car.iloc[0]
     for row in df_car.itertuples():
-        if row.address != prev.address:
+        if (row.coordinates_lat != prev.coordinates_lat) | (
+            row.coordinates_lon != prev.coordinates_lon
+        ):
             trips.append(
                 [
                     prev.name,
