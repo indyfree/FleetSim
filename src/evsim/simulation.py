@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+import click
 from datetime import datetime
 import logging
 import pandas as pd
@@ -22,20 +21,32 @@ CHARGING_STEP_SOC = (
 )  # SoC in 5 minutes charging
 
 
-def main():
-    logger = setup_logger()
-    df = loader.load_car2go_trips()
+@click.command()
+@click.option(
+    "-n",
+    "--name",
+    default=datetime.now().strftime("%Y%m%d-%H%M%S"),
+    help="Name of the Simulation.",
+)
+@click.option("-c", "--charging-speed", default=4.6, help="Capacity of chargers in kw.")
+@click.option("-r", "--rebuild", is_flag=True, help="Rebuild data.")
+def simulate(name, rebuild, charging_speed):
+    logger = setup_logger(name)
+
+    # Set simulation parameters
+    global CHARGING_SPEED
+    CHARGING_SPEED = charging_speed
+
+    df = loader.load_car2go_trips(rebuild)
 
     stats = []
-    stat_filename = "./logs/stats-%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
+    stat_filename = "./logs/stats-%s.csv" % name
 
     env = simpy.Environment(initial_time=df.start_time.min())
     vpp = VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
     env.process(lifecycle(logger, env, vpp, df, stats))
 
-    logger.info(
-        "[%s] - ---- STARTING SIMULATION -----" % datetime.fromtimestamp(env.now)
-    )
+    logger.info("---- STARTING SIMULATION: %s -----" % name)
     env.run(until=df.end_time.max())
 
     save_stats(stats, stat_filename, datetime.fromtimestamp(env.now), vpp)
@@ -89,14 +100,14 @@ def save_stats(stats, filename, timestamp, vpp):
     df_stats.to_csv("./logs/stats.csv", index=False)
 
 
-def setup_logger():
+def setup_logger(name):
     os.makedirs("./logs", exist_ok=True)
 
     # Log to file
     logging.basicConfig(
         level=logging.INFO,
         format="%(name)-10s: %(levelname)-7s %(message)s",
-        filename="./logs/sim-%s.log" % datetime.now().strftime("%Y%m%d-%H%M%S"),
+        filename="./logs/%s.log" % name,
         filemode="w",
     )
     logger = logging.getLogger("evsim")
@@ -108,7 +119,3 @@ def setup_logger():
     logging.getLogger("").addHandler(console)
 
     return logger
-
-
-if __name__ == "__main__":
-    main()
