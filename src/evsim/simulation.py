@@ -28,9 +28,11 @@ CHARGING_STEP_SOC = (
     default=datetime.now().strftime("%Y%m%d-%H%M%S"),
     help="Name of the Simulation.",
 )
-@click.option("-c", "--charging-speed", default=4.6, help="Capacity of chargers in kw.")
+# TODO: Make global defaults work
+@click.option("-c", "--ev-capacity", default=4.6, help="Battery capacity of EV in kWh")
+@click.option("-s", "--charging-speed", default=4.6, help="Capacity of chargers in kW.")
 @click.option("-r", "--rebuild", is_flag=True, help="Rebuild data.")
-def simulate(name, rebuild, charging_speed):
+def simulate(name, rebuild, charging_speed, ev_capacity):
     logger = setup_logger(name)
 
     # Set simulation parameters
