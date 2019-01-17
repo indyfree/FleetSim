@@ -44,6 +44,9 @@ def add_charging_stations(df_trips, df_stations):
     )
 
     df_trips.drop(["coordinates_lat", "coordinates_lon"], axis=1, inplace=True)
+    if "end_charging" in df_trips.columns:
+        df_trips.drop("end_charging", axis=1, inplace=True)
+
     df_trips.rename(columns={"charging": "end_charging"}, inplace=True)
     return df_trips
 
@@ -208,6 +211,7 @@ def calculate_trips(df_car):
                     row.coordinates_lat,
                     row.coordinates_lon,
                     row.fuel,
+                    row.charging,
                     int((row.timestamp - prev.timestamp) / 60),
                     trip_distance(prev.fuel - row.fuel),
                 ]
@@ -228,6 +232,7 @@ def calculate_trips(df_car):
             "end_lat",
             "end_lon",
             "end_soc",
+            "end_charging",
             "trip_duration",
             "trip_distance",
         ],
