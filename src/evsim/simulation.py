@@ -83,6 +83,8 @@ def lifecycle(logger, env, vpp, df, stats):
         stats.append(
             [
                 datetime.fromtimestamp(env.now),
+                len(evs),
+                _fleet_soc(evs),
                 len(vpp.evs),
                 vpp.avg_soc(),
                 vpp.capacity(),
@@ -90,9 +92,25 @@ def lifecycle(logger, env, vpp, df, stats):
         )
 
 
+def _fleet_soc(evs):
+    soc = 0
+    for ev in evs.values():
+        soc += ev.battery.level
+
+    return round(soc / len(evs), 2)
+
+
 def save_stats(stats, filename, timestamp, vpp):
     df_stats = pd.DataFrame(
-        data=stats, columns=["timestamp", "ev_vpp", "vpp_soc", "vpp_capacity_kw"]
+        data=stats,
+        columns=[
+            "timestamp",
+            "fleet",
+            "fleet_soc",
+            "ev_vpp",
+            "vpp_soc",
+            "vpp_capacity_kw",
+        ],
     )
     df_stats = df_stats.groupby("timestamp").last()
     df_stats = df_stats.reset_index()
