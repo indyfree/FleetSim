@@ -62,7 +62,7 @@ def calculate_capacity(df):
     rent = set()
     vpp = dict()
     charging = dict()
-    total = dict()
+    fleet = dict()
     df_charging = list()
 
     # Maximal SoC of an EV to be eligible for VPP.
@@ -88,15 +88,15 @@ def calculate_capacity(df):
 
         # 3. Trip-Ending EVs are available
         ending_evs = df.loc[df["end_time"] == t]
-        total, rent, charging, vpp = _end_trip(
-            ending_evs, total, rent, charging, vpp, max_soc
+        fleet, rent, charging, vpp = _end_trip(
+            ending_evs, fleet, rent, charging, vpp, max_soc
         )
 
-        # 4. Starting EVs may be new to the fleet. Add to total EVs.
+        # 4. Starting EVs may be new to the fleet. Add to fleet EVs.
         # Also make trip-starting EVs unavailable for rent and vpp.
         starting_evs = df.loc[df["start_time"] == t]
-        total, rent, charging, vpp = _start_trip(
-            starting_evs, total, rent, charging, vpp
+        fleet, rent, charging, vpp = _start_trip(
+            starting_evs, fleet, rent, charging, vpp
         )
 
         avg_charging_soc = 0
@@ -104,8 +104,8 @@ def calculate_capacity(df):
             avg_charging_soc = sum(charging.values()) / len(charging)
 
         avg_fleet_soc = 0
-        if len(total) > 0:
-            avg_fleet_soc = sum(total.values()) / len(total)
+        if len(fleet) > 0:
+            avg_fleet_soc = sum(fleet.values()) / len(fleet)
 
         df_charging.append(
             (
@@ -114,7 +114,7 @@ def calculate_capacity(df):
                 len(charging),
                 len(vpp),
                 avg_charging_soc,
-                len(total),
+                len(fleet),
                 avg_fleet_soc,
             )
         )
@@ -147,26 +147,26 @@ def calculate_capacity(df):
     return df_charging
 
 
-def _start_trip(evs, total, rent, charging, vpp):
+def _start_trip(evs, fleet, rent, charging, vpp):
     rent.difference_update(set(evs.EV))
 
     # Update fleet SoC
-    total.update(dict(zip(evs.EV, evs.start_soc)))
+    fleet.update(dict(zip(evs.EV, evs.start_soc)))
 
     # Starting EVs are not connected to charger anymore
     for ev in set(evs.EV):
         charging.pop(ev, None)
         vpp.pop(ev, None)
 
-    return (total, rent, charging, vpp)
+    return (fleet, rent, charging, vpp)
 
 
-def _end_trip(evs, total, rent, charging, vpp, max_soc):
+def _end_trip(evs, fleet, rent, charging, vpp, max_soc):
     # Make EVs available for rent
     rent.update(set(evs.EV))
 
     # Update fleet SoC
-    total.update(dict(zip(evs.EV, evs.end_soc)))
+    fleet.update(dict(zip(evs.EV, evs.end_soc)))
 
     # Add charging EVs
     charging_evs = evs.loc[evs["end_charging"] == 1]
@@ -176,7 +176,7 @@ def _end_trip(evs, total, rent, charging, vpp, max_soc):
     vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
     vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
 
-    return (total, rent, charging, vpp)
+    return (fleet, rent, charging, vpp)
 
 
 def _simulate_charge(charging, vpp, max_soc):
