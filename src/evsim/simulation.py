@@ -84,7 +84,7 @@ def lifecycle(logger, env, vpp, df, stats):
 
         stats.append(
             [
-                datetime.fromtimestamp(env.now),
+                datetime.fromtimestamp(env.now).replace(second=0, microsecond=0),
                 len(evs),
                 _fleet_soc(evs),
                 len(vpp.evs),
