@@ -16,7 +16,7 @@ def process(df):
     df[["coordinates_lat", "coordinates_lon"]] = df[
         ["coordinates_lat", "coordinates_lon"]
     ].round(4)
-    df_stations = determine_charging_stations(df)
+    # df_stations = determine_charging_stations(df)
 
     df.sort_values("timestamp", inplace=True)
 
@@ -30,7 +30,11 @@ def process(df):
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
 
-    df_trips = add_charging_stations(df_trips, df_stations)
+    logger.info(
+        "Found %d trips, %d ended at a charging station."
+        % (len(df_trips), len(df_trips[df_trips["end_charging"] == 1]))
+    )
+    # df_trips = add_charging_stations(df_trips, df_stations)
     df_trips = clean_trips(df_trips)
     return df_trips
 
@@ -193,12 +197,22 @@ def _simulate_charge(charging, vpp, max_soc):
 
 def calculate_trips(df_car):
     trips = list()
+    charging = False
     prev_row = df_car.iloc[0]
-    prev_trip = None
     for row in df_car.itertuples():
+
+        # New trip detected when location changes.
         if (row.coordinates_lat != prev_row.coordinates_lat) | (
             row.coordinates_lon != prev_row.coordinates_lon
         ):
+            # Last location was at a charging station
+            # Add charging info to previous trip.
+            if charging and trips:
+                previous_trip = trips.pop()
+                previous_trip[-1] = 1
+                trips.append(previous_trip)
+                charging = False
+
             trip = [
                 prev_row.name,
                 prev_row.timestamp,
@@ -211,11 +225,15 @@ def calculate_trips(df_car):
                 row.coordinates_lat,
                 row.coordinates_lon,
                 row.fuel,
-                row.charging,
                 int((row.timestamp - prev_row.timestamp) / 60),
                 trip_distance(prev_row.fuel - row.fuel),
+                row.charging,
             ]
             trips.append(trip)
+
+        # Charging at current location
+        if row.charging == 1:
+            charging = True
 
         prev_row = row
 
@@ -233,9 +251,9 @@ def calculate_trips(df_car):
             "end_lat",
             "end_lon",
             "end_soc",
-            "end_charging",
             "trip_duration",
             "trip_distance",
+            "end_charging",
         ],
     )
 
@@ -288,5 +306,8 @@ def _end_charging_previous_trip(df):
 
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop(["index"], axis=1)
-    logger.info("Changed %d trips to end at a charging station." % num_trips)
+    logger.info(
+        "Changed %d trips, previous to service trips, to end at a charging station."
+        % num_trips
+    )
     return df_trips
