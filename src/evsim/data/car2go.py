@@ -193,30 +193,31 @@ def _simulate_charge(charging, vpp, max_soc):
 
 def calculate_trips(df_car):
     trips = list()
-    prev = df_car.iloc[0]
+    prev_row = df_car.iloc[0]
+    prev_trip = None
     for row in df_car.itertuples():
-        if (row.coordinates_lat != prev.coordinates_lat) | (
-            row.coordinates_lon != prev.coordinates_lon
+        if (row.coordinates_lat != prev_row.coordinates_lat) | (
+            row.coordinates_lon != prev_row.coordinates_lon
         ):
-            trips.append(
-                [
-                    prev.name,
-                    prev.timestamp,
-                    prev.address,
-                    prev.coordinates_lat,
-                    prev.coordinates_lon,
-                    prev.fuel,
-                    row.timestamp,
-                    row.address,
-                    row.coordinates_lat,
-                    row.coordinates_lon,
-                    row.fuel,
-                    row.charging,
-                    int((row.timestamp - prev.timestamp) / 60),
-                    trip_distance(prev.fuel - row.fuel),
-                ]
-            )
-        prev = row
+            trip = [
+                prev_row.name,
+                prev_row.timestamp,
+                prev_row.address,
+                prev_row.coordinates_lat,
+                prev_row.coordinates_lon,
+                prev_row.fuel,
+                row.timestamp,
+                row.address,
+                row.coordinates_lat,
+                row.coordinates_lon,
+                row.fuel,
+                row.charging,
+                int((row.timestamp - prev_row.timestamp) / 60),
+                trip_distance(prev_row.fuel - row.fuel),
+            ]
+            trips.append(trip)
+
+        prev_row = row
 
     return pd.DataFrame(
         trips,
