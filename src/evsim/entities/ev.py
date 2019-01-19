@@ -139,3 +139,5 @@ class EV:
         # TODO: Use real bool from data
         if end_charger == 1:
             self.action = self.env.process(self.at_charger())
+        else:
+            self.log("Parked where no charger around")
