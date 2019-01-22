@@ -44,7 +44,7 @@ df_4.describe()
 # In[4]:
 
 
-df_3 = pd.read_csv("../logs/stats-3_6-big.csv", parse_dates=[0], infer_datetime_format=True)
+df_3 = pd.read_csv("../logs/stats-Tobi-3_6.csv", parse_dates=[0], infer_datetime_format=True)
 df_3 = df_3.set_index("timestamp")
 df_3.describe()
 
@@ -77,6 +77,16 @@ print("Average SoC difference: %.2f" % merge.fleet_soc_diff.mean())
 merge = merge.rolling(window=int(1 * 12 * 24)).mean()
 ax = merge.plot(y='fleet_soc_x', label='Fleet SoC Simulation')
 merge.plot(y='fleet_soc_y', label='Fleet SoC Real', ax=ax)
+plt.show()
+
+
+# In[17]:
+
+
+merge["fleet_cap"] = merge["vpp_capacity_kw_x"] - merge["vpp_capacity_kw_y"]
+print("Average Capacity difference: %.2fkW" % merge.fleet_cap.mean())
+ax = merge.plot(y='vpp_capacity_kw_x', label='VPP Capacity Simulation')
+merge.plot(y='vpp_capacity_kw_y', label='VPP Capacity Real', ax=ax)
 plt.show()
 
 
