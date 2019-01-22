@@ -34,20 +34,11 @@ PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
 PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
-
-def main():
-    # Log to console
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(message)s",
-        datefmt="%d.%m. %H:%M:%S",
-        handlers=[logging.StreamHandler()],
-    )
-
-    print(load_car2go_trips(rebuild=True))
-    print(load_car2go_capacity(rebuild=True))
-    print(load_balancing_data(rebuild=True))
-    print(load_intraday_prices(rebuild=True))
+def rebuild():
+    load_car2go_trips(rebuild=True)
+    load_car2go_capacity(rebuild=True)
+    load_balancing_data(rebuild=True)
+    load_intraday_prices(rebuild=True)
 
 
 def load_car2go_trips(rebuild=False):
