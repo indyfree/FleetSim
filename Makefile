@@ -1,4 +1,4 @@
-.PHONY: clean data jupyter lint requirements venv
+.PHONY: clean data jupyter lint simulation requirements venv
 
 #################################################################################
 # GLOBALS                                                                       #
