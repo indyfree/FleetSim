@@ -29,11 +29,11 @@ def process(df):
 
     df_trips = pd.concat(trips)
     df_trips = df_trips.sort_values("start_time").reset_index().drop("index", axis=1)
-
     logger.info(
         "Found %d trips, %d ended at a charging station."
         % (len(df_trips), len(df_trips[df_trips["end_charging"] == 1]))
     )
+
     # df_trips = add_charging_stations(df_trips, df_stations)
     df_trips = clean_trips(df_trips)
     return df_trips
@@ -271,18 +271,39 @@ def clean_trips(df):
         Remove service trips (longer than 2 days) from trip data.
         When EV ended at a charging station, make
         previous trip end at charging station.
+        Also remove EVs that had a faulty charging behaviour.
 
         Effects on Simulation:
           - Earlier charging of EV, if it has been parked at a charging
             station on the service trip.
           - Higher SoC in Sim than in the real data, since trips has been removed.
     """
+    logger.info("Cleaning trips...")
+    df = _remove_incorrect_charged_evs(df, 20)
     df = _end_charging_previous_trip(df)
-
     df_service = df.loc[df["trip_duration"] > 2 * 24 * 60]
     df.drop(df_service.index, inplace=True)
-
     logger.info("Removed %d trips that were longer than 2 days." % len(df_service))
+
+    return df
+
+
+def _remove_incorrect_charged_evs(df, soc_threshold):
+    trips_error = df.sort_values(["EV", "start_time"])
+    trips_error["n_EV"] = trips_error["EV"].shift(-1)
+    trips_error["n_soc"] = trips_error["start_soc"].shift(-1)
+
+    errors = trips_error[
+        (trips_error["EV"] == trips_error["n_EV"])  # Same EV
+        & (
+            trips_error["n_soc"] - trips_error["end_soc"] > soc_threshold
+        )  # Difference in SoC
+        & (trips_error["end_charging"] == 0)  # Was not determined as charging last trip
+    ]
+    df.drop(df[df["EV"].isin(errors.EV.unique())].index, inplace=True)
+    logger.info(
+        "Removed %d EVs that had faulty charging behaviour." % len(errors.EV.unique())
+    )
     return df
 
 
