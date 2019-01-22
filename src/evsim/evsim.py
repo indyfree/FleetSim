@@ -27,3 +27,40 @@ def simulate(ctx, name, ev_capacity, charging_speed, max_ev_range):
     click.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
     click.echo('Simulate')
     simulation.start(name, ev_capacity, charging_speed, max_ev_range)
+
+@cli.group()
+@click.pass_context
+def build(ctx):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(message)s",
+        datefmt="%d.%m. %H:%M:%S",
+        handlers=[logging.StreamHandler()],
+    )
+
+@build.command()
+@click.pass_context
+def all(ctx):
+    loader.rebuild()
+
+@build.command()
+@click.pass_context
+def trips(ctx):
+    loader.load_car2go_trips(rebuild=True)
+
+@build.command()
+@click.pass_context
+def mobility_demand(ctx):
+    loader.load_car2go_capacity(rebuild=True)
+
+
+@build.command()
+@click.pass_context
+def intraday_prices(ctx):
+    loader.load_intraday_prices(rebuild=True)
+
+
+@build.command()
+@click.pass_context
+def balancing_prices(ctx):
+    loader.load_balancing_data(rebuild=True)
