@@ -34,6 +34,7 @@ PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
 PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
+
 def rebuild():
     load_car2go_trips(rebuild=True)
     load_car2go_capacity(rebuild=True)
@@ -169,7 +170,3 @@ def load_balancing_data(rebuild=False):
         )
 
     return df
-
-
-if __name__ == "__main__":
-    main()

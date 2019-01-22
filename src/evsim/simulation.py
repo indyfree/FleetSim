@@ -1,4 +1,3 @@
-import click
 from datetime import datetime
 import logging
 import pandas as pd
