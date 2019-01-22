@@ -11,6 +11,6 @@ setup(
     install_requires=["Click"],
     entry_points="""
             [console_scripts]
-            evsim=evsim.simulation:simulate
+            evsim=evsim.evsim:cli
         """,
 )

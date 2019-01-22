@@ -9,7 +9,7 @@ from evsim.entities import EV, VPP
 from evsim.data import loader
 
 # PHYSICAL CONSTANTS
-CHARGING_SPEED = 3.3 * 0.97  # 4.6 kWh per hour
+CHARGING_SPEED = 3.6  # 3.6 kWh per hour
 MAX_EV_CAPACITY = 17.6  # kWh
 MAX_EV_RANGE = 160  # km
 TIME_UNIT = 15  # Minutes
@@ -21,25 +21,14 @@ CHARGING_STEP_SOC = (
 )  # SoC in 5 minutes charging
 
 
-@click.command()
-@click.option(
-    "-n",
-    "--name",
-    default=datetime.now().strftime("%Y%m%d-%H%M%S"),
-    help="Name of the Simulation.",
-)
-# TODO: Make global defaults work
-@click.option("-c", "--ev-capacity", default=4.6, help="Battery capacity of EV in kWh")
-@click.option("-s", "--charging-speed", default=4.6, help="Capacity of chargers in kW.")
-@click.option("-r", "--rebuild", is_flag=True, help="Rebuild data.")
-def simulate(name, rebuild, charging_speed, ev_capacity):
+def start(name, charging_speed, ev_capacity, max_ev_range):
     logger = setup_logger(name)
 
     # Set simulation parameters
     global CHARGING_SPEED
     CHARGING_SPEED = charging_speed
 
-    df = loader.load_car2go_trips(rebuild)
+    df = loader.load_car2go_trips(False)
 
     stats = []
     stat_filename = "./logs/stats-%s.csv" % name

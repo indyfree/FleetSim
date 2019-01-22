@@ -1,5 +1,7 @@
 # flake8: noqa
 
+import evsim.simulation
+
 from evsim.simulation import (
     CHARGING_SPEED,
     CHARGING_STEP_KWH,
