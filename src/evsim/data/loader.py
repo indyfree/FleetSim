@@ -88,28 +88,29 @@ def load_intraday_prices(rebuild=False):
 
     if rebuild is False and os.path.isfile(PROCESSED_INTRADAY_PRICES_FILE):
         return pd.read_csv(PROCESSED_INTRADAY_PRICES_FILE)
-    else:
-        df = pd.read_csv(
-            PROCOM_TRADES_FILE,
-            sep=",",
-            index_col=False,
-            dayfirst=True,
-            parse_dates=[1, 9],
-            infer_datetime_format=True,
-        )
-        df[df["product"] == "H"].to_pickle(PROCESSED_DATA_PATH + "/procom_H.pkl")
-        df[df["product"] == "Q"].to_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
-        df[df["product"] == "B"].to_pickle(PROCESSED_DATA_PATH + "/procom_B.pkl")
 
-        df_q = pd.read_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
+    logger.info("Processing %s..." % PROCOM_TRADES_FILE)
+    df = pd.read_csv(
+        PROCOM_TRADES_FILE,
+        sep=",",
+        index_col=False,
+        dayfirst=True,
+        parse_dates=[1, 9],
+        infer_datetime_format=True,
+    )
+    df[df["product"] == "H"].to_pickle(PROCESSED_DATA_PATH + "/procom_H.pkl")
+    df[df["product"] == "Q"].to_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
+    df[df["product"] == "B"].to_pickle(PROCESSED_DATA_PATH + "/procom_B.pkl")
 
-        df_q = intraday.calculate_clearing_prices(df_q)
-        df_q.to_csv(PROCESSED_INTRADAY_PRICES_FILE, index=True)
-        logger.info(
-            "Wrote calculated intraday clearing prices to %s"
-            % PROCESSED_INTRADAY_PRICES_FILE
-        )
-        return df_q
+    df_q = pd.read_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
+
+    df_q = intraday.calculate_clearing_prices(df_q)
+    df_q.to_csv(PROCESSED_INTRADAY_PRICES_FILE, index=True)
+    logger.info(
+        "Wrote calculated intraday clearing prices to %s"
+        % PROCESSED_INTRADAY_PRICES_FILE
+    )
+    return df_q
 
 
 def load_balancing_data(rebuild=False):
