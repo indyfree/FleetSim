@@ -1,6 +1,7 @@
 import click
 from datetime import datetime
 import logging
+import os
 
 from evsim import simulation
 from evsim.data import loader
@@ -30,6 +31,19 @@ def cli(ctx, debug):
     "--max-ev-range", default=160, help="Maximal range in km of EV when fully charged."
 )
 def simulate(ctx, name, ev_capacity, charging_speed, max_ev_range):
+    os.makedirs("./logs", exist_ok=True)
+
+    fh = logging.FileHandler('./logs/simulation.log')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter('%(name)-10s: %(levelname)-7s %(message)s'))
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(message)s",
+        datefmt="%d.%m. %H:%M:%S",
+        handlers=[logging.StreamHandler(), fh],
+    )
+
     click.echo("Debug is %s" % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Simulate")
     simulation.start(name, ev_capacity, charging_speed, max_ev_range)
