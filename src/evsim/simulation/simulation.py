@@ -4,8 +4,8 @@ import pandas as pd
 import simpy
 import os
 
-from evsim.entities import EV, VPP
-from evsim.data import loader
+from evsim import data, entities
+
 
 def start(name, charging_speed, ev_capacity, max_ev_range):
     logger = setup_logger(name)
@@ -14,13 +14,13 @@ def start(name, charging_speed, ev_capacity, max_ev_range):
     global CHARGING_SPEED
     CHARGING_SPEED = charging_speed
 
-    df = loader.load_car2go_trips(False)
+    df = data.load_car2go_trips(False)
 
     stats = []
     stat_filename = "./logs/stats-%s.csv" % name
 
     env = simpy.Environment(initial_time=df.start_time.min())
-    vpp = VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
+    vpp = entities.VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
     env.process(lifecycle(logger, env, vpp, df, stats))
 
     logger.info("---- STARTING SIMULATION: %s -----" % name)
@@ -44,7 +44,7 @@ def lifecycle(logger, env, vpp, df, stats):
             )
 
         if rental.EV not in evs:
-            evs[rental.EV] = EV(env, vpp, rental.EV, rental.start_soc)
+            evs[rental.EV] = entities.EV(env, vpp, rental.EV, rental.start_soc)
 
         ev = evs[rental.EV]
         env.process(
