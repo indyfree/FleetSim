@@ -29,7 +29,7 @@ def cli(ctx, debug):
     )
 
 
-@cli.command()
+@cli.command(help="Start the EV Simulation.")
 @click.pass_context
 @click.option(
     "-n",
@@ -49,37 +49,37 @@ def simulate(ctx, name, ev_capacity, charging_speed, max_ev_range):
     simulation.start(name, ev_capacity, charging_speed, max_ev_range)
 
 
-@cli.group(invoke_without_command=True)
+@cli.group(invoke_without_command=True, help="(Re)build all data sources.")
 @click.pass_context
 def build(ctx):
     if ctx.invoked_subcommand is None:
-        click.echo("Rebuilding all data sources.")
+        click.echo("Building all data sources.")
         loader.rebuild()
 
 
-@build.command()
+@build.command(help="(Re)build car2go trip data.")
 @click.pass_context
 def trips(ctx):
-    click.echo("Rebuilding car2go trips.")
+    click.echo("Building car2go trip data...")
     loader.load_car2go_trips(rebuild=True)
 
 
-@build.command()
+@build.command(help="(Re)build mobility demand data.")
 @click.pass_context
 def mobility_demand(ctx):
-    click.echo("Rebuilding mobility demand.")
+    click.echo("Building mobility demand data...")
     loader.load_car2go_capacity(rebuild=True)
 
 
-@build.command()
+@build.command(help="(Re)build intraday price data.")
 @click.pass_context
 def intraday_prices(ctx):
-    click.echo("Rebuilding intraday prices.")
+    click.echo("Rebuilding intraday price data...")
     loader.load_intraday_prices(rebuild=True)
 
 
-@build.command()
+@build.command(help="(Re)build balancing price data.")
 @click.pass_context
 def balancing_prices(ctx):
-    click.echo("Rebuilding balanacing prices.")
+    click.echo("Rebuilding balanacing price data...")
     loader.load_balancing_data(rebuild=True)
