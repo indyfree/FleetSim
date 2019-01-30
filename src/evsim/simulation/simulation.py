@@ -2,14 +2,13 @@ from datetime import datetime
 import logging
 import pandas as pd
 import simpy
-import os
 
 from evsim import data, entities
 
+logger = logging.getLogger(__name__)
+
 
 def start(name, charging_speed, ev_capacity, max_ev_range):
-    logger = setup_logger(name)
-
     # Set simulation parameters
     global CHARGING_SPEED
     CHARGING_SPEED = charging_speed
@@ -93,24 +92,3 @@ def save_stats(stats, filename, timestamp, vpp):
     df_stats = df_stats.reset_index()
     df_stats.to_csv(filename, index=False)
     df_stats.to_csv("./logs/stats.csv", index=False)
-
-
-def setup_logger(name):
-    os.makedirs("./logs", exist_ok=True)
-
-    # Log to file
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(name)-10s: %(levelname)-7s %(message)s",
-        filename="./logs/%s.log" % name,
-        filemode="w",
-    )
-    logger = logging.getLogger("evsim")
-
-    # Also log to stdout
-    console = logging.StreamHandler()
-    console.setLevel(logging.ERROR)
-    console.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
-    logging.getLogger("").addHandler(console)
-
-    return logger
