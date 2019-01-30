@@ -15,9 +15,12 @@ def cli(ctx, debug):
     ctx.obj["DEBUG"] = debug
 
     os.makedirs("./logs", exist_ok=True)
-    fh = logging.FileHandler("./logs/simulation.log")
+    fh = logging.FileHandler(
+        "./logs/%s.log" % str(datetime.now().strftime("%Y%m%d-%H%M%S"))
+    )
     fh.setFormatter(logging.Formatter("%(name)-10s: %(levelname)-7s %(message)s"))
     fh.setLevel(logging.DEBUG)
+    ctx.obj["FH"] = fh
 
     sh = logging.StreamHandler()
     sh.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
@@ -40,7 +43,12 @@ def cli(ctx, debug):
 @click.option(
     "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
 )
-@click.option("-s", "--charging-speed", default=3.6, help="Capacity of chargers in kW.")
+@click.option(
+    "-s",
+    "--charging-speed",
+    default=3.6,
+    help="Charging power of charging stations in kW.",
+)
 @click.option(
     "--max-ev-range", default=160, help="Maximal range in km of EV when fully charged."
 )
