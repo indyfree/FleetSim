@@ -1,4 +1,4 @@
-.PHONY: clean data jupyter lint simulation requirements venv
+.PHONY: clean jupyter lint requirements venv
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -18,20 +18,11 @@ NOTEBOOK_DIR = $(PROJECT_DIR)/notebooks
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
-## Simulation
-simulation:
-	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/simulation.py
-
-
 ## Install Python Dependencies
 requirements: venv
 	$(PIP) install -e .
 	$(PIP) install -U pip setuptools wheel
 	$(PIP) install -r requirements.txt
-
-## Make Dataset
-data:
-	@$(PYTHON_INTERPRETER) src/$(PROJECT_NAME)/data/loader.py
 
 ## Delete all compiled Python files
 clean:
