@@ -65,17 +65,16 @@ def determine_charging_stations(df):
     return df_stations
 
 
-def calculate_capacity(df, charging_speed):
+def calculate_capacity(df, charging_speed, ev_capacity):
     charging = dict()
     fleet = dict()
     rent = dict()
     vpp = dict()
 
     df_charging = list()
-    # Maximal SoC of an EV to be eligible for VPP.
-    max_soc = (
-        (evsim.MAX_EV_CAPACITY - evsim.TIME_UNIT_CHARGE) / evsim.MAX_EV_CAPACITY * 100
-    )
+
+    # SoC that EV charges in 5 minutes
+    charging_step = _charging_step(ev_capacity, charging_speed, 5)
 
     df["start_time"] = df["start_time"].apply(
         lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
@@ -87,16 +86,15 @@ def calculate_capacity(df, charging_speed):
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
         # 1. Each timestep (5min) plugged-in EVs charge linearly
-        charging, vpp = _simulate_charge(charging, vpp, max_soc)
+        charging, vpp = _simulate_charge(charging, vpp, charging_step)
 
-        # 2. Remove EVs from VPP when not enough available
-        # battery capacity for next charge
-        vpp = {k: v for k, v in vpp.items() if v <= max_soc}
+        # 2. Only keep EVs in VPP when enough available battery capacity for next charge
+        vpp = {k: v for k, v in vpp.items() if v <= (100 - charging_step)}
 
         # 3. Trip-Ending EVs are available
         ending_evs = df.loc[df["end_time"] == t]
         fleet, rent, charging, vpp = _end_trip(
-            ending_evs, fleet, rent, charging, vpp, max_soc
+            ending_evs, fleet, rent, charging, vpp, charging_step
         )
 
         # 4. Starting EVs may be new to the fleet. Add to fleet EVs.
@@ -161,7 +159,7 @@ def _start_trip(evs, fleet, rent, charging, vpp):
     return (fleet, rent, charging, vpp)
 
 
-def _end_trip(evs, fleet, rent, charging, vpp, max_soc):
+def _end_trip(evs, fleet, rent, charging, vpp, charging_step):
     # Update fleet SoC
     fleet.update(dict(zip(evs.EV, evs.end_soc)))
 
@@ -173,26 +171,31 @@ def _end_trip(evs, fleet, rent, charging, vpp, max_soc):
     charging.update(dict(zip(charging_evs.EV, evs.end_soc)))
 
     # EVs are only eligible for VPP when they have enough available battery capacity
-    vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= max_soc]
+    vpp_evs = charging_evs.loc[charging_evs["end_soc"] <= (100 - charging_step)]
     vpp.update(dict(zip(vpp_evs.EV, vpp_evs.end_soc)))
 
     return (fleet, rent, charging, vpp)
 
 
-def _simulate_charge(charging, vpp, max_soc):
-    # Increment is the amount of electricity that EVs charge during 5 Minutes
-    increment = 100 * (evsim.TIME_UNIT_CHARGE / 3) / evsim.MAX_EV_CAPACITY
-
+def _simulate_charge(charging, vpp, charging_step):
     for k in charging:
-        if charging[k] <= max_soc:
-            charging[k] += increment
+        if charging[k] <= (100 - charging_step):
+            charging[k] += charging_step
         else:
             charging[k] = 100
 
     # No condition is needed here since EVs are not part of VPP when fully charged
-    vpp.update((k, v + increment) for k, v in vpp.items())
+    vpp.update((k, v + charging_step) for k, v in vpp.items())
 
     return (charging, vpp)
+
+
+def _charging_step(battery_capacity, charging_speed, control_period):
+    """ Returns the SoC increase given the control period in minutes """
+
+    kwh_per_control_period = (charging_speed / 60) * control_period
+    soc_per_control_period = 100 * kwh_per_control_period / battery_capacity
+    return soc_per_control_period
 
 
 def calculate_trips(df_car):
