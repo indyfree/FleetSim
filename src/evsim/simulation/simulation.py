@@ -21,7 +21,7 @@ class Simulation:
         df = data.load_car2go_trips(False)
 
         env = simpy.Environment(initial_time=df.start_time.min())
-        vpp = entities.VPP(env, "BALANCING", num_evs=len(df.EV.unique()))
+        vpp = entities.VPP(env, "BALANCING", num_evs=len(df.EV.unique()), charger_capacity=self.charging_speed)
         env.process(self.lifecycle(logger, env, vpp, df, self.stats))
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)

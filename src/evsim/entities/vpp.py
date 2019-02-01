@@ -5,12 +5,14 @@ import evsim
 
 
 class VPP:
-    def __init__(self, env, name, num_evs):
+    def __init__(self, env, name, num_evs, charger_capacity):
         self.logger = logging.getLogger("evsim.vpp")
 
         self.env = env
         self.evs = dict()
         self.name = name
+
+        self.charger_capacity = charger_capacity
 
     def log(self, message):
         self.logger.info(
@@ -49,7 +51,7 @@ class VPP:
             return 0
 
     def capacity(self):
-        return len(self.evs) * evsim.CHARGING_SPEED
+        return len(self.evs) * self.charger_capacity
 
     def contains(self, ev):
         if ev.name in self.evs:
