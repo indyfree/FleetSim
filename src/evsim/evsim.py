@@ -9,11 +9,23 @@ from evsim.data import loader
 
 @click.group(name="evsim")
 @click.option("--debug/--no-debug", default=False)
+@click.option(
+    "-s",
+    "--charging-speed",
+    default=3.6,
+    help="Charging power of charging stations in kW.",
+)
+@click.option(
+    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
+)
+@click.option("-r", "--ev-range", default=160, help="Maximal Range of EV in km.")
 @click.pass_context
-def cli(ctx, debug):
+def cli(ctx, debug, charging_speed, ev_capacity, ev_range):
     ctx.ensure_object(dict)
     ctx.obj["DEBUG"] = debug
-    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
+    ctx.obj["CHARGING_SPEED"] = charging_speed
+    ctx.obj["EV_CAPACITY"] = ev_capacity
+    ctx.obj["EV_RANGE"] = ev_range
 
     os.makedirs("./logs", exist_ok=True)
     fh = logging.FileHandler(
@@ -41,40 +53,20 @@ def cli(ctx, debug):
     default=str(datetime.now().strftime("%Y%m%d-%H%M%S")),
     help="Name of the Simulation.",
 )
-@click.option(
-    "-s",
-    "--charging-speed",
-    default=3.6,
-    help="Charging power of charging stations in kW.",
-)
-@click.option(
-    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
-)
-def simulate(ctx, name, charging_speed, ev_capacity):
-    click.echo("Charging speed is set to %skW." % charging_speed)
-    click.echo("EV battery capacity is set to %skWh." % ev_capacity)
-    sim = Simulation(name, charging_speed, ev_capacity)
+def simulate(ctx, name):
+    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
+    click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
+    click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
+    sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"])
     sim.start()
 
 
 @cli.group(invoke_without_command=True, help="(Re)build all data sources.")
-@click.option(
-    "-s",
-    "--charging-speed",
-    default=3.6,
-    help="Charging power of charging stations in kW.",
-)
-@click.option(
-    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
-)
-@click.option("-r", "--ev-range", default=160, help="Maximal Range of EV in km.")
 @click.pass_context
-def build(ctx, charging_speed, ev_capacity, ev_range):
-    ctx.ensure_object(dict)
-    ctx.obj["CHARGING_SPEED"] = charging_speed
-    ctx.obj["EV_CAPACITY"] = ev_capacity
-    ctx.obj["EV_RANGE"] = ev_range
-
+def build(ctx):
+    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
+    click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
+    click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
     if ctx.invoked_subcommand is None:
         click.echo("Building all data sources.")
         loader.rebuild(charging_speed)
@@ -92,14 +84,14 @@ def trips(ctx):
 @build.command(help="(Re)build mobility demand data.")
 @click.pass_context
 def mobility_demand(ctx):
-    cs = ctx.obj["CHARGING_SPEED"]
-    ev_capacity = ctx.obj["EV_CAPACITY"]
-    ev_range = ctx.obj["EV_RANGE"]
-    click.echo("Charging speed is set to %skW." % cs)
-    click.echo("EV battery capacity is set to %skWh." % ev_capacity)
-    click.echo("Maximal EV range is set to %skm." % ev_range)
+    click.echo("Maximal EV range is set to %skm." % ctx.obj["EV_RANGE"])
     click.echo("Building mobility demand data...")
-    loader.load_car2go_capacity(cs, ev_capacity, ev_range, rebuild=True)
+    loader.load_car2go_capacity(
+        ctx.obj["CHARGING_SPEED"],
+        ctx.obj["EV_CAPACITY"],
+        ctx.obj["EV_RANGE"],
+        rebuild=True,
+    )
 
 
 @build.command(help="(Re)build intraday price data.")
