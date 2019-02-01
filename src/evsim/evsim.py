@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 import os
 
-from evsim import simulation
+from evsim.simulation import Simulation
 from evsim.data import loader
 
 
@@ -41,20 +41,20 @@ def cli(ctx, debug):
     help="Name of the Simulation.",
 )
 @click.option(
-    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
-)
-@click.option(
     "-s",
     "--charging-speed",
     default=3.6,
     help="Charging power of charging stations in kW.",
 )
 @click.option(
-    "--max-ev-range", default=160, help="Maximal range in km of EV when fully charged."
+    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
 )
-def simulate(ctx, name, ev_capacity, charging_speed, max_ev_range):
-    click.echo("Debug is %s" % (ctx.obj["DEBUG"] and "on" or "off"))
-    simulation.start(name, ev_capacity, charging_speed, max_ev_range)
+def simulate(ctx, name, charging_speed, ev_capacity):
+    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
+    click.echo("Charging speed is set to %skW." % charging_speed)
+    click.echo("EV battery capacity is set to %skWh." % ev_capacity)
+    sim = Simulation(name, charging_speed, ev_capacity)
+    sim.start()
 
 
 @cli.group(invoke_without_command=True, help="(Re)build all data sources.")
