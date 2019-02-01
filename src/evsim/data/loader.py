@@ -42,7 +42,7 @@ def rebuild(charging_speed):
     load_intraday_prices(rebuild=True)
 
 
-def load_car2go_trips(charrebuild=False):
+def load_car2go_trips(ev_range, rebuild=False):
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
@@ -58,7 +58,7 @@ def load_car2go_trips(charrebuild=False):
         files.append(pd.read_csv(CAR2GO_PATH + f))
     df = pd.concat(files)
 
-    df_trips = car2go.process(df)
+    df_trips = car2go.process(df, ev_range)
     df_trips = (
         df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
     )
@@ -69,9 +69,9 @@ def load_car2go_trips(charrebuild=False):
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
 
 
-def load_car2go_capacity(charging_speed, ev_capacity, rebuild=False):
+def load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=False):
     """Loads processed capacity data into a dataframe, process again if needed"""
-    df_trips = load_car2go_trips()
+    df_trips = load_car2go_trips(ev_range)
 
     if rebuild is False and os.path.isfile(PROCESSED_CAPACITY_FILE):
         return pd.read_pickle(PROCESSED_CAPACITY_FILE)

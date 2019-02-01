@@ -3,12 +3,10 @@ import logging
 import numpy as np
 import pandas as pd
 
-import evsim
-
 logger = logging.getLogger(__name__)
 
 
-def process(df):
+def process(df, ev_range):
     """Executes all preprocessing steps sequentially"""
 
     # GPS accuracy is only guaranteed at a granularity of 10m, round accordingly.
@@ -24,7 +22,7 @@ def process(df):
     cars = df["name"].unique()
     logger.info("Determining trips of %d cars..." % len(cars))
     for car in cars:
-        ev_trips = calculate_trips(df[df["name"] == car])
+        ev_trips = calculate_trips(df[df["name"] == car], ev_range)
         trips.append(ev_trips)
 
     df_trips = pd.concat(trips)
@@ -198,7 +196,7 @@ def _charging_step(battery_capacity, charging_speed, control_period):
     return soc_per_control_period
 
 
-def calculate_trips(df_car):
+def calculate_trips(df_car, ev_range):
     trips = list()
     charging = False
     prev_row = df_car.iloc[0]
@@ -229,7 +227,7 @@ def calculate_trips(df_car):
                 row.coordinates_lon,
                 row.fuel,
                 int((row.timestamp - prev_row.timestamp) / 60),
-                trip_distance(prev_row.fuel - row.fuel),
+                _trip_distance(prev_row.fuel - row.fuel, ev_range),
                 row.charging,
             ]
             trips.append(trip)
@@ -261,12 +259,12 @@ def calculate_trips(df_car):
     )
 
 
-def trip_distance(trip_charge):
+def _trip_distance(trip_charge, ev_range):
     # EV has been charged on the trip. Not possible to infer distance
     if trip_charge < 0:
         return np.nan
 
-    return (trip_charge / 100) * evsim.MAX_EV_RANGE
+    return (trip_charge / 100) * ev_range
 
 
 def clean_trips(df):
