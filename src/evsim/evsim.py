@@ -58,11 +58,20 @@ def simulate(ctx, name, ev_capacity, charging_speed, max_ev_range):
 
 
 @cli.group(invoke_without_command=True, help="(Re)build all data sources.")
+@click.option(
+    "-s",
+    "--charging-speed",
+    default=3.6,
+    help="Charging power of charging stations in kW.",
+)
 @click.pass_context
-def build(ctx):
+def build(ctx, charging_speed):
+    ctx.ensure_object(dict)
+    ctx.obj["CHARGING_SPEED"] = charging_speed
+
     if ctx.invoked_subcommand is None:
         click.echo("Building all data sources.")
-        loader.rebuild()
+        loader.rebuild(charging_speed)
 
 
 @build.command(help="(Re)build car2go trip data.")
@@ -75,8 +84,10 @@ def trips(ctx):
 @build.command(help="(Re)build mobility demand data.")
 @click.pass_context
 def mobility_demand(ctx):
+    cs = ctx.obj["CHARGING_SPEED"]
+    click.echo("Charging speed is set to %skW." % cs)
     click.echo("Building mobility demand data...")
-    loader.load_car2go_capacity(rebuild=True)
+    loader.load_car2go_capacity(cs, rebuild=True)
 
 
 @build.command(help="(Re)build intraday price data.")

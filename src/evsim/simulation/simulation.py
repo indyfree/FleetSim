@@ -9,10 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 def start(name, charging_speed, ev_capacity, max_ev_range):
-    # Set simulation parameters
-    global CHARGING_SPEED
-    CHARGING_SPEED = charging_speed
-
     df = data.load_car2go_trips(False)
 
     stats = []
