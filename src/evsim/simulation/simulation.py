@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 class Simulation:
     def __init__(self, name, charging_speed, ev_capacity):
 
+        self.name = name
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
 
         self.stats = []
-        self.stats_filename = "./logs/stats-%s.csv" % name
+        self.stats_filename = "./logs/stats-%s.csv" % self.name
 
     def start(self):
         df = data.load_car2go_trips(False)
@@ -27,7 +28,7 @@ class Simulation:
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
-        env.process(self.lifecycle(logger, env, vpp, df, self.stats))
+        env.process(self.lifecycle(env, vpp, df, self.stats))
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
         env.run(until=df.end_time.max())

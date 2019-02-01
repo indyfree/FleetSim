@@ -35,9 +35,9 @@ PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
 
-def rebuild(charging_speed):
-    load_car2go_trips(rebuild=True)
-    load_car2go_capacity(charging_speed, rebuild=True)
+def rebuild(charging_speed, ev_capacity, ev_range):
+    load_car2go_trips(ev_range, rebuild=True)
+    load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
     load_balancing_data(rebuild=True)
     load_intraday_prices(rebuild=True)
 

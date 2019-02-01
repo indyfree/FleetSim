@@ -68,8 +68,10 @@ def build(ctx):
     click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
     click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
     if ctx.invoked_subcommand is None:
-        click.echo("Building all data sources.")
-        loader.rebuild(charging_speed)
+        click.echo("Building all data sources...")
+        loader.rebuild(
+            ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"], ctx.obj["EV_RANGE"]
+        )
 
 
 @build.command(help="(Re)build car2go trip data.")
