@@ -1,8 +1,6 @@
 from datetime import datetime
 import logging
 
-import evsim
-
 
 class VPP:
     def __init__(self, env, name, num_evs, charger_capacity):
