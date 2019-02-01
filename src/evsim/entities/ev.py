@@ -2,11 +2,9 @@ from datetime import datetime
 import logging
 import simpy
 
-import evsim
-
 
 class EV:
-    def __init__(self, env, vpp, name, soc):
+    def __init__(self, env, vpp, name, soc, battery_capacity, charging_speed):
         self.logger = logging.getLogger("evsim.ev")
 
         # Battery capacity in percent
@@ -15,6 +13,8 @@ class EV:
         self.name = name
         self.vpp = vpp
         self.action = None
+
+        self.charging_step = self._charging_step(battery_capacity, charging_speed, 5)
 
         self.log("Added to fleet!")
 
@@ -58,7 +58,7 @@ class EV:
         self.log("At a charging station!")
 
         # Only add to VPP if enough battery capacity to charge next timeslot
-        if self.battery.capacity - self.battery.level >= evsim.CHARGING_STEP_SOC:
+        if self.battery.capacity - self.battery.level >= self.charging_step:
             self.vpp.add(self)
         else:
             self.vpp.log(
@@ -72,9 +72,9 @@ class EV:
 
                 self.log("Charging...")
                 free_battery = self.battery.capacity - self.battery.level
-                if free_battery >= evsim.CHARGING_STEP_SOC:
-                    self.battery.put(evsim.CHARGING_STEP_SOC)
-                    self.log("Charged battery for %.2f%%." % evsim.CHARGING_STEP_SOC)
+                if free_battery >= self.charging_step:
+                    self.battery.put(self.charging_step)
+                    self.log("Charged battery for %.2f%%." % self.charging_step)
                 elif free_battery > 0:
                     self.battery.put(free_battery)
                     self.log("Charged battery for %.2f%%." % free_battery)
@@ -141,3 +141,10 @@ class EV:
             self.action = self.env.process(self.at_charger())
         else:
             self.log("Parked where no charger around")
+
+    def _charging_step(self, battery_capacity, charging_speed, control_period):
+        """ Returns the SoC increase given the control period in minutes """
+
+        kwh_per_control_period = (charging_speed / 60) * control_period
+        soc_per_control_period = 100 * kwh_per_control_period / battery_capacity
+        return soc_per_control_period
