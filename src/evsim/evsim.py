@@ -13,6 +13,7 @@ from evsim.data import loader
 def cli(ctx, debug):
     ctx.ensure_object(dict)
     ctx.obj["DEBUG"] = debug
+    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
 
     os.makedirs("./logs", exist_ok=True)
     fh = logging.FileHandler(
@@ -50,7 +51,6 @@ def cli(ctx, debug):
     "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
 )
 def simulate(ctx, name, charging_speed, ev_capacity):
-    click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     sim = Simulation(name, charging_speed, ev_capacity)
@@ -64,10 +64,14 @@ def simulate(ctx, name, charging_speed, ev_capacity):
     default=3.6,
     help="Charging power of charging stations in kW.",
 )
+@click.option(
+    "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
+)
 @click.pass_context
-def build(ctx, charging_speed):
+def build(ctx, charging_speed, ev_capacity):
     ctx.ensure_object(dict)
     ctx.obj["CHARGING_SPEED"] = charging_speed
+    ctx.obj["EV_CAPACITY"] = ev_capacity
 
     if ctx.invoked_subcommand is None:
         click.echo("Building all data sources.")
@@ -85,9 +89,11 @@ def trips(ctx):
 @click.pass_context
 def mobility_demand(ctx):
     cs = ctx.obj["CHARGING_SPEED"]
+    ev_capacity = ctx.obj["EV_CAPACITY"]
     click.echo("Charging speed is set to %skW." % cs)
+    click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Building mobility demand data...")
-    loader.load_car2go_capacity(cs, rebuild=True)
+    loader.load_car2go_capacity(cs, ev_capacity, rebuild=True)
 
 
 @build.command(help="(Re)build intraday price data.")

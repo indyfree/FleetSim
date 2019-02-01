@@ -69,7 +69,7 @@ def load_car2go_trips(charrebuild=False):
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
 
 
-def load_car2go_capacity(charging_speed, rebuild=False):
+def load_car2go_capacity(charging_speed, ev_capacity, rebuild=False):
     """Loads processed capacity data into a dataframe, process again if needed"""
     df_trips = load_car2go_trips()
 
@@ -77,7 +77,7 @@ def load_car2go_capacity(charging_speed, rebuild=False):
         return pd.read_pickle(PROCESSED_CAPACITY_FILE)
 
     logger.info("Processing %s..." % PROCESSED_CAPACITY_FILE)
-    df = car2go.calculate_capacity(df_trips, charging_speed)
+    df = car2go.calculate_capacity(df_trips, charging_speed, ev_capacity)
     df.to_csv(PROCESSED_CAPACITY_FILE.strip(".pkl") + ".csv")
     pd.to_pickle(df, PROCESSED_CAPACITY_FILE)
     logger.info("Wrote calculated car2go demand to %s" % PROCESSED_CAPACITY_FILE)
