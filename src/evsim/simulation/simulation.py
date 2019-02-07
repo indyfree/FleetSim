@@ -43,14 +43,15 @@ class Simulation:
 
         for rental in df.itertuples():
 
-            # Wait until next rental
-            yield env.timeout(rental.start_time - previous.start_time)  # sec
+            # 1. Wait or don't time till next rental
             if rental.start_time - previous.start_time > 0:
+                yield env.timeout(rental.start_time - previous.start_time)  # sec
                 logger.info(
                     "[%s] - ---------- TIMESLOT %s ----------"
                     % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
                 )
 
+            # 2. Add new EVs to Fleet
             if rental.EV not in evs:
                 evs[rental.EV] = entities.EV(
                     env,
@@ -61,6 +62,7 @@ class Simulation:
                     self.charging_speed,
                 )
 
+            # 3. Start trip with EV
             ev = evs[rental.EV]
             env.process(
                 ev.drive(
@@ -72,6 +74,8 @@ class Simulation:
             )
             previous = rental
 
+
+            # 4. Save stats at each trip
             stats.append(
                 [
                     datetime.fromtimestamp(env.now).replace(second=0, microsecond=0),
