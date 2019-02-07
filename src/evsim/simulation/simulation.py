@@ -15,11 +15,9 @@ class Simulation:
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
 
-        self.stats = []
-        self.stats_filename = "./logs/stats-%s.csv" % self.name
-
-    def start(self):
+    def start(self, save_logs):
         df = data.load_car2go_trips(False)
+        stats = list() if save_logs else None
 
         env = simpy.Environment(initial_time=df.start_time.min())
         vpp = entities.VPP(
@@ -28,14 +26,17 @@ class Simulation:
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
-        env.process(self.lifecycle(env, vpp, df, self.stats))
+        env.process(self.lifecycle(env, vpp, df, stats))
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
         env.run(until=df.end_time.max())
 
-        self.save_stats(
-            self.stats, self.stats_filename, datetime.fromtimestamp(env.now), vpp
-        )
+        if save_logs:
+            self.save_stats(
+                stats,
+                "./logs/stats-%s.csv" % self.name,
+                datetime.fromtimestamp(env.now),
+            )
 
     def lifecycle(self, env, vpp, df, stats):
         evs = {}
@@ -74,18 +75,20 @@ class Simulation:
             )
             previous = rental
 
-
-            # 4. Save stats at each trip
-            stats.append(
-                [
-                    datetime.fromtimestamp(env.now).replace(second=0, microsecond=0),
-                    len(evs),
-                    self._fleet_soc(evs),
-                    len(vpp.evs),
-                    vpp.avg_soc(),
-                    vpp.capacity(),
-                ]
-            )
+            # 4. Save stats at each trip if enabled
+            if stats:
+                stats.append(
+                    [
+                        datetime.fromtimestamp(env.now).replace(
+                            second=0, microsecond=0
+                        ),
+                        len(evs),
+                        self._fleet_soc(evs),
+                        len(vpp.evs),
+                        vpp.avg_soc(),
+                        vpp.capacity(),
+                    ]
+                )
 
     def _fleet_soc(self, evs):
         soc = 0
@@ -94,7 +97,7 @@ class Simulation:
 
         return round(soc / len(evs), 2)
 
-    def save_stats(self, stats, filename, timestamp, vpp):
+    def save_stats(self, stats, filename, timestamp):
         df_stats = pd.DataFrame(
             data=stats,
             columns=[

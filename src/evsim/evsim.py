@@ -9,6 +9,7 @@ from evsim.data import loader
 
 @click.group(name="evsim")
 @click.option("--debug/--no-debug", default=False)
+@click.option("--logs/--no-logs", default=True)
 @click.option(
     "-s",
     "--charging-speed",
@@ -20,9 +21,11 @@ from evsim.data import loader
 )
 @click.option("-r", "--ev-range", default=160, help="Maximal Range of EV in km.")
 @click.pass_context
-def cli(ctx, debug, charging_speed, ev_capacity, ev_range):
+def cli(ctx, debug, logs, charging_speed, ev_capacity, ev_range):
     ctx.ensure_object(dict)
     ctx.obj["DEBUG"] = debug
+    ctx.obj["LOGS"] = logs
+
     ctx.obj["CHARGING_SPEED"] = charging_speed
     ctx.obj["EV_CAPACITY"] = ev_capacity
     ctx.obj["EV_RANGE"] = ev_range
@@ -55,10 +58,11 @@ def cli(ctx, debug, charging_speed, ev_capacity, ev_range):
 )
 def simulate(ctx, name):
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
+    click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
     click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
     sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"])
-    sim.start()
+    sim.start(ctx.obj["LOGS"])
 
 
 @cli.group(invoke_without_command=True, help="(Re)build all data sources.")
