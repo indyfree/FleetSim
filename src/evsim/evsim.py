@@ -2,6 +2,7 @@ import click
 from datetime import datetime
 import logging
 import os
+import time
 
 from evsim.simulation import Simulation
 from evsim.data import loader
@@ -61,8 +62,11 @@ def simulate(ctx, name):
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
     click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
+
     sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"])
+    start = time.time()
     sim.start(ctx.obj["LOGS"])
+    click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
 
 
 @cli.group(invoke_without_command=True, help="(Re)build all data sources.")
