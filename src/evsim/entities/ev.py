@@ -54,18 +54,7 @@ class EV:
             )
         )
 
-    def at_charger(self):
-        self.log("At a charging station!")
-
-        # Only add to VPP if enough battery capacity to charge next timeslot
-        if self.battery.capacity - self.battery.level >= self.charging_step:
-            self.vpp.add(self)
-        else:
-            self.vpp.log(
-                "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
-                % (self.name, self.battery.capacity - self.battery.level)
-            )
-
+    def charge(self):
         while True:
             try:
                 yield self.env.timeout(5 * 60)  # 5 Minutes
@@ -88,6 +77,7 @@ class EV:
                 self.log("Charging interrupted! %s" % i.cause)
                 break
 
+        # Remove from VPP when full or not charging anymore
         if self.vpp.contains(self):
             self.vpp.remove(self)
 
@@ -138,7 +128,18 @@ class EV:
 
         # TODO: Use real bool from data
         if end_charger == 1:
-            self.action = self.env.process(self.at_charger())
+            self.log("At a charging station!")
+
+            # Only add to VPP if enough battery capacity to charge next timeslot
+            if self.battery.capacity - self.battery.level >= self.charging_step:
+                self.vpp.add(self)
+            else:
+                self.vpp.log(
+                    "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
+                    % (self.name, self.battery.capacity - self.battery.level)
+                )
+
+            self.action = self.env.process(self.charge())
         else:
             self.log("Parked where no charger around")
 
