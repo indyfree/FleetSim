@@ -4,7 +4,7 @@ import logging
 
 class VPP:
     def __init__(self, env, name, num_evs, charger_capacity):
-        self.logger = logging.getLogger("evsim.vpp")
+        self.logger = logging.getLogger(__name__)
 
         self.env = env
         self.evs = dict()

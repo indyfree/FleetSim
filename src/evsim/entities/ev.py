@@ -5,7 +5,7 @@ import simpy
 
 class EV:
     def __init__(self, env, vpp, name, soc, battery_capacity, charging_speed):
-        self.logger = logging.getLogger("evsim.ev")
+        self.logger = logging.getLogger(__name__)
 
         # Battery capacity in percent
         self.battery = simpy.Container(env, init=soc, capacity=100)

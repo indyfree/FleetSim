@@ -76,7 +76,7 @@ class Simulation:
             previous = rental
 
             # 4. Save stats at each trip if enabled
-            if stats:
+            if stats is not None:
                 stats.append(
                     [
                         datetime.fromtimestamp(env.now).replace(

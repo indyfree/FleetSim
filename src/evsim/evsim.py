@@ -32,20 +32,22 @@ def cli(ctx, debug, logs, charging_speed, ev_capacity, ev_range):
     ctx.obj["EV_RANGE"] = ev_range
 
     os.makedirs("./logs", exist_ok=True)
+    f = logging.Formatter("%(levelname)-7s %(message)s")
+
     fh = logging.FileHandler(
         "./logs/%s.log" % str(datetime.now().strftime("%Y%m%d-%H%M%S"))
     )
-    fh.setFormatter(logging.Formatter("%(name)-10s: %(levelname)-7s %(message)s"))
+    fh.setFormatter(f)
     fh.setLevel(logging.DEBUG)
-    ctx.obj["FH"] = fh
 
     sh = logging.StreamHandler()
-    sh.setFormatter(logging.Formatter("%(levelname)-8s: %(message)s"))
+    sh.setFormatter(f)
     if not debug:
         sh.setLevel(logging.ERROR)
 
+    handlers = [sh, fh] if logs else [sh]
     logging.basicConfig(
-        level=logging.DEBUG, datefmt="%d.%m. %H:%M:%S", handlers=[sh, fh]
+        level=logging.DEBUG, datefmt="%d.%m. %H:%M:%S", handlers=handlers
     )
 
 
