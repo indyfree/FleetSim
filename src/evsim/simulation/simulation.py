@@ -34,7 +34,7 @@ class Simulation:
         env.run(until=df.end_time.max())
 
         self.save_stats(
-            self.stats, self.stat_filename, datetime.fromtimestamp(env.now), vpp
+            self.stats, self.stats_filename, datetime.fromtimestamp(env.now), vpp
         )
 
     def lifecycle(self, env, vpp, df, stats):
