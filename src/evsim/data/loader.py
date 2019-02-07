@@ -16,7 +16,7 @@ PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
 PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
 CAR2GO_FILES = [
     # "stuttgart.2016.03.22-2016.11.30.csv",
-    "stuttgart.2016.12.01-2017.02.22.csv",
+    # "stuttgart.2016.12.01-2017.02.22.csv",
     "stuttgart.2017.02.23-2017-05-01.csv",
     # "stuttgart.2017.05.01-2017.10.31.csv",
     # "stuttgart.2017.11.01-2018.01.31.csv",
