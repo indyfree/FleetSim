@@ -66,15 +66,17 @@ class EV:
             )
         )
 
+    def charge_timestep(self, timestep):
+        yield self.env.timeout(timestep * 60)  # Minutes
+        free = self.battery.capacity - self.battery.level
+        self.battery.put(min(self.charging_step, free))
+        self.log("Charged battery for %.2f%%." % self.charging_step)
+
     def charge_full(self):
-        timestep = 5
         while self.battery.capacity > self.battery.level:
             try:
                 self.log("Charging...")
-                yield self.env.timeout(timestep * 60)  # Minutes
-                free = self.battery.capacity - self.battery.level
-                self.battery.put(min(self.charging_step, free))
-                self.log("Charged battery for %.2f%%." % self.charging_step)
+                yield self.env.process(self.charge_timestep(5))
             except simpy.Interrupt as i:
                 self.log("Charging interrupted! %s" % i.cause)
                 break
