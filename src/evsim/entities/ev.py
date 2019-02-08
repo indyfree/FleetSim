@@ -18,6 +18,18 @@ class EV:
 
         self.log("Added to fleet!")
 
+    def debug(self, message):
+        self.logger.debug(
+            "[%s] - %s(%.2f/%s) %s"
+            % (
+                datetime.fromtimestamp(self.env.now),
+                self.name,
+                self.battery.level,
+                self.battery.capacity,
+                message,
+            )
+        )
+
     def error(self, message):
         self.logger.error(
             "[%s] - %s(%.2f/%s) %s"
