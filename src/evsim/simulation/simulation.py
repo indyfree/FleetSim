@@ -15,9 +15,9 @@ class Simulation:
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
 
-    def start(self, save_logs):
+    def start(self, save):
         df = data.load_car2go_trips(False)
-        stats = list() if save_logs else None
+        stats = list() if save else None
 
         env = simpy.Environment(initial_time=df.start_time.min())
         vpp = entities.VPP(
@@ -31,7 +31,7 @@ class Simulation:
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
         env.run(until=df.end_time.max())
 
-        if save_logs:
+        if save:
             self.save_stats(
                 stats,
                 "./logs/stats-%s.csv" % self.name,

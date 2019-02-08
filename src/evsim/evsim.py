@@ -10,7 +10,11 @@ from evsim.data import loader
 
 @click.group(name="evsim")
 @click.option("--debug/--no-debug", default=False)
-@click.option("--logs/--no-logs", default=True)
+@click.option(
+    "--logs/--no-logs",
+    default=True,
+    help="Save logs to file. Turning off improves speed.",
+)
 @click.option(
     "-s",
     "--charging-speed",
@@ -34,18 +38,20 @@ def cli(ctx, debug, logs, charging_speed, ev_capacity, ev_range):
     os.makedirs("./logs", exist_ok=True)
     f = logging.Formatter("%(levelname)-7s %(message)s")
 
-    fh = logging.FileHandler(
-        "./logs/%s.log" % str(datetime.now().strftime("%Y%m%d-%H%M%S"))
-    )
-    fh.setFormatter(f)
-    fh.setLevel(logging.DEBUG)
-
     sh = logging.StreamHandler()
     sh.setFormatter(f)
     if not debug:
         sh.setLevel(logging.ERROR)
+    handlers = [sh]
 
-    handlers = [sh, fh] if logs else [sh]
+    if logs:
+        fh = logging.FileHandler(
+            "./logs/%s.log" % str(datetime.now().strftime("%Y%m%d-%H%M%S"))
+        )
+        fh.setFormatter(f)
+        fh.setLevel(logging.DEBUG)
+        handlers = [sh, fh]
+
     logging.basicConfig(
         level=logging.DEBUG, datefmt="%d.%m. %H:%M:%S", handlers=handlers
     )
@@ -59,7 +65,12 @@ def cli(ctx, debug, logs, charging_speed, ev_capacity, ev_range):
     default=str(datetime.now().strftime("%Y%m%d-%H%M%S")),
     help="Name of the Simulation.",
 )
-def simulate(ctx, name):
+@click.option(
+    "--stats/--no-stats",
+    default=True,
+    help="Save logs to file. Turning off improves speed.",
+)
+def simulate(ctx, name, stats):
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
@@ -67,7 +78,7 @@ def simulate(ctx, name):
 
     sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"])
     start = time.time()
-    sim.start(ctx.obj["LOGS"])
+    sim.start(stats)
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
 
 
