@@ -82,11 +82,11 @@ class Simulation:
                         datetime.fromtimestamp(env.now).replace(
                             second=0, microsecond=0
                         ),
-                        len(evs),
-                        self._fleet_soc(evs),
-                        len(vpp.evs),
-                        vpp.avg_soc(),
-                        vpp.capacity(),
+                        int(len(evs)),
+                        round(self._fleet_soc(evs), 2),
+                        int(len(vpp.evs)),
+                        round(vpp.avg_soc(), 2),
+                        rount(vpp.capacity(), 2),
                     ]
                 )
 
