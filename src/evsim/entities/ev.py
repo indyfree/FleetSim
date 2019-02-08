@@ -54,29 +54,20 @@ class EV:
             )
         )
 
-    def charge(self):
-        while True:
+    def charge_full(self):
+        timestep = 5
+        while self.battery.capacity > self.battery.level:
             try:
-                yield self.env.timeout(5 * 60)  # 5 Minutes
-
                 self.log("Charging...")
-                free_battery = self.battery.capacity - self.battery.level
-                if free_battery >= self.charging_step:
-                    self.battery.put(self.charging_step)
-                    self.log("Charged battery for %.2f%%." % self.charging_step)
-                elif free_battery > 0:
-                    self.battery.put(free_battery)
-                    self.log("Charged battery for %.2f%%." % free_battery)
-                    self.log("Battery full!")
-                    break
-                else:
-                    self.log("Battery full!")
-                    break
-
+                yield self.env.timeout(timestep * 60)  # Minutes
+                free = self.battery.capacity - self.battery.level
+                self.battery.put(min(self.charging_step, free))
+                self.log("Charged battery for %.2f%%." % self.charging_step)
             except simpy.Interrupt as i:
                 self.log("Charging interrupted! %s" % i.cause)
                 break
 
+        self.log("Battery full!")
         # Remove from VPP when full or not charging anymore
         if self.vpp.contains(self):
             self.vpp.remove(self)
@@ -139,7 +130,7 @@ class EV:
                     % (self.name, self.battery.capacity - self.battery.level)
                 )
 
-            self.action = self.env.process(self.charge())
+            self.action = self.env.process(self.charge_full())
         else:
             self.log("Parked where no charger around")
 
