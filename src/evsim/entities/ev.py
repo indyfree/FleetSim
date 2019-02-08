@@ -72,6 +72,10 @@ class EV:
         self.battery.put(min(self.charging_step, free))
         self.log("Charged battery for %.2f%%." % self.charging_step)
 
+        # Remove from VPP when not enough capacity left
+        if free < self.charging_step and self.vpp.contains(self):
+            self.vpp.remove(self)
+
     def charge_full(self):
         while self.battery.capacity > self.battery.level:
             try:
@@ -79,12 +83,11 @@ class EV:
                 yield self.env.process(self.charge_timestep(5))
             except simpy.Interrupt as i:
                 self.log("Charging interrupted! %s" % i.cause)
+                if self.vpp.contains(self):
+                    self.vpp.remove(self)
                 break
 
         self.log("Battery full!")
-        # Remove from VPP when full or not charging anymore
-        if self.vpp.contains(self):
-            self.vpp.remove(self)
 
     def drive(self, rental, duration, trip_charge, end_charger):
 
