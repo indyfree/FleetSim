@@ -86,7 +86,7 @@ class Simulation:
                         round(self._fleet_soc(evs), 2),
                         int(len(vpp.evs)),
                         round(vpp.avg_soc(), 2),
-                        rount(vpp.capacity(), 2),
+                        round(vpp.capacity(), 2),
                     ]
                 )
 
