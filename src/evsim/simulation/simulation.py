@@ -79,7 +79,9 @@ class Simulation:
                 )
 
             # 5. TODO: Centrally control charging
-            controller.dispatch_charging(env, vpp)
+            controller.charge_fleet(
+                env, vpp.evs.values(), 5, controller.strategy.regular
+            )
 
             # 6. Save stats at each trip if enabled
             if stats is not None:
