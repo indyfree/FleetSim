@@ -87,8 +87,6 @@ class EV:
             if self.vpp.contains(self):
                 self.vpp.remove(self)
 
-        self.log("Battery full!")
-
     def drive(self, rental, duration, trip_charge, end_charger):
 
         self.log("Starting trip %d." % rental)
