@@ -69,12 +69,17 @@ class EV:
     def charge_timestep(self, timestep):
         try:
             yield self.env.timeout(timestep * 60)  # Minutes
-            increment = min(self.charging_step, self.battery.capacity - self.battery.level)
+            increment = min(
+                self.charging_step, self.battery.capacity - self.battery.level
+            )
             if increment > 0:
                 self.battery.put(increment)
             self.log("Charged battery for %.2f%%." % increment)
             # Remove EV after from VPP after charging, when not enough capacity left
-            if self.battery.capacity - self.battery.level < self.charging_step and self.vpp.contains(self):
+            if (
+                self.battery.capacity - self.battery.level < self.charging_step
+                and self.vpp.contains(self)
+            ):
                 self.debug("Remove from VPP after charge. Too full!")
                 self.vpp.remove(self)
         except simpy.Interrupt as i:
