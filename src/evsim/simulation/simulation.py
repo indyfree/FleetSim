@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import simpy
 
-from evsim import data, entities
+from evsim import controller, data, entities
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +73,12 @@ class Simulation:
                     rental.end_charging,
                 )
             )
-            previous = rental
 
-            # 4. Save stats at each trip if enabled
+            # 4. TODO: Centrally control charging
+            if rental.start_time - previous.start_time > 0:
+                controller.dispatch_charging(env, vpp)
+
+            # 5. Save stats at each trip if enabled
             if stats is not None:
                 stats.append(
                     [
@@ -89,6 +92,8 @@ class Simulation:
                         round(vpp.capacity(), 2),
                     ]
                 )
+
+            previous = rental
 
     def _fleet_soc(self, evs):
         soc = 0

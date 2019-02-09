@@ -67,25 +67,20 @@ class EV:
         )
 
     def charge_timestep(self, timestep):
-        yield self.env.timeout(timestep * 60)  # Minutes
-        free = self.battery.capacity - self.battery.level
-        self.battery.put(min(self.charging_step, free))
-        self.log("Charged battery for %.2f%%." % self.charging_step)
-
-        # Remove from VPP when not enough capacity left
-        if free < self.charging_step and self.vpp.contains(self):
-            self.vpp.remove(self)
-
-    def charge_full(self):
-        while self.battery.capacity > self.battery.level:
-            try:
-                self.log("Charging...")
-                yield self.env.process(self.charge_timestep(5))
-            except simpy.Interrupt as i:
-                self.log("Charging interrupted! %s" % i.cause)
-                if self.vpp.contains(self):
-                    self.vpp.remove(self)
-                break
+        try:
+            yield self.env.timeout(timestep * 60)  # Minutes
+            increment = min(self.charging_step, self.battery.capacity - self.battery.level)
+            if increment > 0:
+                self.battery.put(increment)
+            self.log("Charged battery for %.2f%%." % increment)
+            # Remove EV after from VPP after charging, when not enough capacity left
+            if self.battery.capacity - self.battery.level < self.charging_step and self.vpp.contains(self):
+                self.debug("Remove from VPP after charge. Too full!")
+                self.vpp.remove(self)
+        except simpy.Interrupt as i:
+            self.log("Charging interrupted! %s" % i.cause)
+            if self.vpp.contains(self):
+                self.vpp.remove(self)
 
         self.log("Battery full!")
 
@@ -100,8 +95,9 @@ class EV:
             self.error("Not enough battery for the planned trip %d!" % rental)
             return
 
+        # TODO: Check for seconds and time sequence
         # Drive for the trip duration
-        yield self.env.timeout((duration * 60) - 1)  # seconds
+        yield self.env.timeout((duration * 60) - 2)  # seconds
 
         # Adjust SoC
         self.log(
@@ -147,7 +143,8 @@ class EV:
                     % (self.name, self.battery.capacity - self.battery.level)
                 )
 
-            self.action = self.env.process(self.charge_full())
+            # TODO: Check different charging behaviour with centralized
+            # self.action = self.env.process(self.charge_full())
         else:
             self.log("Parked where no charger around")
 
