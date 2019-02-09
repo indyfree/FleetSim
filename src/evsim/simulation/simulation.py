@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import numpy as np
 import pandas as pd
 import simpy
 
@@ -40,45 +41,48 @@ class Simulation:
 
     def lifecycle(self, env, vpp, df, stats):
         evs = {}
-        previous = df.iloc[0, :]
 
-        for rental in df.itertuples():
+        timeslots = np.sort(pd.unique(df[["start_time"]].values.ravel("K")))
+        t0 = timeslots[0]
+        for t in timeslots:
 
             # 1. Wait or don't time till next rental
-            if rental.start_time - previous.start_time > 0:
-                yield env.timeout(rental.start_time - previous.start_time)  # sec
-                logger.info(
-                    "[%s] - ---------- TIMESLOT %s ----------"
-                    % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
-                )
-
-            # 2. Add new EVs to Fleet
-            if rental.EV not in evs:
-                evs[rental.EV] = entities.EV(
-                    env,
-                    vpp,
-                    rental.EV,
-                    rental.start_soc,
-                    self.ev_capacity,
-                    self.charging_speed,
-                )
-
-            # 3. Start trip with EV
-            ev = evs[rental.EV]
-            env.process(
-                ev.drive(
-                    rental.Index,
-                    rental.trip_duration,
-                    rental.start_soc - rental.end_soc,
-                    rental.end_charging,
-                )
+            yield env.timeout(t - t0)  # sec
+            logger.info(
+                "[%s] - ---------- TIMESLOT %s ----------"
+                % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
             )
 
-            # 4. TODO: Centrally control charging
-            if rental.start_time - previous.start_time > 0:
-                controller.dispatch_charging(env, vpp)
+            # 2. Find trips at the timeslot
+            trips = df.loc[df["start_time"] == t]
+            for trip in trips.itertuples():
 
-            # 5. Save stats at each trip if enabled
+                # 3. Add new EVs to Fleet
+                if trip.EV not in evs:
+                    evs[trip.EV] = entities.EV(
+                        env,
+                        vpp,
+                        trip.EV,
+                        trip.start_soc,
+                        self.ev_capacity,
+                        self.charging_speed,
+                    )
+
+                # 4. Start trip with EV
+                ev = evs[trip.EV]
+                env.process(
+                    ev.drive(
+                        trip.Index,
+                        trip.trip_duration,
+                        trip.start_soc - trip.end_soc,
+                        trip.end_charging,
+                    )
+                )
+
+            # 5. TODO: Centrally control charging
+            controller.dispatch_charging(env, vpp)
+
+            # 6. Save stats at each trip if enabled
             if stats is not None:
                 stats.append(
                     [
@@ -93,7 +97,7 @@ class Simulation:
                     ]
                 )
 
-            previous = rental
+            t0 = t
 
     def _fleet_soc(self, evs):
         soc = 0
