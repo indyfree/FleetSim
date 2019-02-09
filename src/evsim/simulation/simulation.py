@@ -27,9 +27,9 @@ class Simulation:
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
-        env.process(self.lifecycle(env, vpp, df, stats))
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
+        env.process(self.lifecycle(env, vpp, df, stats))
         env.run(until=df.end_time.max())
 
         if save:
@@ -45,7 +45,6 @@ class Simulation:
         timeslots = np.sort(pd.unique(df[["start_time"]].values.ravel("K")))
         t0 = timeslots[0]
         for t in timeslots:
-
             # 1. Wait or don't time till next rental
             yield env.timeout(t - t0)  # sec
             logger.info(
@@ -73,7 +72,7 @@ class Simulation:
                 env.process(
                     ev.drive(
                         trip.Index,
-                        trip.trip_duration,
+                        trip.trip_duration,  # Arrive before starting again
                         trip.start_soc - trip.end_soc,
                         trip.end_charging,
                     )

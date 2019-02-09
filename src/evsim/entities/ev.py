@@ -100,7 +100,7 @@ class EV:
 
         # TODO: Check for seconds and time sequence
         # Drive for the trip duration
-        yield self.env.timeout((duration * 60) - 2)  # seconds
+        yield self.env.timeout(duration * 60 - 1)  # seconds
 
         # Adjust SoC
         self.log(
