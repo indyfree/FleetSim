@@ -16,6 +16,7 @@ def process(df, ev_range):
     ].round(4)
     # df_stations = determine_charging_stations(df)
 
+    df["timestamp"] = df["timestamp"] // 60 * 60
     df.sort_values("timestamp", inplace=True)
 
     trips = list()
@@ -73,13 +74,6 @@ def calculate_capacity(df, charging_speed, ev_capacity):
 
     # SoC that EV charges in 5 minutes
     charging_step = _charging_step(ev_capacity, charging_speed, 5)
-
-    df["start_time"] = df["start_time"].apply(
-        lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
-    )
-    df["end_time"] = df["end_time"].apply(
-        lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
-    )
 
     timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
     for t in timeslots:
