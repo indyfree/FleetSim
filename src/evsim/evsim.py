@@ -4,8 +4,9 @@ import logging
 import os
 import time
 
-from evsim.simulation import Simulation
+from evsim.controller import strategy
 from evsim.data import loader
+from evsim.simulation import Simulation
 
 
 @click.group(name="evsim")
@@ -70,15 +71,24 @@ def cli(ctx, debug, logs, charging_speed, ev_capacity, ev_range):
     default=True,
     help="Save logs to file. Turning off improves speed.",
 )
-def simulate(ctx, name, stats):
+@click.option(
+    "--charging-strategy",
+    type=click.Choice(["regular"]),
+    default="regular",
+    help="Charging strategy",
+)
+def simulate(ctx, name, stats, charging_strategy):
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Charging speed is set to %skW." % ctx.obj["CHARGING_SPEED"])
     click.echo("EV battery capacity is set to %skWh." % ctx.obj["EV_CAPACITY"])
 
-    sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"])
+    if charging_strategy == "regular":
+        s = strategy.regular
+
+    sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"], s, stats)
     start = time.time()
-    sim.start(stats)
+    sim.start()
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
 
 

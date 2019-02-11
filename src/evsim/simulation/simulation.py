@@ -10,15 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class Simulation:
-    def __init__(self, name, charging_speed, ev_capacity):
+    def __init__(self, name, charging_speed, ev_capacity, strategy, save):
 
         self.name = name
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
+        self.strategy = strategy
+        self.save = save
 
-    def start(self, save):
+    def start(self):
         df = data.load_car2go_trips(False)
-        stats = list() if save else None
+        stats = list() if self.save else None
 
         env = simpy.Environment(initial_time=df.start_time.min())
         vpp = entities.VPP(
@@ -32,7 +34,7 @@ class Simulation:
         env.process(self.lifecycle(env, vpp, df, stats))
         env.run(until=df.end_time.max())
 
-        if save:
+        if self.save:
             self.save_stats(
                 stats,
                 "./logs/stats-%s.csv" % self.name,
@@ -79,9 +81,7 @@ class Simulation:
                 )
 
             # 5. TODO: Centrally control charging
-            controller.charge_fleet(
-                env, vpp.evs.values(), 5, controller.strategy.regular
-            )
+            controller.charge_fleet(env, vpp.evs.values(), 5, self.strategy)
 
             # 6. Save stats at each trip if enabled
             if stats is not None:
