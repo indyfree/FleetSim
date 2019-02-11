@@ -150,7 +150,7 @@ def trips(ev_range):
     loader.load_car2go_trips(ev_range, rebuild=True)
 
 
-@build.command(help="(Re)build mobility demand data.")
+@build.command(help="(Re)build car2go capacity data.")
 @click.option(
     "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
 )
@@ -161,11 +161,11 @@ def trips(ev_range):
     default=3.6,
     help="Charging power of charging stations in kW.",
 )
-def mobility_demand(ev_capacity, ev_range, charging_speed):
+def capacity(ev_capacity, ev_range, charging_speed):
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
-    click.echo("Building mobility demand data...")
+    click.echo("Building car2go capacity data...")
     loader.load_car2go_capacity(ev_capacity, charging_speed, ev_range, rebuild=True)
 
 
