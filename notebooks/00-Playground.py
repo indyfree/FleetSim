@@ -4,7 +4,7 @@
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
 # <div class="toc"><ul class="toc-item"></ul></div>
 
-# In[7]:
+# In[22]:
 
 
 from datetime import datetime
@@ -14,6 +14,37 @@ import pandas as pd
 import seaborn as sns
 
 from evsim.data import load_car2go_trips, load_car2go_capacity
+
+
+# In[125]:
+
+
+df = load_car2go_trips(160)
+
+
+# In[142]:
+
+
+t = pd.date_range(datetime.utcfromtimestamp(df.start_time.min()), datetime.utcfromtimestamp(df.end_time.max()), freq="5min")
+t.astype(np.int64) // 10**9
+
+print(len(t))
+
+
+# In[140]:
+
+
+df.start_time.unique()
+
+
+# In[67]:
+
+
+a = df
+a["s"] = a.start_time.apply(lambda x: datetime.utcfromtimestamp(x))
+a["d"] = a["s"].astype(np.int64) // 10**9
+a["e"] = a.d.apply(lambda x: datetime.utcfromtimestamp(x))
+a
 
 
 # In[5]:
