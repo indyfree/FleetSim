@@ -97,7 +97,7 @@ def simulate(
     if charging_strategy == "regular":
         s = strategy.regular
 
-    sim = Simulation(name, ctx.obj["CHARGING_SPEED"], ctx.obj["EV_CAPACITY"], s, stats)
+    sim = Simulation(name, charging_speed, ev_capacity, s, stats)
     start = time.time()
     sim.start()
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
