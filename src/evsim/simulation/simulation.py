@@ -44,7 +44,16 @@ class Simulation:
     def lifecycle(self, env, vpp, df, stats):
         evs = {}
 
-        timeslots = np.sort(pd.unique(df[["start_time"]].values.ravel("K")))
+        # Timerange from start to end in 5 minute intervals
+        # https://stackoverflow.com/a/15204235
+        timeslots = (
+            pd.date_range(
+                datetime.utcfromtimestamp(df.start_time.min()),
+                datetime.utcfromtimestamp(df.end_time.max()),
+                freq="5min",
+            ).astype(np.int64)
+            // 10 ** 9
+        )
         t0 = timeslots[0]
         for t in timeslots:
             # 1. Wait or don't time till next rental
