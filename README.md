@@ -7,7 +7,7 @@
 
 ## Installation
 
-This project is intended to run on Mac or Linux. 
+This project is intended to run on Mac or Linux.
 On Windows it should also work via the [Linux Subsystem](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
 ### Clone the Repository
@@ -30,19 +30,19 @@ Installs virtual environment and dependencies with `pip`:
 ```
 
 ## Preprocess the Data
-*Note:* Not all the data are freely accesseble. Contact me if you need access.
+*Note:* Not all the data are freely accessible. Contact me if you need access.
 
 ```bash
-> env/bin/evsim build --help
-
+> evsim build --help
 Usage: evsim build [OPTIONS] COMMAND [ARGS]...
 
-  (Re)build all data sources.
+  (Re)build data sources.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
+  all               (Re)build all data sources.
   balancing-prices  (Re)build balancing price data.
   intraday-prices   (Re)build intraday price data.
   mobility-demand   (Re)build mobility demand data.
@@ -54,26 +54,25 @@ Commands:
 Available parameters:
 
 ```bash
-> env/bin/evsim --help
-Usage: evsim [OPTIONS] COMMAND [ARGS]...
+> evsim simulate --help
+Usage: evsim simulate [OPTIONS]
+
+  Start the EV Simulation.
 
 Options:
-  --debug / --no-debug
-  -s, --charging-speed FLOAT  Charging power of charging stations in kW.
-  -c, --ev-capacity FLOAT     Battery capacity of EV in kWh.
-  -r, --ev-range INTEGER      Maximal Range of EV in km.
-  --help                      Show this message and exit.
-
-Commands:
-  build     (Re)build all data sources.
-  simulate  Start the EV Simulation.
-
+  -n, --name TEXT                Name of the Simulation.
+  -c, --ev-capacity FLOAT        Battery capacity of EV in kWh.  [default: 17.6]
+  -r, --ev-range INTEGER         Maximal Range of EV in km.  [default: 160]
+  -s, --charging-speed FLOAT     Charging power in kW.  [default: 3.6]
+  --charging-strategy [regular]  Charging strategy  [default: regular]
+  --stats / --no-stats           Save logs to file. Turning off improves speed.
+  --help                         Show this message and exit.
 ```
 
 E.g.:
 
 ``` sh
-> env/bin/evsim --debug --charging-speed 3.6 --ev-capacity 17.6 simulate --name My-Simulation                                                                                                ~/uni/evsim master 2+
+> env/bin/evsim --debug simulate --charging-speed=3.6 --ev-capacity=17.6 --name=My-Simulation --charging-strategy=regular
 Debug is on.
 Charging speed is set to 3.6kW.
 EV battery capacity is set to 17.6kWh.
@@ -90,3 +89,8 @@ INFO    : [2016-12-01 01:15:00] - S-GO2453(45.00/100) Adjusting battery level...
 INFO    : [2016-12-01 01:15:00] - S-GO2453(42.00/100) Battery level has been decreased by 3%.
 ```
 
+## Autocompletion:
+Activate autocompletion by sourcing the according completion file:
+```sh
+> source ./completion_zsh.sh
+```
