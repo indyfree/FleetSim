@@ -6,7 +6,7 @@ def regular(env, fleet, timestep):
     Charge all EVs at regular prices
     '''
 
-    evs = controller.dispatch(env, fleet, 1)
+    evs = controller.dispatch(env, fleet, len(fleet))
     controller.log(env, "Charging %d EVs." % len(evs))
     controller.log(env, evs)
 
