@@ -55,9 +55,12 @@ class EV:
                 self.battery.put(increment)
             self.log("Charged battery for %.2f%%." % increment)
 
-            # Remove EV after from VPP after charging
-            if self.battery.capacity - self.battery.level < self.charging_step:
-                self.debug("Remove from VPP after charge. Too full!")
+            # Remove EV after from VPP when battery too full
+            if (
+                self.battery.capacity - self.battery.level < self.charging_step
+                and self.vpp.contains(self)
+            ):
+                self.debug("Remove from VPP. Too full!")
                 self.vpp.remove(self)
         except simpy.Interrupt as i:
             self.log("Charging interrupted! %s" % i.cause)
