@@ -89,7 +89,7 @@ INFO    : [2016-12-01 01:15:00] - S-GO2453(45.00/100) Adjusting battery level...
 INFO    : [2016-12-01 01:15:00] - S-GO2453(42.00/100) Battery level has been decreased by 3%.
 ```
 
-## Autocompletion:
+## Autocompletion
 Activate autocompletion by sourcing the according completion file:
 ```sh
 > source ./completion_zsh.sh
