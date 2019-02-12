@@ -18,6 +18,9 @@ class EV:
 
         self.log("Added to fleet!")
 
+    def __repr__(self):
+            return repr((self.name, self.battery.level))
+
     def log(self, message, level=None):
         if level is None:
             level = self.logger.info
