@@ -25,7 +25,7 @@ class VPP:
 
     def log_EVs(self):
         self.log("Number EVs: %d, Mean SoC: %.1f" % (len(self.evs), self.avg_soc()))
-        self.log(dict(zip(self.evs.keys(), self.socs())))
+        self.log(list(self.evs.values()))
 
     def socs(self):
         s = list()
