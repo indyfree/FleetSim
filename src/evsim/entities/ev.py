@@ -90,27 +90,7 @@ class EV:
             "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
         )
-        self.env.process(self._adjust_soc(trip_charge))
 
-        # 6. Add to VPP when parked at charger
-        if end_charger == 1:
-            self.log("At a charging station!")
-
-            # Only add to VPP if enough battery capacity to charge next timeslot
-            if self.battery.capacity - self.battery.level >= self.charging_step:
-                self.vpp.add(self)
-            else:
-                self.vpp.log(
-                    "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
-                    % (self.name, self.battery.capacity - self.battery.level)
-                )
-
-            # TODO: Check different charging behaviour with centralized
-            # self.action = self.env.process(self.charge_full())
-        else:
-            self.log("Parked where no charger around")
-
-    def _adjust_soc(self, trip_charge):
         self.log("Adjusting battery level...")
         # Special case: Battery has been charged without appearing in data
         if trip_charge < 0:
@@ -135,6 +115,24 @@ class EV:
             self.log("Battery level has been decreased by %s%%." % trip_charge)
         else:
             self.log("No consumed charge!")
+
+        # 6. Add to VPP when parked at charger
+        if end_charger == 1:
+            self.log("At a charging station!")
+
+            # Only add to VPP if enough battery capacity to charge next timeslot
+            if self.battery.capacity - self.battery.level >= self.charging_step:
+                self.vpp.add(self)
+            else:
+                self.vpp.log(
+                    "Not adding EV %s to VPP, not enough free battery capacity(%.2f)"
+                    % (self.name, self.battery.capacity - self.battery.level)
+                )
+
+            # TODO: Check different charging behaviour with centralized
+            # self.action = self.env.process(self.charge_full())
+        else:
+            self.log("Parked where no charger around")
 
     def _charging_step(self, battery_capacity, charging_speed, control_period):
         """ Returns the SoC increase given the control period in minutes """
