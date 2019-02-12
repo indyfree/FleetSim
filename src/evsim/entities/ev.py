@@ -19,7 +19,7 @@ class EV:
         self.log("Added to fleet!")
 
     def __repr__(self):
-            return repr((self.name, round(self.battery.level, 1)))
+        return repr((self.name, round(self.battery.level, 1)))
 
     def log(self, message, level=None):
         if level is None:
@@ -54,34 +54,35 @@ class EV:
             if increment > 0:
                 self.battery.put(increment)
             self.log("Charged battery for %.2f%%." % increment)
-            # Remove EV after from VPP after charging, when not enough capacity left
-            if (
-                self.battery.capacity - self.battery.level < self.charging_step
-                and self.vpp.contains(self)
-            ):
+
+            # Remove EV after from VPP after charging
+            if self.battery.capacity - self.battery.level < self.charging_step:
                 self.debug("Remove from VPP after charge. Too full!")
                 self.vpp.remove(self)
         except simpy.Interrupt as i:
             self.log("Charging interrupted! %s" % i.cause)
-            if self.vpp.contains(self):
-                self.vpp.remove(self)
 
     def drive(self, rental, duration, trip_charge, end_charger):
-
         self.log("Starting trip %d." % rental)
-        # Interrupt Charging
-        if self.action is not None and not self.action.triggered:
-            self.action.interrupt("Customer wants to rent car")
 
+        # 1. Check if enough battery for trip left
         if trip_charge > 0 and self.battery.level < trip_charge:
             self.error("Not enough battery for the planned trip %d!" % rental)
             return
 
+        # 2. Interrupt if charging
+        if self.action is not None and not self.action.triggered:
+            self.action.interrupt("Customer wants to rent car")
+
+        # 3. Remove VPP when applicable
+        if self.vpp.contains(self):
+            self.vpp.remove(self)
+
+        # 4. Drive for the trip duration
         # TODO: Check for seconds and time sequence
-        # Drive for the trip duration
         yield self.env.timeout(duration * 60 - 1)  # seconds
 
-        # Adjust SoC
+        # 5. Adjust SoC
         self.log(
             "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
@@ -112,7 +113,7 @@ class EV:
         else:
             self.log("No consumed charge!")
 
-        # TODO: Use real bool from data
+        # 6. Add to VPP when parked at charger
         if end_charger == 1:
             self.log("At a charging station!")
 
