@@ -18,8 +18,11 @@ class EV:
 
         self.log("Added to fleet!")
 
-    def debug(self, message):
-        self.logger.debug(
+    def log(self, message, level=None):
+        if level is None:
+            level = self.logger.info
+
+        level(
             "[%s] - %s(%.2f/%s) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
@@ -29,42 +32,15 @@ class EV:
                 message,
             )
         )
+
+    def debug(self, message):
+        self.log(message, self.logger.debug)
 
     def error(self, message):
-        self.logger.error(
-            "[%s] - %s(%.2f/%s) %s"
-            % (
-                datetime.fromtimestamp(self.env.now),
-                self.name,
-                self.battery.level,
-                self.battery.capacity,
-                message,
-            )
-        )
-
-    def log(self, message):
-        self.logger.info(
-            "[%s] - %s(%.2f/%s) %s"
-            % (
-                datetime.fromtimestamp(self.env.now),
-                self.name,
-                self.battery.level,
-                self.battery.capacity,
-                message,
-            )
-        )
+        self.log(message, self.logger.error)
 
     def warning(self, message):
-        self.logger.warning(
-            "[%s] - %s(%.2f/%s) %s"
-            % (
-                datetime.fromtimestamp(self.env.now),
-                self.name,
-                self.battery.level,
-                self.battery.capacity,
-                message,
-            )
-        )
+        self.log(message, self.logger.warning)
 
     def charge_timestep(self, timestep):
         try:
