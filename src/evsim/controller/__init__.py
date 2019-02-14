@@ -1,3 +1,3 @@
 # flake8: noqa
 from . import strategy
-from .controller import charge_fleet
+from .controller import Controller

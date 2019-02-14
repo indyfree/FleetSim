@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 import simpy
 
-from evsim import controller, data, entities
+from evsim.controller import Controller
+from evsim import data, entities
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,9 @@ class Simulation:
         self.name = name
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
-        self.strategy = strategy
         self.save = save
+
+        self.controller = Controller(strategy)
 
     def start(self):
         df = data.load_car2go_trips(False)
@@ -90,7 +92,7 @@ class Simulation:
                 )
 
             # 5. TODO: Centrally control charging
-            controller.charge_fleet(env, vpp.evs.values(), 5, self.strategy)
+            self.controller.charge_fleet(env, vpp.evs.values(), 5)
 
             # 6. Save stats at each trip if enabled
             if stats is not None:
