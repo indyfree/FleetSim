@@ -29,3 +29,13 @@ class Controller:
         """Return n EVs from fleet according to ascending EV criteria"""
         s = sorted(fleet, key=attrgetter(criteria))
         return s[:n]
+
+    def bid(self, price, quantity):
+        """ Bid at intraday market given the price in EUR/MWh and quantity in kW"""
+
+        return 300
+
+    def predict_clearing_price(self, data, time):
+        """ Predict the clearing price for a 15-min contract at a given time"""
+
+        return 300

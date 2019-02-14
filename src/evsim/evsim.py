@@ -4,7 +4,7 @@ import logging
 import os
 import time
 
-from evsim.controller import strategy
+from evsim.controller import Controller, strategy
 from evsim.data import loader
 from evsim.simulation import Simulation
 
@@ -179,3 +179,19 @@ def intraday_prices():
 def balancing_prices():
     click.echo("Rebuilding balanacing price data...")
     loader.load_balancing_data(rebuild=True)
+
+
+@cli.group(help="EV Fleet Controller")
+@click.pass_context
+def controller(ctx):
+    c = Controller(strategy.regular)
+    ctx.obj["CONTROLLER"] = c
+    return True
+
+
+@controller.command(help="Bid at a given Market")
+@click.pass_context
+def bid(ctx):
+    controller = ctx.obj["CONTROLLER"]
+
+    click.echo(controller.bid(controller.intraday_prices, "15Q"))
