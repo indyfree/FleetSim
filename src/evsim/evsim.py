@@ -195,3 +195,17 @@ def bid(ctx):
     controller = ctx.obj["CONTROLLER"]
 
     click.echo(controller.bid(controller.intraday_prices, "15Q"))
+
+
+@controller.command(help="Predict clearing price for a given time at a given market")
+@click.option("-t", "--timeslot", help="Charging power of charging stations in kW.")
+@click.pass_context
+def predict(ctx, timeslot):
+    controller = ctx.obj["CONTROLLER"]
+
+    try:
+        click.echo(
+            controller.predict_clearing_price(controller.intraday_prices, timeslot)
+        )
+    except ValueError as e:
+        logger.error(e)
