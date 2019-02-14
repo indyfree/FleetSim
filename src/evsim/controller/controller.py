@@ -19,11 +19,17 @@ class Controller:
 
         self.strategy(env, self, fleet, timestep)
 
-    def log(self, env, message):
-        self.logger.info(
+    def log(self, env, message, level=None):
+        if level is None:
+            level = self.logger.info
+
+        level(
             "[%s] - %s(%s) %s"
             % (datetime.fromtimestamp(env.now), "Controller", "regular", message)
         )
+
+    def error(self, env, message):
+        self.log(env, message, self.logger.error)
 
     def dispatch(self, fleet, criteria, n):
         """Return n EVs from fleet according to ascending EV criteria"""
