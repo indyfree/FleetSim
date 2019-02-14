@@ -88,7 +88,7 @@ def load_intraday_prices(rebuild=False):
     """Loads intraday prices, calculate again if needed"""
 
     if rebuild is False and os.path.isfile(PROCESSED_INTRADAY_PRICES_FILE):
-        return pd.read_csv(PROCESSED_INTRADAY_PRICES_FILE)
+        return pd.read_csv(PROCESSED_INTRADAY_PRICES_FILE, parse_dates=[0], infer_datetime_format=True)
 
     logger.info("Processing %s..." % PROCOM_TRADES_FILE)
     df = pd.read_csv(
