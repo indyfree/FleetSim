@@ -1,12 +1,10 @@
 from . import controller
 
 
-def regular(env, fleet, timestep):
-    '''
-    Charge all EVs at regular prices
-    '''
+def regular(env, controller, fleet, timestep):
+    ''' Charge all EVs at regular prices'''
 
-    evs = controller.dispatch(env, fleet, len(fleet))
+    evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
     controller.log(env, "Charging %d EVs." % len(evs))
     controller.log(env, evs)
 
