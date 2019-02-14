@@ -38,4 +38,15 @@ class Controller:
     def predict_clearing_price(self, data, time):
         """ Predict the clearing price for a 15-min contract at a given time"""
 
-        return 300
+    def predict_clearing_price(self, df, timeslot):
+        """ Predict the clearing price for a 15-min contract at a given timeslot.
+        Takes a dataframe and timeslot (string/datetime) as input.
+        Return price in EUR/MWh.
+        """
+        try:
+            return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
+        except IndexError as e:
+            raise ValueError(
+                "%s is not in data. Specify in 15 minute intervals between %s and %s"
+                % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
+            )
