@@ -36,18 +36,23 @@ class Controller:
         s = sorted(fleet, key=attrgetter(criteria))
         return s[:n]
 
-    def bid(self, price, quantity):
-        """ Bid at intraday market given the price in EUR/MWh and quantity in kW"""
+    def bid(self, df, timeslot, price, quantity):
+        """ Bid at intraday market given the price in EUR/MWh and quantity in kW
+            at a given timeslot.
+            Takes dataframe of the market as input.
+        """
 
-        return 300
+        # NOTE: Simplified auction process
+        cp = self.predict_clearing_price(df, timeslot)
+        if price > cp:
+            return (timeslot, price, quantity)
 
-    def predict_clearing_price(self, data, time):
-        """ Predict the clearing price for a 15-min contract at a given time"""
+        return None
 
     def predict_clearing_price(self, df, timeslot):
         """ Predict the clearing price for a 15-min contract at a given timeslot.
         Takes a dataframe and timeslot (string/datetime) as input.
-        Return price in EUR/MWh.
+        Returns the predicted price in EUR/MWh.
         """
         try:
             return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
