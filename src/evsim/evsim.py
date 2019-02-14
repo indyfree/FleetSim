@@ -8,6 +8,8 @@ from evsim.controller import Controller, strategy
 from evsim.data import loader
 from evsim.simulation import Simulation
 
+logger = logging.getLogger(__name__)
+
 
 @click.group(name="evsim")
 @click.option("--debug/--no-debug", default=False)
@@ -189,23 +191,38 @@ def controller(ctx):
     return True
 
 
-@controller.command(help="Bid at a given Market")
+@controller.command(help="Bid at a given market")
+@click.option("-p", "--price", help="Quantity in kW.", type=int)
+@click.option("-q", "--quantity", help="Quantity in kW.", type=int)
+@click.option(
+    "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
+)
 @click.pass_context
-def bid(ctx):
+def bid(ctx, price, quantity, timeslot):
     controller = ctx.obj["CONTROLLER"]
 
-    click.echo(controller.bid(controller.intraday_prices, "15Q"))
+    try:
+        result = controller.bid(controller.intraday_prices, timeslot, price, quantity)
+        if result:
+            click.echo(result)
+        else:
+            click.echo("Bid unsuccessful! Try a higher price next time.")
+    except ValueError as e:
+        logger.error(e)
 
 
 @controller.command(help="Predict clearing price for a given time at a given market")
-@click.option("-t", "--timeslot", help="Charging power of charging stations in kW.")
+@click.option(
+    "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
+)
 @click.pass_context
 def predict(ctx, timeslot):
     controller = ctx.obj["CONTROLLER"]
 
     try:
         click.echo(
-            controller.predict_clearing_price(controller.intraday_prices, timeslot)
+            "%.2f EUR/MWh"
+            % controller.predict_clearing_price(controller.intraday_prices, timeslot)
         )
     except ValueError as e:
         logger.error(e)
