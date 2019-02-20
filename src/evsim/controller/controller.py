@@ -64,7 +64,7 @@ class Controller:
         try:
             # TODO: Distort data --> Prediction
             return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
-        except IndexError as e:
+        except IndexError:
             raise ValueError(
                 "%s is not in data. Specify in 15 minute intervals between %s and %s"
                 % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
@@ -83,7 +83,7 @@ class Controller:
                 ts = datetime.fromisoformat(timeslot).timestamp()
 
             return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
-        except IndexError as e:
+        except IndexError:
             raise ValueError(
                 "%s is not in data. Specify 5 minute intervals between %s and %s"
                 % (
