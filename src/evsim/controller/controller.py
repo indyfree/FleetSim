@@ -74,7 +74,12 @@ class Controller:
         Returns the predicted price capacity in kW.
         """
         try:
-            ts = datetime.fromisoformat(timeslot).timestamp()
+            # NOTE: df["timestamp"] is in unix timestamp format, cast accordingly
+            if type(timeslot) is datetime:
+                ts = timeslot.timestamp()
+            elif type(timeslot) is str:
+                ts = datetime.fromisoformat(timeslot).timestamp()
+
             return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
         except IndexError as e:
             raise ValueError(
