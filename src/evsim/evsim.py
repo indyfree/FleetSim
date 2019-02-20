@@ -211,18 +211,39 @@ def bid(ctx, price, quantity, timeslot):
         logger.error(e)
 
 
-@controller.command(help="Predict clearing price for a given time at a given market")
+@controller.group(help="Predict all the things")
+@click.pass_context
+def predict(ctx):
+    return True
+
+@predict.command(help="Predict clearing price at the intraday market.")
 @click.option(
     "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
 )
 @click.pass_context
-def predict(ctx, timeslot):
+def intraday_price(ctx, timeslot):
     controller = ctx.obj["CONTROLLER"]
 
     try:
         click.echo(
             "%.2f EUR/MWh"
             % controller.predict_clearing_price(controller.intraday_prices, timeslot)
+        )
+    except ValueError as e:
+        logger.error(e)
+
+@predict.command(help="Predict available fleet capacity.")
+@click.option(
+    "-t", "--timeslot", help="5-min timeslot as string e.g. '2018-01-01 08:05'."
+)
+@click.pass_context
+def available_capacity(ctx, timeslot):
+    controller = ctx.obj["CONTROLLER"]
+
+    try:
+        click.echo(
+            "%.2f kW"
+            % controller.predict_available_capacity(controller.fleet_capacity, timeslot)
         )
     except ValueError as e:
         logger.error(e)
