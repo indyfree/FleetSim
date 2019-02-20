@@ -49,8 +49,9 @@ class Controller:
         """
 
         # NOTE: Simplified auction process
+        # TODO: Predict --> Real clearing price
         cp = self.predict_clearing_price(df, timeslot)
-        if price > cp:
+        if price >= cp:
             return (timeslot, price, quantity)
 
         return None
@@ -61,6 +62,7 @@ class Controller:
         Returns the predicted price in EUR/MWh.
         """
         try:
+            # TODO: Distort data --> Prediction
             return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
         except IndexError as e:
             raise ValueError(
@@ -68,7 +70,7 @@ class Controller:
                 % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
             )
 
-    def predict_available_capacity(self, df, timeslot):
+    def predict_capacity(self, df, timeslot):
         """ Predict the available capacity for at a given 5min timeslot.
         Takes a dataframe and timeslot (string/datetime) as input.
         Returns the predicted price capacity in kW.
