@@ -1,5 +1,4 @@
 from datetime import datetime
-from . import controller
 
 
 def regular(env, controller, fleet, timestep):
