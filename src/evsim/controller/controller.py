@@ -26,7 +26,12 @@ class Controller:
 
         level(
             "[%s] - %s(%s) %s"
-            % (datetime.fromtimestamp(env.now), "Controller", "regular", message)
+            % (
+                datetime.fromtimestamp(env.now),
+                type(self).__name__,
+                self.strategy.__name__,
+                message,
+            )
         )
 
     def error(self, env, message):
