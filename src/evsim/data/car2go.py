@@ -127,7 +127,7 @@ def calculate_capacity(df, charging_speed, ev_capacity):
 
     df_charging["vpp_capacity_kw"] = df_charging["vpp"] * charging_speed
 
-    df_charging = df_charging.set_index("timestamp").sort_index()
+    df_charging = df_charging.sort_values("timestamp")
     return df_charging
 
 
