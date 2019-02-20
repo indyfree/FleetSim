@@ -13,6 +13,7 @@ def process(df, ev_range):
     df[["coordinates_lat", "coordinates_lon"]] = df[
         ["coordinates_lat", "coordinates_lon"]
     ].round(4)
+    # TODO: Add infered charging stations
     # df_stations = determine_charging_stations(df)
 
     df["timestamp"] = df["timestamp"] // 60 * 60
