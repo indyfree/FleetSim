@@ -218,6 +218,7 @@ def bid(ctx, price, quantity, timeslot):
 def predict(ctx):
     return True
 
+
 @predict.command(help="Predict clearing price at the intraday market.")
 @click.option(
     "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
@@ -233,6 +234,7 @@ def intraday_price(ctx, timeslot):
         )
     except ValueError as e:
         logger.error(e)
+
 
 @predict.command(help="Predict available fleet capacity.")
 @click.option(
