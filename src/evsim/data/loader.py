@@ -9,11 +9,15 @@ from evsim.data import balancing, car2go, intraday
 
 logger = logging.getLogger(__name__)
 
+# Base Paths
 PROJECT_DIR = str(Path(__file__).resolve().parents[3])
-CAR2GO_PATH = PROJECT_DIR + "/data/raw/car2go/"
-PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed/"
+RAW_DATA_PATH = PROJECT_DIR + "/data/raw"
+CAR2GO_PATH = RAW_DATA_PATH + "/car2go/"
+PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed"
 PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
 PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
+
+# Raw file paths
 CAR2GO_FILES = [
     # "stuttgart.2016.03.22-2016.11.30.csv",
     # "stuttgart.2016.12.01-2017.02.22.csv",
@@ -21,28 +25,32 @@ CAR2GO_FILES = [
     # "stuttgart.2017.05.01-2017.10.31.csv",
     # "stuttgart.2017.11.01-2018.01.31.csv",
 ]
-
 ACTIVATED_CONTROL_RESERVE_FILE = (
-    PROJECT_DIR + "/data/raw/balancing/activated_control_reserve_2016_2017.csv"
+    RAW_DATA_PATH + "/balancing/activated_control_reserve_2016_2017.csv"
 )
-TENDER_RESULTS_FILE = PROJECT_DIR + "/data/raw/balancing/tender_results_2016_2017.csv"
+TENDER_RESULTS_FILE = RAW_DATA_PATH + "/balancing/tender_results_2016_2017.csv"
+PROCOM_TRADES_FILE = RAW_DATA_PATH + "/intraday/procom_data.csv"
 
-PROCOM_TRADES_FILE = PROJECT_DIR + "/data/raw/intraday/procom_data.csv"
-
+# Processed files paths
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
 PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
 PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
 
+# Default values
+CHARGING_SPEED = 3.6
+EV_CAPACITY = 17.6
+EV_RANGE = 160
 
-def rebuild(charging_speed, ev_capacity, ev_range):
+
+def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_RANGE):
     load_car2go_trips(ev_range, rebuild=True)
     load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
     load_balancing_data(rebuild=True)
     load_intraday_prices(rebuild=True)
 
 
-def load_car2go_trips(ev_range, rebuild=False):
+def load_car2go_trips(ev_range=EV_RANGE, rebuild=False):
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
@@ -69,7 +77,12 @@ def load_car2go_trips(ev_range, rebuild=False):
     return pd.read_pickle(PROCESSED_TRIPS_FILE)
 
 
-def load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=False):
+def load_car2go_capacity(
+    charging_speed=CHARGING_SPEED,
+    ev_capacity=EV_CAPACITY,
+    ev_range=EV_RANGE,
+    rebuild=False,
+):
     """Loads processed capacity data into a dataframe, process again if needed"""
     df_trips = load_car2go_trips(ev_range)
 
@@ -88,7 +101,9 @@ def load_intraday_prices(rebuild=False):
     """Loads intraday prices, calculate again if needed"""
 
     if rebuild is False and os.path.isfile(PROCESSED_INTRADAY_PRICES_FILE):
-        return pd.read_csv(PROCESSED_INTRADAY_PRICES_FILE, parse_dates=[0], infer_datetime_format=True)
+        return pd.read_csv(
+            PROCESSED_INTRADAY_PRICES_FILE, parse_dates=[0], infer_datetime_format=True
+        )
 
     logger.info("Processing %s..." % PROCOM_TRADES_FILE)
     df = pd.read_csv(
