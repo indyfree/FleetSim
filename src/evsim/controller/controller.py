@@ -9,6 +9,7 @@ class Controller:
     def __init__(self, strategy):
         self.logger = logging.getLogger(__name__)
 
+        self.fleet_capacity = loader.load_car2go_capacity()
         self.intraday_prices = loader.load_intraday_prices()
         self.strategy = strategy
 
@@ -60,4 +61,22 @@ class Controller:
             raise ValueError(
                 "%s is not in data. Specify in 15 minute intervals between %s and %s"
                 % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
+            )
+
+    def predict_available_capacity(self, df, timeslot):
+        """ Predict the available capacity for at a given 5min timeslot.
+        Takes a dataframe and timeslot (string/datetime) as input.
+        Returns the predicted price capacity in kW.
+        """
+        try:
+            ts = datetime.fromisoformat(timeslot).timestamp()
+            return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
+        except IndexError as e:
+            raise ValueError(
+                "%s is not in data. Specify 5 minute intervals between %s and %s"
+                % (
+                    timeslot,
+                    datetime.fromtimestamp(df["timestamp"].min()),
+                    datetime.fromtimestamp(df["timestamp"].max()),
+                )
             )
