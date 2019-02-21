@@ -26,7 +26,7 @@ def intraday(env, controller, fleet, timestep):
         )
 
         if not bid:
-            controller.log(env, "Nothing bought. The industry tariff is cheaper.")
+            controller.log(env, "Nothing bought.")
         elif bid[0] in controller.consumption_plan:
             raise ValueError("%s was already in consumption plan" % bid[0])
         else:
@@ -61,19 +61,25 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
             controller.intraday_prices, timeslot
         )
     except ValueError as e:
-        controller.warning(env, "Submitting bid failed %s: %s" % (timeslot, e))
+        controller.warning(env, "Submitting bid failed %s: %s." % (timeslot, e))
         return None
 
     # We don't want to buy more expensive than Industry tariff
     # TODO: Parametrize and verify Industry Tariff
     if clearing_price > 250:
+        controller.log(env, "The industry tariff is cheaper.")
         return None
 
     # Predict available capacity at t
+    capacity = 0
     try:
         capacity = controller.predict_capacity(df_capacity, timeslot)
     except ValueError as e:
-        controller.warning(env, "Submitting bid failed %s: %s" % (timeslot, e))
+        controller.warning(env, "Submitting bid failed %s: %s." % (timeslot, e))
+        return None
+
+    if capacity == 0:
+        controller.log(env, "No capacity predicted.")
         return None
 
     # Submit bid for predicted capacity at t
