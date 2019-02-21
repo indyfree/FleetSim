@@ -37,6 +37,9 @@ class Controller:
     def error(self, env, message):
         self.log(env, message, self.logger.error)
 
+    def warning(self, env, message):
+        self.log(env, message, self.logger.warning)
+
     def dispatch(self, fleet, criteria, n):
         """Return n EVs from fleet according to ascending EV criteria"""
         s = sorted(fleet, key=attrgetter(criteria))
