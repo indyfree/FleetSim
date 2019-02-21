@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def regular(env, controller, fleet, timestep):
@@ -35,8 +35,14 @@ def intraday(env, controller, fleet, timestep):
                 "Bought %.2f kW for %.2f EUR/MWh for 15-min timeslot %s"
                 % (bid[1], bid[2], bid[0]),
             )
-            # 3. Save in a day ahead consumption plan (t --> (quantity,price))
-            controller.consumption_plan[bid[0].timestamp()] = bid[1]
+
+            # TODO: Better data structure to save 15 min consumption plan
+            # TODO: Save prices
+            # 3. Save in a 30-min ahead consumption plan
+            # Bought capacity will be for 3 * 5-min timeslots
+            for t in [0, 5, 10]:
+                time = bid[0] + timedelta(minutes=t)
+                controller.consumption_plan[time.timestamp()] = bid[1]
 
     # Intraday charging
     if env.now in controller.consumption_plan:
@@ -49,7 +55,6 @@ def intraday(env, controller, fleet, timestep):
     # Regular charging
     evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
     controller.log(env, "Charging %d EVs." % len(evs))
-    controller.log(env, evs)
 
     for ev in evs:
         ev.action = env.process(ev.charge_timestep(timestep))
@@ -79,7 +84,7 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
         return None
 
     if capacity == 0:
-        controller.log(env, "No capacity predicted.")
+        controller.log(env, "No available capacity predicted.")
         return None
 
     # Submit bid for predicted capacity at t
