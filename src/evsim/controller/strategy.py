@@ -12,7 +12,7 @@ def regular(env, controller, fleet, timestep):
         ev.action = env.process(ev.charge_timestep(timestep))
 
 
-def intraday(env, controller, fleet, timestamp):
+def intraday(env, controller, fleet, timestep):
     """ Charge available EVs with intraday electricity
         charge others with regulary"""
 
@@ -25,22 +25,29 @@ def intraday(env, controller, fleet, timestamp):
             env, controller, controller.fleet_capacity, controller.intraday_prices, t
         )
 
-        if bid:
+        if not bid:
+            controller.log(env, "Nothing bought. The industry tariff is cheaper.")
+        elif bid[0] in controller.consumption_plan:
+            raise ValueError("%s was already in consumption plan" % bid[0])
+        else:
             controller.log(
                 env,
                 "Bought %.2f kW for %.2f EUR/MWh for 15-min timeslot %s"
-                % (bid[2], bid[1], bid[0]),
+                % (bid[1], bid[2], bid[0]),
             )
-        else:
-            controller.log(env, "Nothing bought")
+            # 3. Save in a day ahead consumption plan (t --> (quantity,price))
+            controller.consumption_plan[bid[0]] = bid[1]
 
-    # 3. Save in a day ahead consumption plan (t --> (quantity,price))
+    # Regular charging
+    evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
+    controller.log(env, "Charging %d EVs." % len(evs))
+    controller.log(env, evs)
 
-    return True
+    for ev in evs:
+        ev.action = env.process(ev.charge_timestep(timestep))
 
 
 def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
-
     try:
         clearing_price = controller.predict_clearing_price(
             controller.intraday_prices, timeslot
@@ -55,7 +62,12 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
         return None
 
     # Predict available capacity at t
-    capacity = controller.predict_capacity(df_capacity, timeslot)
+    try:
+        capacity = controller.predict_capacity(df_capacity, timeslot)
+    except ValueError as e:
+        controller.warning(env, "Submitting bid failed %s: %s" % (timeslot, e))
+        return None
+
     # Submit bid for predicted capacity at t
     return controller.bid(
         controller.intraday_prices, timeslot, clearing_price, capacity

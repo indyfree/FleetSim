@@ -9,6 +9,7 @@ class Controller:
     def __init__(self, strategy):
         self.logger = logging.getLogger(__name__)
 
+        self.consumption_plan = dict()
         self.fleet_capacity = loader.load_car2go_capacity()
         self.intraday_prices = loader.load_intraday_prices()
         self.strategy = strategy
@@ -55,7 +56,7 @@ class Controller:
         # TODO: Predict --> Real clearing price
         cp = self.predict_clearing_price(df, timeslot)
         if price >= cp:
-            return (timeslot, price, quantity)
+            return (timeslot, quantity, price)
 
         return None
 
@@ -69,7 +70,7 @@ class Controller:
             return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
         except IndexError:
             raise ValueError(
-                "%s is not in data. Specify in 15 minute intervals between %s and %s"
+                "Clearing price prediction failed: %s is not in data. Specify in 15 minute intervals between %s and %s"
                 % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
             )
 
@@ -88,7 +89,7 @@ class Controller:
             return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
         except IndexError:
             raise ValueError(
-                "%s is not in data. Specify 5 minute intervals between %s and %s"
+                "Capacity prediction failed: %s is not in data. Specify 5 minute intervals between %s and %s"
                 % (
                     timeslot,
                     datetime.fromtimestamp(df["timestamp"].min()),
