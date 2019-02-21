@@ -22,7 +22,7 @@ def intraday(env, controller, fleet, timestamp):
     # Only bid for 15-min timeslots
     if t.minute % 15 == 0:
         bid = _submit_bid(
-            controller, controller.fleet_capacity, controller.intraday_prices, t
+            env, controller, controller.fleet_capacity, controller.intraday_prices, t
         )
 
         if bid:
@@ -46,7 +46,7 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
             controller.intraday_prices, timeslot
         )
     except ValueError as e:
-        controller.warning(env, "Could not bid for time %s: %s" % (timeslot, e))
+        controller.warning(env, "Submitting bid failed %s: %s" % (timeslot, e))
         return None
 
     # We don't want to buy more expensive than Industry tariff
@@ -56,7 +56,6 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
 
     # Predict available capacity at t
     capacity = controller.predict_capacity(df_capacity, timeslot)
-    print(capacity)
     # Submit bid for predicted capacity at t
     return controller.bid(
         controller.intraday_prices, timeslot, clearing_price, capacity
