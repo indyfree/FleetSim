@@ -48,7 +48,7 @@ class Controller:
 
     def bid(self, df, timeslot, price, quantity):
         """ Bid at intraday market given the price in EUR/MWh and quantity in kW
-            at a given timeslot.
+            at a given timeslot (string/datetime).
             Takes dataframe of the market as input.
         """
 
