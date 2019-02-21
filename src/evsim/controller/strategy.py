@@ -36,7 +36,15 @@ def intraday(env, controller, fleet, timestep):
                 % (bid[1], bid[2], bid[0]),
             )
             # 3. Save in a day ahead consumption plan (t --> (quantity,price))
-            controller.consumption_plan[bid[0]] = bid[1]
+            controller.consumption_plan[bid[0].timestamp()] = bid[1]
+
+    # Intraday charging
+    if env.now in controller.consumption_plan:
+        controller.log(
+            env,
+            "Charge %.2fkW from intraday market."
+            % controller.consumption_plan[env.now],
+        )
 
     # Regular charging
     evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
