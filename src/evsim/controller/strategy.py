@@ -39,10 +39,15 @@ def intraday(env, controller, fleet, timestamp):
     return True
 
 
-def _submit_bid(controller, df_capacity, df_intraday, timeslot):
-    clearing_price = controller.predict_clearing_price(
-        controller.intraday_prices, timeslot
-    )
+def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
+
+    try:
+        clearing_price = controller.predict_clearing_price(
+            controller.intraday_prices, timeslot
+        )
+    except ValueError as e:
+        controller.warning(env, "Could not bid for time %s: %s" % (timeslot, e))
+        return None
 
     # We don't want to buy more expensive than Industry tariff
     # TODO: Parametrize and verify Industry Tariff
