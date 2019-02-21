@@ -65,7 +65,7 @@ def determine_charging_stations(df):
     return df_stations
 
 
-def calculate_capacity(df, charging_speed, ev_capacity):
+def calculate_capacity(df, charging_speed, ev_capacity, sim_charging=False):
     charging = dict()
     fleet = dict()
     rent = dict()
@@ -86,8 +86,9 @@ def calculate_capacity(df, charging_speed, ev_capacity):
         // 10 ** 9
     )
     for t in timeslots:
-        # 1. Each timestep (5min) plugged-in EVs charge linearly
-        charging, vpp = _simulate_charge(charging, vpp, charging_step)
+        if sim_charging:
+            # 1. Each timestep (5min) plugged-in EVs charge linearly
+            charging, vpp = _simulate_charge(charging, vpp, charging_step)
 
         # 2. Only keep EVs in VPP when enough available battery capacity for next charge
         vpp = {k: v for k, v in vpp.items() if v <= (100 - charging_step)}
