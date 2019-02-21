@@ -17,7 +17,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[14]:
 
 
 from datetime import datetime
@@ -29,48 +29,30 @@ import seaborn as sns
 from evsim.data import load_car2go_trips, load_car2go_capacity
 
 
-# ### 4.6kW Chargers
-
-# In[3]:
+# In[15]:
 
 
-df_4 = pd.read_csv("../logs/stats-Tobi-4-6.csv", parse_dates=[0], infer_datetime_format=True)
-df_4 = df_4.set_index("timestamp")
-df_4.describe()
-
-
-# ### 3.6kW Chargers
-
-# In[4]:
-
-
-df_3 = pd.read_csv("../logs/stats-Tobi-3_6.csv", parse_dates=[0], infer_datetime_format=True)
-df_3 = df_3.set_index("timestamp")
-df_3.describe()
+df = pd.read_csv("../logs/stats.csv", parse_dates=[0], infer_datetime_format=True)
+df = df.set_index("timestamp")
+df.describe()
 
 
 # # Real data comparison
 
-# In[5]:
+# In[17]:
 
 
 real_cap = load_car2go_capacity()
-
-
-# ### 4.6kw chargers (only time on chargers simulated)
-
-# In[6]:
-
-
+real_cap = real_cap.set_index("timestamp")
 real_cap.describe()
 
 
 # ## Plot differences
 
-# In[7]:
+# In[19]:
 
 
-merge = df_3.merge(real_cap, left_index=True, right_index=True, how='left')
+merge = df.merge(real_cap, left_index=True, right_index=True, how='left')
 merge["fleet_soc_diff"] = merge["fleet_soc_x"] - merge["fleet_soc_y"]
 print("Average SoC difference: %.2f" % merge.fleet_soc_diff.mean())
 
