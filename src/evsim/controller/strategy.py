@@ -44,22 +44,28 @@ def intraday(env, controller, fleet, timestep):
                 time = bid[0] + timedelta(minutes=t)
                 controller.consumption_plan[time.timestamp()] = bid[1]
 
-    # Intraday charging
+    # Intraday charging if in plan
+    intraday_evs = 0
     if env.now in controller.consumption_plan:
+        # TODO Pass capacity as param
+        intraday_evs = int(controller.consumption_plan[env.now] // 17.6)
+        evs = controller.dispatch(fleet, criteria="battery.level", n=intraday_evs)
         controller.log(
-            env,
-            "Charge %.2fkW from intraday market."
-            % controller.consumption_plan[env.now],
+            env, "Charging %d/%d EVs from intraday market." % (len(evs), len(fleet))
         )
+        for ev in evs:
+            ev.action = env.process(ev.charge_timestep(timestep))
 
-    # Regular charging
-    evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
-    controller.log(env, "Charging %d EVs." % len(evs))
-
+    # Regular charging all other EVs
+    evs = controller.dispatch(
+        fleet, criteria="battery.level", n=len(fleet) - intraday_evs, descending=True
+    )
+    controller.log(env, "Charging %d/%d EVs regulary." % (len(evs), len(fleet)))
     for ev in evs:
         ev.action = env.process(ev.charge_timestep(timestep))
 
 
+# TODO: Rename method
 def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
     try:
         clearing_price = controller.predict_clearing_price(
@@ -75,6 +81,7 @@ def _submit_bid(env, controller, df_capacity, df_intraday, timeslot):
         controller.log(env, "The industry tariff is cheaper.")
         return None
 
+    # TODO: Predict number of charging EVs instead
     # Predict available capacity at t
     capacity = 0
     try:
