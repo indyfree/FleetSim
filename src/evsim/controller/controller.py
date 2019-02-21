@@ -41,9 +41,9 @@ class Controller:
     def warning(self, env, message):
         self.log(env, message, self.logger.warning)
 
-    def dispatch(self, fleet, criteria, n):
+    def dispatch(self, fleet, criteria, n, descending=False):
         """Return n EVs from fleet according to ascending EV criteria"""
-        s = sorted(fleet, key=attrgetter(criteria))
+        s = sorted(fleet, key=attrgetter(criteria), reverse=descending)
         return s[:n]
 
     def bid(self, df, timeslot, price, quantity):
