@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import numpy as np
 import pandas as pd
@@ -75,7 +76,15 @@ def calculate_capacity(df, charging_speed, ev_capacity):
     # SoC that EV charges in 5 minutes
     charging_step = _charging_step(ev_capacity, charging_speed, 5)
 
-    timeslots = np.sort(pd.unique(df[["start_time", "end_time"]].values.ravel("K")))
+    # Timerange in unix timestamps
+    timeslots = (
+        pd.date_range(
+            datetime.utcfromtimestamp(df.start_time.min()),
+            datetime.utcfromtimestamp(df.end_time.max()),
+            freq="5min",
+        ).astype(np.int64)
+        // 10 ** 9
+    )
     for t in timeslots:
         # 1. Each timestep (5min) plugged-in EVs charge linearly
         charging, vpp = _simulate_charge(charging, vpp, charging_step)
