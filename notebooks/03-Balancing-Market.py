@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from evsim.data import loader
+
 
 # # List of Tenders (Ausschreibung)
 
@@ -53,6 +55,7 @@ df_tenders.head(10)
 
 df_results = pd.read_csv("../data/processed/tender_results.csv",
                          parse_dates=[0, 1], infer_datetime_format=True)
+
 df_results[(df_results["from"] == '2017-10-23') & (df_results["product_type"] == 'NEG') &
            (df_results["product_time"] == 'HT')].sort_values(['energy_price_mwh'], ascending=False)
 
