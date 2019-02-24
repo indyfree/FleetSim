@@ -171,7 +171,13 @@ def capacity(ev_capacity, ev_range, charging_speed, simulate_charging):
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Building car2go capacity data...")
-    loader.load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True, simulate_charging=simulate_charging)
+    loader.load_car2go_capacity(
+        charging_speed,
+        ev_capacity,
+        ev_range,
+        rebuild=True,
+        simulate_charging=simulate_charging,
+    )
 
 
 @build.command(help="(Re)build intraday price data.")
