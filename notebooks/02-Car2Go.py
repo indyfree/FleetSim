@@ -42,6 +42,7 @@ trips["end_time"] = trips["end_time"].apply(
     lambda x: datetime.fromtimestamp(x).replace(second=0, microsecond=0)
 )
 print("We are looking at %d trips!" % len(trips))
+trips
 
 
 # ## Average Charging Speed
@@ -169,15 +170,24 @@ print("%d EVs were charged on a trip, which didn't end at a charger %d times." %
 
 
 df = load_car2go_capacity()
+df["timestamp"] = df["timestamp"].apply(lambda x : datetime.fromtimestamp(x))
+df = df.set_index("timestamp")
 
 
 # In[11]:
 
 
-df.head()
+print(len(df))
+df.loc[df.index > "2017-02-23 23:35"].head()
 
 
 # In[12]:
+
+
+df.describe()
+
+
+# In[13]:
 
 
 def apply_smoother(df, days):
@@ -203,39 +213,25 @@ def plot(df, title, start=datetime(2016, 12, 1), end=datetime(2017, 5, 1)):
 
 # ## Yearly rental patterns
 
-# In[13]:
+# In[14]:
 
 
 df = apply_smoother(df, days=3)
-plot(df, "Yearly rental patterns")
+plot(df, "Yearly rental patterns");
 
 
 # ## Weekly Pattern of connected EVS
 
-# In[14]:
+# In[20]:
 
 
 df["day"] = df.index.weekday
 
 f, (ax1, ax2) = plt.subplots(1, 2)
 f.set_size_inches(18.5, 10.5)
-sns.violinplot(x="day", y="fleet_soc", data=df, ax=ax1)
-sns.violinplot(x="day", y="charging", data=df, ax=ax2)
+sns.violinplot(x="day", y="rent", data=df, ax=ax1)
+sns.violinplot(x="day", y="charging", data=df, ax=ax2);
 
-
-# **Comment**: EVs get fully charged during morning/noon and are not able to be used as vpp anymore
-
-# ### Example Week
-
-# In[15]:
-
-
-df = apply_smoother(df, days=0.5)
-plot(df, "Weekly rental patterns", start=datetime(
-    2017, 1, 1), end=datetime(2017, 1, 7))
-
-
-# ## Daily Pattern of connected EVS
 
 # In[16]:
 
@@ -245,13 +241,38 @@ df["hour"] = df.index.hour
 f, (ax1, ax2) = plt.subplots(1, 2)
 f.set_size_inches(18.5, 10.5)
 sns.violinplot(x="hour", y="fleet_soc", data=df, ax=ax1)
-sns.violinplot(x="hour", y="vpp", data=df, ax=ax2)
+sns.violinplot(x="hour", y="charging", data=df, ax=ax2);
 
+
+# **Comment**: EVs get fully charged during morning/noon and are not able to be used as vpp anymore
+
+# ### Example Week
 
 # In[17]:
 
 
+df = apply_smoother(df, days=0.5)
+plot(df, "Weekly rental patterns", start=datetime(
+    2017, 3, 1), end=datetime(2017, 3, 7))
+
+
+# ## Daily Pattern of connected EVS
+
+# In[18]:
+
+
+df["hour"] = df.index.hour
+
+f, (ax1, ax2) = plt.subplots(1, 2)
+f.set_size_inches(18.5, 10.5)
+sns.violinplot(x="hour", y="fleet_soc", data=df, ax=ax1)
+sns.violinplot(x="hour", y="vpp", data=df, ax=ax2);
+
+
+# In[19]:
+
+
 df = apply_smoother(df, days=1/24)
 plot(df, "Daily rental patterns", start=datetime(
-    2017, 1, 6), end=datetime(2017, 1, 7))
+    2017, 3, 6), end=datetime(2017, 3, 7));
 
