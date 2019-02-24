@@ -38,7 +38,9 @@ def process(df, ev_range, infer_chargers):
     if infer_chargers:
         df_trips = add_charging_stations(df_trips, df_stations)
 
-    df_trips = clean_trips(df_trips)
+    # Rental duration threshold is 2 days
+    duration_threshold = 60 * 24 * 2
+    df_trips = clean_trips(df_trips, duration_threshold)
     return df_trips
 
 
@@ -274,7 +276,7 @@ def _trip_distance(trip_charge, ev_range):
     return (trip_charge / 100) * ev_range
 
 
-def clean_trips(df):
+def clean_trips(df, duration_threshold):
     """
         Remove service trips (longer than 2 days) from trip data.
         When EV ended at a charging station, make
@@ -288,8 +290,8 @@ def clean_trips(df):
     """
     logger.info("Cleaning trips...")
     df = _remove_incorrect_charged_evs(df, 20)
-    df = _end_charging_previous_trip(df)
-    df_service = df.loc[df["trip_duration"] > 2 * 24 * 60]
+    df = _end_charging_previous_trip(df, duration_threshold)
+    df_service = df.loc[df["trip_duration"] > duration_threshold]
     df.drop(df_service.index, inplace=True)
     logger.info("Removed %d trips that were longer than 2 days." % len(df_service))
 
@@ -315,14 +317,14 @@ def _remove_incorrect_charged_evs(df, soc_threshold):
     return df
 
 
-def _end_charging_previous_trip(df):
+def _end_charging_previous_trip(df, duration_threshold):
     trips = list()
 
     num_trips = 0
     for ev in df["EV"].unique():
         df_car = df[df["EV"] == ev].reset_index().drop(["index"], axis=1)
         service_trips_idx = df_car[
-            (df_car["trip_duration"] > 60 * 24 * 2)
+            (df_car["trip_duration"] > duration_threshold)
             & ((df_car["end_charging"] == 1) | (df_car["trip_distance"].isna()))
         ].index
 
