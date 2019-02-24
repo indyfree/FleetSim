@@ -4,7 +4,7 @@
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
 # <div class="toc"><ul class="toc-item"></ul></div>
 
-# In[22]:
+# In[1]:
 
 
 from datetime import datetime
@@ -16,7 +16,7 @@ import seaborn as sns
 from evsim.data import load_car2go_trips, load_car2go_capacity
 
 
-# In[125]:
+# In[13]:
 
 
 df = load_car2go_trips(160)
@@ -37,7 +37,7 @@ print(len(t))
 df.start_time.unique()
 
 
-# In[67]:
+# In[14]:
 
 
 a = df
@@ -47,13 +47,19 @@ a["e"] = a.d.apply(lambda x: datetime.utcfromtimestamp(x))
 a
 
 
-# In[5]:
+# In[11]:
 
 
-print(round(9.14784, 4))
-print(round(48.80589, 4))
-print()
-print(round(9.14674, 4), round(48.80549, 4))
+time = "2017-02-23 00:00:00"
+dt = datetime.fromisoformat(time)
+unix = dt.timestamp()
+datetime.fromtimestamp(unix)
+
+
+# In[30]:
+
+
+33 % 15
 
 
 # In[4]:
@@ -106,10 +112,16 @@ append(list)
 list
 
 
-# In[18]:
+# In[4]:
 
 
-df = pd.read_csv('/home/morty/Downloads/stuttgart_trips.csv')
+df = pd.read_csv('/home/morty/uni/evsim/data/raw/car2go/stuttgart.2016.12.01-2017.02.22.csv')
+
+
+# In[7]:
+
+
+df.interior.unique()
 
 
 # In[37]:
