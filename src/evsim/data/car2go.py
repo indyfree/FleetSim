@@ -9,14 +9,14 @@ logger = logging.getLogger(__name__)
 def process(df, ev_range):
     """Executes all preprocessing steps sequentially"""
 
-    # GPS accuracy is only guaranteed at a granularity of 10m, round accordingly.
-    # See also: https://wiki.openstreetmap.org/wiki/Precision_of_coordinates.
+    # Round GPS accuracy to 10 meters
     df[["coordinates_lat", "coordinates_lon"]] = df[
         ["coordinates_lat", "coordinates_lon"]
     ].round(4)
     # TODO: Add infered charging stations
     # df_stations = determine_charging_stations(df)
 
+    # Round timestamp to minutes
     df["timestamp"] = df["timestamp"] // 60 * 60
     df.sort_values("timestamp", inplace=True)
 
