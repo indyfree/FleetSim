@@ -50,7 +50,7 @@ def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_
     load_intraday_prices(rebuild=True)
 
 
-def load_car2go_trips(ev_range=EV_RANGE, rebuild=False):
+def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
@@ -66,7 +66,7 @@ def load_car2go_trips(ev_range=EV_RANGE, rebuild=False):
         files.append(pd.read_csv(CAR2GO_PATH + f))
     df = pd.concat(files)
 
-    df_trips = car2go.process(df, ev_range)
+    df_trips = car2go.process(df, ev_range, infer_chargers)
     df_trips = (
         df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
     )

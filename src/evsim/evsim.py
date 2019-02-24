@@ -148,10 +148,15 @@ def all(ev_capacity, ev_range, charging_speed):
     help="Maximal Range of EV in km.",
     show_default=True,
 )
-def trips(ev_range):
+@click.option(
+    "--infer-chargers/ --no-infer-chargers",
+    default=False,
+    help="Infer charging stations by GPS data.",
+)
+def trips(ev_range, infer_chargers):
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("Building car2go trip data...")
-    loader.load_car2go_trips(ev_range, rebuild=True)
+    loader.load_car2go_trips(ev_range, infer_chargers, rebuild=True)
 
 
 @build.command(help="(Re)build car2go capacity data.")

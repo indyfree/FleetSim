@@ -6,15 +6,16 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def process(df, ev_range):
+def process(df, ev_range, infer_chargers):
     """Executes all preprocessing steps sequentially"""
 
     # Round GPS accuracy to 10 meters
     df[["coordinates_lat", "coordinates_lon"]] = df[
         ["coordinates_lat", "coordinates_lon"]
     ].round(4)
-    # TODO: Add infered charging stations
-    # df_stations = determine_charging_stations(df)
+
+    if infer_chargers:
+        df_stations = determine_charging_stations(df)
 
     # Round timestamp to minutes
     df["timestamp"] = df["timestamp"] // 60 * 60
@@ -34,7 +35,9 @@ def process(df, ev_range):
         % (len(df_trips), len(df_trips[df_trips["end_charging"] == 1]))
     )
 
-    # df_trips = add_charging_stations(df_trips, df_stations)
+    if infer_chargers:
+        df_trips = add_charging_stations(df_trips, df_stations)
+
     df_trips = clean_trips(df_trips)
     return df_trips
 
