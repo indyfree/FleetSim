@@ -70,8 +70,7 @@ class Controller:
             return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
         except IndexError:
             raise ValueError(
-                "Clearing price prediction failed: %s is not in data. Specify in 15 minute intervals between %s and %s"
-                % (timeslot, df["delivery_date"].min(), df["delivery_date"].max())
+                "Clearing price prediction failed: %s is not in data." % timeslot
             )
 
     def predict_capacity(self, df, timeslot):
@@ -88,11 +87,14 @@ class Controller:
 
             return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
         except IndexError:
-            raise ValueError(
-                "Capacity prediction failed: %s is not in data. Specify 5 minute intervals between %s and %s"
+            self.error(
+                "Specify 5 minute intervals between %s and %s"
                 % (
                     timeslot,
                     datetime.fromtimestamp(df["timestamp"].min()),
                     datetime.fromtimestamp(df["timestamp"].max()),
                 )
+            )
+            raise ValueError(
+                "Capacity prediction failed: %s is not in data." % timeslot
             )
