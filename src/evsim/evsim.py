@@ -206,17 +206,24 @@ def controller(ctx):
 
 
 @controller.command(help="Bid at a given market")
-@click.option("-p", "--price", help="Quantity in kW.", type=int)
+@click.option("-p", "--price", help="Price in EUR/MWh.", type=int)
 @click.option("-q", "--quantity", help="Quantity in kW.", type=int)
 @click.option(
     "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
 )
+@click.option(
+    "--market",
+    type=click.Choice(["balancing", "intraday"]),
+    default="intraday",
+    help="Market to bid on",
+    show_default=True,
+)
 @click.pass_context
-def bid(ctx, price, quantity, timeslot):
+def bid(ctx, price, quantity, timeslot, market):
     controller = ctx.obj["CONTROLLER"]
 
     try:
-        result = controller.bid(controller.intraday_prices, timeslot, price, quantity)
+        result = controller.bid(market, timeslot, price, quantity)
         if result:
             click.echo(result)
         else:

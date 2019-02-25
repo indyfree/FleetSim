@@ -47,14 +47,21 @@ class Controller:
         s = sorted(fleet, key=attrgetter(criteria), reverse=descending)
         return s[:n]
 
-    def bid(self, df, timeslot, price, quantity):
+    def bid(self, market, timeslot, price, quantity):
         """ Bid at intraday market given the price in EUR/MWh and quantity in kW
             at a given timeslot (string/datetime).
             Takes dataframe of the market as input.
         """
+        if market == "intraday":
+            cp = self._clearing_price(self.intraday_prices, timeslot)
+        elif market == "balancing":
+            cp = self._clearing_price(self.balancing_prices, timeslot)
+        else:
+            raise ValueError("Market does not exists: %s" % market)
 
-        # NOTE: Simplified auction process
-        cp = self._clearing_price(df, timeslot)
+        print("CP: %s" % type(cp))
+        print("Price: %s" % price)
+
         if price >= cp:
             return (timeslot, quantity, price)
 
@@ -65,13 +72,9 @@ class Controller:
         Takes a dataframe and timeslot (string/datetime) as input.
         Returns the predicted price in EUR/MWh.
         """
-        try:
-            # TODO: Distort data --> Prediction
-            return df.loc[df["delivery_date"] == timeslot, "unit_price_eur_mwh"].iat[0]
-        except IndexError:
-            raise ValueError(
-                "Clearing price prediction failed: %s is not in data." % timeslot
-            )
+
+        # TODO: Distort data for Prediction
+        return self._clearing_price(df, timeslot)
 
     def predict_capacity(self, df, timeslot):
         """ Predict the available capacity for at a given 5min timeslot.
@@ -105,7 +108,7 @@ class Controller:
         Returns the clearing price in EUR/MWh.
         """
         try:
-            # TODO: Distort data --> Prediction
+            # TODO: balancing cp is string
             return df.loc[df["product_time"] == timeslot, "clearing_price_mwh"].iat[0]
         except IndexError:
             raise ValueError(
