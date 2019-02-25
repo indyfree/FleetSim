@@ -7,27 +7,27 @@ logger = logging.getLogger(__name__)
 def calculate_clearing_prices(df_results, df_activated_control_reserve):
     clearing_prices = list()
 
+    # We are only looking at negative control reserve
+    df_results = df_results[df_results["product_type"] == "NEG"]
+
     for t in df_activated_control_reserve.itertuples():
-        day = pd.to_datetime(t[1])
+        product_daytime = pd.to_datetime(t[1])
         # Find out product time
-        product_time = "HT" if 8 <= day.hour < 20 else "NT"
-        # We are only interested in negative control reserve clearing prices
-        product_type = "NEG"
+        product_time = "HT" if 8 <= product_daytime.hour < 20 else "NT"
+        product_day = pd.Timestamp(product_daytime.date())
 
         cp = df_results.loc[
-            (df_results["to"] >= pd.Timestamp(day.date()))
-            & (df_results["from"] <= pd.Timestamp(day.date()))
+            (df_results["to"] >= product_day)
+            & (df_results["from"] <= product_day)
             & (df_results["product_time"] == product_time)
-            & (df_results["product_type"] == product_type)
             & (df_results["cumsum_allocated_mw"] >= t.neg_mw)
         ].iloc[0]["energy_price_mwh"]
-
         clearing_prices.append(cp)
 
-    df = df_activated_control_reserve.drop(["pos_mw"], axis=1)
-    df.columns = ["from", "to", "capacity_mw"]
-
-    df["clearing_price_mwh"] = pd.Series(clearing_prices).values
+    df = pd.concat(
+        [df_activated_control_reserve["from"], pd.Series(clearing_prices)], axis=1
+    )
+    df.columns = ["product_time", "clearing_price_mwh"]
     return df
 
 
