@@ -11,6 +11,7 @@ class Controller:
 
         self.consumption_plan = dict()
         self.fleet_capacity = loader.load_car2go_capacity()
+        self.balancing_prices = loader.load_balancing_prices()
         self.intraday_prices = loader.load_intraday_prices()
         self.strategy = strategy
 

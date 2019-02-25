@@ -194,7 +194,7 @@ def intraday_prices():
 @build.command(help="(Re)build balancing price data.")
 def balancing_prices():
     click.echo("Rebuilding balanacing price data...")
-    loader.load_balancing_data(rebuild=True)
+    loader.load_balancing_prices(rebuild=True)
 
 
 @cli.group(help="EV Fleet Controller")

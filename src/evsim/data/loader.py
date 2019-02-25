@@ -46,7 +46,7 @@ EV_RANGE = 160
 def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_RANGE):
     load_car2go_trips(ev_range, rebuild=True)
     load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
-    load_balancing_data(rebuild=True)
+    load_balancing_prices(rebuild=True)
     load_intraday_prices(rebuild=True)
 
 
@@ -132,8 +132,8 @@ def load_intraday_prices(rebuild=False):
     return df_q
 
 
-def load_balancing_data(rebuild=False):
-    """Loads processed balancing data into a dataframe, process again if needed"""
+def load_balancing_prices(rebuild=False):
+    """Loads balancing prices, process again if needed"""
 
     if rebuild is False and os.path.isfile(PROCESSED_TENDER_RESULTS_FILE):
         df_results = pd.read_csv(PROCESSED_TENDER_RESULTS_FILE)
