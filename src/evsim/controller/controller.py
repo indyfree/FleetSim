@@ -54,8 +54,7 @@ class Controller:
         """
 
         # NOTE: Simplified auction process
-        # TODO: Predict --> Real clearing price
-        cp = self.predict_clearing_price(df, timeslot)
+        cp = self._clearing_price(df, timeslot)
         if price >= cp:
             return (timeslot, quantity, price)
 
@@ -98,4 +97,17 @@ class Controller:
             )
             raise ValueError(
                 "Capacity prediction failed: %s is not in data." % timeslot
+            )
+
+    def _clearing_price(self, df, timeslot):
+        """ Get the clearing price for a 15-min contract at a given timeslot.
+        Takes a dataframe and timeslot (string/datetime) as input.
+        Returns the clearing price in EUR/MWh.
+        """
+        try:
+            # TODO: Distort data --> Prediction
+            return df.loc[df["product_time"] == timeslot, "clearing_price_mwh"].iat[0]
+        except IndexError:
+            raise ValueError(
+                "Retrieving clearing price failed: %s is not in data." % timeslot
             )
