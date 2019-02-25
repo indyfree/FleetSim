@@ -16,11 +16,11 @@ def calculate_clearing_prices(df):
 
     # Clearing price is the lowest conducted trade. Bidding above the clearing price
     # will always be sucessful
-    df = df.groupby("delivery_date").min()
+    df = df.groupby("delivery_date").min().reset_index()
 
     # Transform to EUR/MWh
     df.loc[:, "unit_price"] = df["unit_price"] / 100
 
-    df = df.loc[:, ["unit_price"]]
-    df.columns = ["unit_price_eur_mwh"]
+    df = df.loc[:, ["delivery_date", "unit_price"]]
+    df.columns = ["product_time", "clearing_price_mwh"]
     return df
