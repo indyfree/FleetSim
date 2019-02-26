@@ -80,7 +80,10 @@ class Controller:
                     datetime.fromtimestamp(df["timestamp"].max()),
                 ),
             )
-            raise ValueError("Capacity prediction failed: %d is not in data." % ts)
+            raise ValueError(
+                "Capacity prediction failed: %d is not in data."
+                % datetime.fromtimestamp(ts)
+            )
 
     # TODO: Distort data for Prediction
     def predict_clearing_price(self, market, timeslot, accuracy=100):
