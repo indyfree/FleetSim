@@ -59,9 +59,6 @@ class Controller:
         else:
             raise ValueError("Market does not exists: %s" % market)
 
-        print("CP: %s" % type(cp))
-        print("Price: %s" % price)
-
         if price >= cp:
             return (timeslot, quantity, price)
 
@@ -108,7 +105,6 @@ class Controller:
         Returns the clearing price in EUR/MWh.
         """
         try:
-            # TODO: balancing cp is string
             return df.loc[df["product_time"] == timeslot, "clearing_price_mwh"].iat[0]
         except IndexError:
             raise ValueError(
