@@ -35,7 +35,7 @@ def balancing(env, controller, fleet, timestep):
 
     # 2. Charge from balancing if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
-    num_balancing_evs = int(controller.consumption_plan[env.now] // 17.6)
+    num_balancing_evs = int(controller.get_consumption(env.now) // 17.6)
     try:
         controller.dispatch(
             env, fleet, criteria="battery.level", n=num_balancing_evs, timestep=timestep
@@ -43,7 +43,7 @@ def balancing(env, controller, fleet, timestep):
         controller.log(
             env,
             "Charging %d/%d EVs from balancing market."
-            % (len(num_balancing_evs), len(fleet)),
+            % (num_balancing_evs, len(fleet)),
         )
     except ValueError as e:
         controller.error(env, str(e))
@@ -60,7 +60,7 @@ def balancing(env, controller, fleet, timestep):
             timestep=timestep,
         )
         controller.log(
-            env, "Charging %d/%d EVs regulary." % (len(num_regular_evs), len(fleet))
+            env, "Charging %d/%d EVs regulary." % (num_regular_evs, len(fleet))
         )
     except ValueError as e:
         controller.error(env, str(e))
@@ -82,15 +82,14 @@ def intraday(env, controller, fleet, timestep):
 
     # 2. Charge from intraday if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
-    num_intraday_evs = int(controller.consumption_plan[env.now] // 17.6)
+    num_intraday_evs = int(controller.get_consumption(env.now) // 17.6)
     try:
         controller.dispatch(
             env, fleet, criteria="battery.level", n=num_intraday_evs, timestep=timestep
         )
         controller.log(
             env,
-            "Charging %d/%d EVs from intraday market."
-            % (len(num_intraday_evs), len(fleet)),
+            "Charging %d/%d EVs from intraday market." % (num_intraday_evs, len(fleet)),
         )
     except ValueError as e:
         controller.error(env, str(e))
@@ -107,7 +106,7 @@ def intraday(env, controller, fleet, timestep):
             timestep=timestep,
         )
         controller.log(
-            env, "Charging %d/%d EVs regulary." % (len(num_regular_evs), len(fleet))
+            env, "Charging %d/%d EVs regulary." % (num_regular_evs, len(fleet))
         )
     except ValueError as e:
         controller.error(env, str(e))

@@ -92,3 +92,9 @@ class Controller:
         """
 
         return market.clearing_price(timeslot)
+
+    def get_consumption(self, timeslot):
+        if timeslot in self.consumption_plan:
+            return self.consumption_plan[timeslot]
+        else:
+            return 0
