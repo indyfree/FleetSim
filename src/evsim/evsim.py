@@ -77,7 +77,7 @@ def cli(ctx, debug, logs):
 )
 @click.option(
     "--charging-strategy",
-    type=click.Choice(["regular", "intraday"]),
+    type=click.Choice(["regular", "balancing", "intraday"]),
     default="regular",
     help="Charging strategy",
     show_default=True,
@@ -98,6 +98,8 @@ def simulate(
 
     if charging_strategy == "regular":
         s = strategy.regular
+    elif charging_strategy == "balancing":
+        s = strategy.balancing
     elif charging_strategy == "intraday":
         s = strategy.intraday
 
