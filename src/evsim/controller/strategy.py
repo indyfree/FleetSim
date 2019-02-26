@@ -5,7 +5,9 @@ import pandas as pd
 def regular(env, controller, fleet, timestep):
     """ Charge all EVs at regular prices"""
 
-    evs = controller.dispatch(fleet, criteria="battery.level", n=len(fleet) - 5)
+    evs = controller.dispatch(
+        fleet, criteria="battery.level", n=len(fleet) - 5, timestep=timestep
+    )
     controller.log(env, "Charging %d EVs." % len(evs))
     controller.log(env, evs)
 
@@ -17,21 +19,51 @@ def balancing(env, controller, fleet, timestep):
     """ Charge predicted available EVs with balancing electricity
         charge others from regular electricity tariff"""
 
-    # NOTE: Assumption: every day ahead at 16:00,
-    # we can procure at price >= clearing price
+    # 1. Bid for every 15-minute slot of the next day at 16:00
+    # NOTE: Look up exact balancing mechanism
     if datetime.fromtimestamp(env.now).hour == 16:
-        # Purchase for every 15-minute slot of the next day
         tomorrow = datetime.now().date() + timedelta(days=1)
-
-        # 15-minute intervals for the next day
         intervals = pd.date_range(
             start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
         )[:-1]
 
         for t in intervals:
-            print(t)
+            try:
+                update_consumption_plan(env, controller, controller.balancing, t, 250)
+            except ValueError as e:
+                controller.error(env, "Could not update consumption plan: %s" % e)
 
-    return False
+    # 2. Charge from balancing if in consumption plan
+    # TODO Pass EV capacity as param or use number EVs
+    num_balancing_evs = int(controller.consumption_plan[env.now] // 17.6)
+    try:
+        controller.dispatch(
+            env, fleet, criteria="battery.level", n=num_balancing_evs, timestep=timestep
+        )
+        controller.log(
+            env,
+            "Charging %d/%d EVs from balancing market."
+            % (len(num_balancing_evs), len(fleet)),
+        )
+    except ValueError as e:
+        controller.error(env, str(e))
+
+    # 3. Charge remaining EVs regulary
+    num_regular_evs = len(fleet) - num_balancing_evs
+    try:
+        controller.dispatch(
+            env,
+            fleet,
+            criteria="battery.level",
+            n=num_regular_evs,
+            descending=True,
+            timestep=timestep,
+        )
+        controller.log(
+            env, "Charging %d/%d EVs regulary." % (len(num_regular_evs), len(fleet))
+        )
+    except ValueError as e:
+        controller.error(env, str(e))
 
 
 def intraday(env, controller, fleet, timestep):
@@ -46,30 +78,39 @@ def intraday(env, controller, fleet, timestep):
         try:
             update_consumption_plan(env, controller, controller.intraday, t, 250)
         except ValueError as e:
-            controller.error(e)
+            controller.error(env, "Could not update consumption plan: %s" % e)
 
-    # 2. Charge from Intraday if in consumption plan
-    num_intraday_evs = 0
-    if env.now in controller.consumption_plan:
-        # TODO Pass capacity as param
-        num_intraday_evs = int(controller.consumption_plan[env.now] // 17.6)
-        evs = controller.dispatch(fleet, criteria="battery.level", n=num_intraday_evs)
-        controller.log(
-            env, "Charging %d/%d EVs from intraday market." % (len(evs), len(fleet))
+    # 2. Charge from intraday if in consumption plan
+    # TODO Pass EV capacity as param or use number EVs
+    num_intraday_evs = int(controller.consumption_plan[env.now] // 17.6)
+    try:
+        controller.dispatch(
+            env, fleet, criteria="battery.level", n=num_intraday_evs, timestep=timestep
         )
-        for ev in evs:
-            ev.action = env.process(ev.charge_timestep(timestep))
+        controller.log(
+            env,
+            "Charging %d/%d EVs from intraday market."
+            % (len(num_intraday_evs), len(fleet)),
+        )
+    except ValueError as e:
+        controller.error(env, str(e))
 
-    # Regular charging all other EVs
-    evs = controller.dispatch(
-        fleet,
-        criteria="battery.level",
-        n=len(fleet) - num_intraday_evs,
-        descending=True,
-    )
-    controller.log(env, "Charging %d/%d EVs regulary." % (len(evs), len(fleet)))
-    for ev in evs:
-        ev.action = env.process(ev.charge_timestep(timestep))
+    # 3. Charge remaining EVs regulary
+    num_regular_evs = len(fleet) - num_intraday_evs
+    try:
+        controller.dispatch(
+            env,
+            fleet,
+            criteria="battery.level",
+            n=num_regular_evs,
+            descending=True,
+            timestep=timestep,
+        )
+        controller.log(
+            env, "Charging %d/%d EVs regulary." % (len(num_regular_evs), len(fleet))
+        )
+    except ValueError as e:
+        controller.error(env, str(e))
 
 
 def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
