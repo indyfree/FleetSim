@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 
 from evsim.data import loader
+from evsim.market import Market
 
 
 class Controller:
@@ -10,9 +11,9 @@ class Controller:
         self.logger = logging.getLogger(__name__)
 
         self.consumption_plan = dict()
+        self.balancing = Market(loader.load_balancing_prices())
+        self.intraday = Market(loader.load_intraday_prices())
         self.fleet_capacity = loader.load_car2go_capacity()
-        self.balancing_prices = loader.load_balancing_prices()
-        self.intraday_prices = loader.load_intraday_prices()
         self.strategy = strategy
 
     def charge_fleet(self, env, fleet, timestep):
@@ -47,37 +48,13 @@ class Controller:
         s = sorted(fleet, key=attrgetter(criteria), reverse=descending)
         return s[:n]
 
-    def bid(self, market, timeslot, price, quantity):
-        """ Bid at intraday market given the price in EUR/MWh and quantity in kW
-            at a given timeslot (string/datetime).
-            Takes dataframe of the market as input.
-        """
-        if market == "intraday":
-            cp = self._clearing_price(self.intraday_prices, timeslot)
-        elif market == "balancing":
-            cp = self._clearing_price(self.balancing_prices, timeslot)
-        else:
-            raise ValueError("Market does not exists: %s" % market)
-
-        if price >= cp:
-            return (timeslot, quantity, price)
-
-        return None
-
-    def predict_clearing_price(self, df, timeslot):
-        """ Predict the clearing price for a 15-min contract at a given timeslot.
-        Takes a dataframe and timeslot (string/datetime) as input.
-        Returns the predicted price in EUR/MWh.
-        """
-
-        # TODO: Distort data for Prediction
-        return self._clearing_price(df, timeslot)
-
-    def predict_capacity(self, df, timeslot):
+    # TODO: Distort data for Prediction
+    def predict_capacity(self, timeslot):
         """ Predict the available capacity for at a given 5min timeslot.
         Takes a dataframe and timeslot (string/datetime) as input.
         Returns the predicted price capacity in kW.
         """
+        df = self.fleet_capacity
         try:
             # NOTE: df["timestamp"] is in unix timestamp format, cast accordingly
             if type(timeslot) is datetime:
@@ -99,14 +76,11 @@ class Controller:
                 "Capacity prediction failed: %s is not in data." % timeslot
             )
 
-    def _clearing_price(self, df, timeslot):
-        """ Get the clearing price for a 15-min contract at a given timeslot.
+    # TODO: Distort data for Prediction
+    def predict_clearing_price(self, market, timeslot, accuracy=100):
+        """ Predict the clearing price for a 15-min contract at a given timeslot.
         Takes a dataframe and timeslot (string/datetime) as input.
-        Returns the clearing price in EUR/MWh.
+        Returns the predicted price in EUR/MWh.
         """
-        try:
-            return df.loc[df["product_time"] == timeslot, "clearing_price_mwh"].iat[0]
-        except IndexError:
-            raise ValueError(
-                "Retrieving clearing price failed: %s is not in data." % timeslot
-            )
+
+        return market.clearing_price(timeslot)
