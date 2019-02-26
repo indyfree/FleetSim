@@ -21,15 +21,18 @@ def balancing(env, controller, fleet, timestep):
 
     # 1. Bid for every 15-minute slot of the next day at 16:00
     # NOTE: Look up exact balancing mechanism
-    if datetime.fromtimestamp(env.now).hour == 16:
-        tomorrow = datetime.now().date() + timedelta(days=1)
+    t = datetime.fromtimestamp(env.now)
+    if t.hour == 16:
+        tomorrow = t.date() + timedelta(days=1)
         intervals = pd.date_range(
             start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
         )[:-1]
 
-        for t in intervals:
+        for i in intervals:
             try:
-                update_consumption_plan(env, controller, controller.balancing, t, 250)
+                update_consumption_plan(
+                    env, controller, controller.balancing, i.to_pydatetime(), 250
+                )
             except ValueError as e:
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
@@ -118,7 +121,7 @@ def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
         controller.log(env, "The industry tariff is cheaper.")
         return
 
-    available_capacity = controller.predict_capacity(timeslot)
+    available_capacity = controller.predict_capacity(env, timeslot)
     if available_capacity == 0:
         controller.log(env, "No available capacity predicted.")
         return None

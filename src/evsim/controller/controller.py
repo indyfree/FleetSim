@@ -57,7 +57,7 @@ class Controller:
             ev.action = env.process(ev.charge_timestep(timestep))
 
     # TODO: Distort data for Prediction
-    def predict_capacity(self, timeslot):
+    def predict_capacity(self, env, timeslot):
         """ Predict the available capacity for at a given 5min timeslot.
         Takes a dataframe and timeslot (string/datetime) as input.
         Returns the predicted price capacity in kW.
@@ -73,16 +73,14 @@ class Controller:
             return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
         except IndexError:
             self.error(
+                env,
                 "Specify 5 minute intervals between %s and %s"
                 % (
-                    timeslot,
                     datetime.fromtimestamp(df["timestamp"].min()),
                     datetime.fromtimestamp(df["timestamp"].max()),
-                )
+                ),
             )
-            raise ValueError(
-                "Capacity prediction failed: %s is not in data." % timeslot
-            )
+            raise ValueError("Capacity prediction failed: %d is not in data." % ts)
 
     # TODO: Distort data for Prediction
     def predict_clearing_price(self, market, timeslot, accuracy=100):
