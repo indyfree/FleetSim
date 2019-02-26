@@ -222,8 +222,13 @@ def controller(ctx):
 def bid(ctx, price, quantity, timeslot, market):
     controller = ctx.obj["CONTROLLER"]
 
+    if market == "intraday":
+        market = controller.intraday
+    elif market == "balancing":
+        market = controller.balancing
+
     try:
-        result = controller.bid(market, timeslot, price, quantity)
+        result = market.bid(timeslot, price, quantity)
         if result:
             click.echo(result)
         else:
@@ -242,15 +247,24 @@ def predict(ctx):
 @click.option(
     "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:15'."
 )
+@click.option(
+    "--market",
+    type=click.Choice(["balancing", "intraday"]),
+    default="intraday",
+    help="Market to bid on",
+    show_default=True,
+)
 @click.pass_context
-def intraday_price(ctx, timeslot):
+def clearing_price(ctx, timeslot, market):
     controller = ctx.obj["CONTROLLER"]
 
+    if market == "intraday":
+        market = controller.intraday
+    elif market == "balancing":
+        market = controller.balancing
+
     try:
-        click.echo(
-            "%.2f EUR/MWh"
-            % controller.predict_clearing_price(controller.intraday_prices, timeslot)
-        )
+        click.echo("%.2f EUR/MWh" % controller.predict_clearing_price(market, timeslot))
     except ValueError as e:
         logger.error(e)
 
