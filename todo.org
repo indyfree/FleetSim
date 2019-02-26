@@ -1,5 +1,6 @@
 #+TITLE: Extensive TODO List of this Simulation
 * Inbox
+** TODO Implement balancing bids with capacity unequal 0
 ** TODO Double check that so many EVs are at charger full! Less than 25% is in VPP...
 ** TODO What if csv headers not there. Why no error??
         df = pd.read_csv(CAR2GO_PATH + f)
