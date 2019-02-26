@@ -146,4 +146,4 @@ def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
         # Bought capacity will be for 3 * 5-min timeslots
         for t in [0, 5, 10]:
             time = bid[0] + timedelta(minutes=t)
-            controller.consumption_plan[time.timestamp()] = bid[1]
+            controller.consumption_plan[int(time.timestamp())] = bid[1]
