@@ -54,7 +54,7 @@ def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
-    if rebuild is False or os.path.isfile(PROCESSED_TRIPS_FILE):
+    if rebuild is True or not os.path.isfile(PROCESSED_TRIPS_FILE):
         if not os.path.exists(PROCESSED_DATA_PATH):
             os.makedirs(PROCESSED_DATA_PATH)
 
