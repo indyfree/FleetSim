@@ -178,5 +178,5 @@ def load_balancing_prices(rebuild=False):
         )
 
     return pd.read_csv(
-        PROCESSED_BALANCING_PRICES_FILE, parse_dates=[0, 1], infer_datetime_format=True
+        PROCESSED_BALANCING_PRICES_FILE, parse_dates=[0], infer_datetime_format=True
     )
