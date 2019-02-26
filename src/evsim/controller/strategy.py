@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import pandas as pd
 
 
@@ -22,7 +22,7 @@ def balancing(env, controller, fleet, timestep):
     # 1. Bid for every 15-minute slot of the next day at 16:00
     # NOTE: Look up exact balancing mechanism
     t = datetime.fromtimestamp(env.now)
-    if t.hour == 16:
+    if t.time() == time(16, 0):
         tomorrow = t.date() + timedelta(days=1)
         intervals = pd.date_range(
             start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
