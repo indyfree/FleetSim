@@ -230,9 +230,13 @@ def bid(ctx, price, quantity, timeslot, market):
         market = controller.balancing
 
     try:
-        result = market.bid(timeslot, price, quantity)
+        ts = int(datetime.fromisoformat(timeslot).timestamp())
+        result = market.bid(ts, price, quantity)
         if result:
-            click.echo(result)
+            click.echo(
+                "Succesful bid for %s at %.2fMWh/%.2fkW"
+                % (datetime.fromtimestamp(result[0]), result[2], result[1])
+            )
         else:
             click.echo("Bid unsuccessful! Try a higher price next time.")
     except ValueError as e:
@@ -266,7 +270,8 @@ def clearing_price(ctx, timeslot, market):
         market = controller.balancing
 
     try:
-        click.echo("%.2f EUR/MWh" % controller.predict_clearing_price(market, timeslot))
+        ts = int(datetime.fromisoformat(timeslot).timestamp())
+        click.echo("%.2f EUR/MWh" % controller.predict_clearing_price(market, ts))
     except ValueError as e:
         logger.error(e)
 
@@ -280,9 +285,10 @@ def available_capacity(ctx, timeslot):
     controller = ctx.obj["CONTROLLER"]
 
     try:
+        ts = int(datetime.fromisoformat(timeslot).timestamp())
         click.echo(
             "%.2f kW"
-            % controller.predict_available_capacity(controller.fleet_capacity, timeslot)
+            % controller.predict_available_capacity(controller.fleet_capacity, ts)
         )
     except ValueError as e:
         logger.error(e)

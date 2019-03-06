@@ -59,18 +59,12 @@ class Controller:
     # TODO: Distort data for Prediction
     def predict_capacity(self, env, timeslot):
         """ Predict the available capacity for at a given 5min timeslot.
-        Takes a dataframe and timeslot (string/datetime) as input.
+        Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted price capacity in kW.
         """
         df = self.fleet_capacity
-        # NOTE: df["timestamp"] is in unix timestamp format, cast accordingly
-        if type(timeslot) is datetime:
-            ts = timeslot.timestamp()
-        elif type(timeslot) is str:
-            ts = datetime.fromisoformat(timeslot).timestamp()
-
         try:
-            return df.loc[df["timestamp"] == ts, "vpp_capacity_kw"].iat[0]
+            return df.loc[df["timestamp"] == timeslot, "vpp_capacity_kw"].iat[0]
         except IndexError:
             self.error(
                 env,
@@ -81,14 +75,14 @@ class Controller:
                 ),
             )
             raise ValueError(
-                "Capacity prediction failed: %d is not in data."
-                % datetime.fromtimestamp(ts)
+                "Capacity prediction failed: %s is not in data."
+                % datetime.fromtimestamp(timeslot)
             )
 
     # TODO: Distort data for Prediction
     def predict_clearing_price(self, market, timeslot, accuracy=100):
         """ Predict the clearing price for a 15-min contract at a given timeslot.
-        Takes a dataframe and timeslot (string/datetime) as input.
+        Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted price in EUR/MWh.
         """
 

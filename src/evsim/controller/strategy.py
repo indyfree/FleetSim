@@ -21,18 +21,17 @@ def balancing(env, controller, fleet, timestep):
 
     # 1. Bid for every 15-minute slot of the next day at 16:00
     # NOTE: Look up exact balancing mechanism
-    t = datetime.fromtimestamp(env.now)
-    if t.time() == time(16, 0):
-        tomorrow = t.date() + timedelta(days=1)
+    dt = datetime.fromtimestamp(env.now)
+    if dt.time() == time(16, 0):
+        tomorrow = dt.date() + timedelta(days=1)
         intervals = pd.date_range(
             start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
         )[:-1]
 
         for i in intervals:
             try:
-                update_consumption_plan(
-                    env, controller, controller.balancing, i.to_pydatetime(), 250
-                )
+                ts = i.to_pydatetime().timestamp()
+                update_consumption_plan(env, controller, controller.balancing, ts, 250)
             except ValueError as e:
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
@@ -74,12 +73,14 @@ def intraday(env, controller, fleet, timestep):
         charge others from regular electricity tariff"""
 
     # NOTE: Assumption: 30min ahead we can procure at price >= clearing price
-    t = datetime.fromtimestamp(env.now + (60 * 30))
+    dt = datetime.fromtimestamp(env.now + (60 * 30))
 
     # 1. Bid for 15-min timeslots
-    if t.minute % 15 == 0:
+    if dt.minute % 15 == 0:
         try:
-            update_consumption_plan(env, controller, controller.intraday, t, 250)
+            update_consumption_plan(
+                env, controller, controller.intraday, dt.timestamp(), 250
+            )
         except ValueError as e:
             controller.error(env, "Could not update consumption plan: %s" % e)
 
@@ -116,10 +117,13 @@ def intraday(env, controller, fleet, timestep):
 
 
 def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
+    """ Updates the consumption plan for a given timeslot (POSIX timestamp)
+    """
+
     predicted_clearing_price = controller.predict_clearing_price(market, timeslot)
     if predicted_clearing_price > industry_tariff:
         controller.log(env, "The industry tariff is cheaper.")
-        return
+        return None
 
     available_capacity = controller.predict_capacity(env, timeslot)
     if available_capacity == 0:
@@ -131,14 +135,15 @@ def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
     if bid is None:
         controller.log(env, "Bid unsuccessful")
         return
-    elif bid[0].timestamp() in controller.consumption_plan:
-        controller.error(env, "%s was already in consumption plan" % bid[0])
-        raise ValueError("%s was already in consumption plan" % bid[0])
+    elif bid[0] in controller.consumption_plan:
+        raise ValueError(
+            "%s was already in consumption plan" % datetime.fromtimestamp(bid[0])
+        )
     else:
         controller.log(
             env,
             "Bought %.2f kW for %.2f EUR/MWh for 15-min timeslot %s"
-            % (bid[1], bid[2], bid[0]),
+            % (bid[1], bid[2], datetime.fromtimestamp(bid[0])),
         )
 
         # TODO: Better data structure to save 15 min consumption plan
@@ -146,5 +151,5 @@ def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
         # TODO: Check timestamp() utc??
         # Bought capacity will be for 3 * 5-min timeslots
         for t in [0, 5, 10]:
-            time = bid[0] + timedelta(minutes=t)
-            controller.consumption_plan[time.timestamp()] = bid[1]
+            time = bid[0] + (60 * t)
+            controller.consumption_plan[time] = bid[1]
