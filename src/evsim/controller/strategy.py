@@ -86,32 +86,38 @@ def intraday(env, controller, fleet, timestep):
 
     # 2. Charge from intraday if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
-    num_intraday_evs = int(controller.get_consumption(env.now) // 17.6)
+    consumption_evs = int(controller.get_consumption(env.now) // 17.6)
+    if consumption_evs > len(fleet):
+        controller.error(
+            env,
+            "Overcommited %.2fkW capacity, account for imbalance costs!"
+            % ((consumption_evs - len(fleet)) * 17.6),
+        )
+        consumption_evs = len(fleet)
+
     try:
         controller.dispatch(
-            env, fleet, criteria="battery.level", n=num_intraday_evs, timestep=timestep
+            env, fleet, criteria="battery.level", n=consumption_evs, timestep=timestep
         )
         controller.log(
             env,
-            "Charging %d/%d EVs from intraday market." % (num_intraday_evs, len(fleet)),
+            "Charging %d/%d EVs from intraday market." % (consumption_evs, len(fleet)),
         )
     except ValueError as e:
         controller.error(env, str(e))
 
     # 3. Charge remaining EVs regulary
-    num_regular_evs = max(0, len(fleet) - num_intraday_evs)
+    regular_evs = max(0, len(fleet) - consumption_evs)
     try:
         controller.dispatch(
             env,
             fleet,
             criteria="battery.level",
-            n=num_regular_evs,
+            n=regular_evs,
             descending=True,
             timestep=timestep,
         )
-        controller.log(
-            env, "Charging %d/%d EVs regulary." % (num_regular_evs, len(fleet))
-        )
+        controller.log(env, "Charging %d/%d EVs regulary." % (regular_evs, len(fleet)))
     except ValueError as e:
         controller.error(env, str(e))
 
