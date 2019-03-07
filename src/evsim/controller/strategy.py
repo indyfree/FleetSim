@@ -112,18 +112,32 @@ def _update_consumption_plan(env, controller, market, timeslot, industry_tariff)
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 
-    predicted_clearing_price = controller.predict_clearing_price(market, timeslot)
+    try:
+        predicted_clearing_price = controller.predict_clearing_price(market, timeslot)
+    except ValueError as e:
+        controller.warning(env, e)
+        return None
+
     if predicted_clearing_price > industry_tariff:
         controller.log(env, "The industry tariff is cheaper.")
         return None
 
-    available_capacity = controller.predict_capacity(env, timeslot)
+    try:
+        available_capacity = controller.predict_capacity(env, timeslot)
+    except ValueError as e:
+        controller.warning(env, e)
+        return None
     if available_capacity == 0:
         controller.log(env, "No available capacity predicted.")
         return None
 
     # NOTE: Simple strategy to always bid at predicted clearing price
-    bid = market.bid(timeslot, predicted_clearing_price, available_capacity)
+    try:
+        bid = market.bid(timeslot, predicted_clearing_price, available_capacity)
+    except ValueError as e:
+        controller.warning(env, e)
+        return None
+
     if bid is None:
         controller.log(env, "Bid unsuccessful")
         return

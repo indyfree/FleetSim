@@ -69,14 +69,6 @@ class Controller:
         try:
             return df.loc[df["timestamp"] == timeslot, "vpp_capacity_kw"].iat[0]
         except IndexError:
-            self.error(
-                env,
-                "Specify 5 minute intervals between %s and %s"
-                % (
-                    datetime.fromtimestamp(df["timestamp"].min()),
-                    datetime.fromtimestamp(df["timestamp"].max()),
-                ),
-            )
             raise ValueError(
                 "Capacity prediction failed: %s is not in data."
                 % datetime.fromtimestamp(timeslot)
