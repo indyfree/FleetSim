@@ -85,7 +85,7 @@ def _charge_consumption_plan(env, controller, fleet, timestep):
         ),
     )
     if consumption_evs > len(fleet):
-        controller.error(
+        controller.warning(
             env,
             "Overcommited %.2fkW capacity, account for imbalance costs!"
             % ((consumption_evs - len(fleet)) * controller.charger_capacity),
@@ -134,7 +134,7 @@ def _update_consumption_plan(env, controller, market, timeslot, industry_tariff)
         return None
 
     try:
-        available_capacity = controller.predict_capacity(env, timeslot)
+        available_capacity = controller.predict_min_capacity(env, timeslot)
     except ValueError as e:
         controller.warning(env, e)
         return None

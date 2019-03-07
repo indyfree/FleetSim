@@ -299,14 +299,13 @@ def clearing_price(ctx, timeslot, market):
     "-t", "--timeslot", help="5-min timeslot as string e.g. '2018-01-01 08:05'."
 )
 @click.pass_context
-def available_capacity(ctx, timeslot):
+def capacity(ctx, timeslot):
     controller = ctx.obj["CONTROLLER"]
 
     try:
         ts = int(datetime.fromisoformat(timeslot).timestamp())
         click.echo(
-            "%.2f kW"
-            % controller.predict_available_capacity(controller.fleet_capacity, ts)
+            "%.2f kW" % controller.predict_capacity(controller.fleet_capacity, ts)
         )
     except ValueError as e:
         logger.error(e)

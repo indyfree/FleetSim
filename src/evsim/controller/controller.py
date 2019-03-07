@@ -1,13 +1,14 @@
 from operator import attrgetter
 from datetime import datetime
 import logging
+import sys
 
 from evsim.data import loader
 from evsim.market import Market
 
 
 class Controller:
-    def __init__(self, strategy, charger_capacity, industry_tariff):
+    def __init__(self, strategy, charger_capacity=0, industry_tariff=0):
         self.logger = logging.getLogger(__name__)
 
         self.consumption_plan = dict()
@@ -64,9 +65,9 @@ class Controller:
 
     # TODO: Distort data for Prediction
     def predict_capacity(self, env, timeslot):
-        """ Predict the available capacity for at a given 5min timeslot.
+        """ Predict the available capacity for a given 5min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
-        Returns the predicted price capacity in kW.
+        Returns the predicted fleet capacity in kW.
         """
         df = self.fleet_capacity
         try:
@@ -76,6 +77,25 @@ class Controller:
                 "Capacity prediction failed: %s is not in data."
                 % datetime.fromtimestamp(timeslot)
             )
+
+    def predict_min_capacity(self, env, timeslot):
+        """ Predict the minimum available capacity for a given 15min timeslot.
+        Takes a dataframe and timeslot (POSIX timestamp) as input.
+        Returns the predicted fleet capacity in kW.
+        """
+        cap = sys.maxsize
+        for t in [0, 5, 10]:
+            try:
+                cap = min(cap, self.predict_capacity(env, timeslot + (60 * t)))
+            except ValueError:
+                pass
+
+        if cap == sys.maxsize:
+            raise ValueError(
+                "Capacity prediction failed: 15 min timeslot %s is not in data."
+                % datetime.fromtimestamp(timeslot)
+            )
+        return cap
 
     # TODO: Distort data for Prediction
     def predict_clearing_price(self, market, timeslot, accuracy=100):
