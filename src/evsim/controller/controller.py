@@ -19,11 +19,14 @@ class Controller:
         self.ev_capacity = ev_capacity
         self.industry_tariff = industry_tariff
 
+        self.vpp = None
+
     def charge_fleet(self, env, fleet, industry_tariff, timestep):
         """ Perform a charging operation on the fleet for a given timestep.
             Takes a a list of EVs as input and charges given its strategy.
         """
 
+        self.vpp.commited_capacity = self.consumption_plan.get(env.now, 0)
         self.strategy(env, self, fleet, timestep)
 
     def log(self, env, message, level=None):

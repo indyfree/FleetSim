@@ -34,6 +34,7 @@ class Simulation:
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
+        self.controller.vpp = vpp
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
         env.process(self.lifecycle(env, vpp, df, stats))
@@ -61,7 +62,7 @@ class Simulation:
         )
         t0 = timeslots[0]
         for t in timeslots:
-            # 1. Wait or don't time till next rental
+            # 1. Wait 5 min timestep
             yield env.timeout(t - t0)  # sec
             logger.info(
                 "[%s] - ---------- TIMESLOT %s ----------"

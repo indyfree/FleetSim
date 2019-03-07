@@ -12,13 +12,16 @@ class VPP:
 
         self.charger_capacity = charger_capacity
 
+        self.commited_capacity = 0
+
     def log(self, message):
         self.logger.info(
-            "[%s] - %s(%.1fkW) %s"
+            "[%s] - %s(%.1fkW/%.1fkW) %s"
             % (
                 datetime.fromtimestamp(self.env.now),
                 self.name,
                 self.capacity(),
+                self.commited_capacity,
                 message,
             )
         )
