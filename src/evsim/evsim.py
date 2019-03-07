@@ -104,6 +104,7 @@ def simulate(
     industry_tariff,
     stats,
 ):
+    click.echo("--- Simulation Settings: ---")
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Maximal EV range is set to %skm." % ev_range)
@@ -119,6 +120,8 @@ def simulate(
         s = strategy.intraday
 
     sim = Simulation(name, charging_speed, ev_capacity, industry_tariff, s, stats)
+
+    click.echo("--- Starting Simulation: ---")
     start = time.time()
     sim.start()
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
