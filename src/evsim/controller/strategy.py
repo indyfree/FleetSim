@@ -36,36 +36,7 @@ def balancing(env, controller, fleet, timestep):
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
     # 2. Charge from balancing if in consumption plan
-    # TODO Pass EV capacity as param or use number EVs
-    num_balancing_evs = int(controller.get_consumption(env.now) // 17.6)
-    try:
-        controller.dispatch(
-            env, fleet, criteria="battery.level", n=num_balancing_evs, timestep=timestep
-        )
-        controller.log(
-            env,
-            "Charging %d/%d EVs from balancing market."
-            % (num_balancing_evs, len(fleet)),
-        )
-    except ValueError as e:
-        controller.error(env, str(e))
-
-    # 3. Charge remaining EVs regulary
-    num_regular_evs = max(0, len(fleet) - num_balancing_evs)
-    try:
-        controller.dispatch(
-            env,
-            fleet,
-            criteria="battery.level",
-            n=num_regular_evs,
-            descending=True,
-            timestep=timestep,
-        )
-        controller.log(
-            env, "Charging %d/%d EVs regulary." % (num_regular_evs, len(fleet))
-        )
-    except ValueError as e:
-        controller.error(env, str(e))
+    charge_from_consumption_plan(env, controller, fleet, timestep)
 
 
 def intraday(env, controller, fleet, timestep):
@@ -84,6 +55,11 @@ def intraday(env, controller, fleet, timestep):
         except ValueError as e:
             controller.error(env, "Could not update consumption plan: %s" % e)
 
+    # 2. Charge from intraday if in consumption plan
+    charge_from_consumption_plan(env, controller, fleet, timestep)
+
+
+def charge_from_consumption_plan(env, controller, fleet, timestep):
     # 2. Charge from intraday if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
     consumption_evs = int(controller.get_consumption(env.now) // 17.6)
