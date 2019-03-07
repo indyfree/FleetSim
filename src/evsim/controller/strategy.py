@@ -31,12 +31,18 @@ def balancing(env, controller, fleet, timestep):
         for i in intervals:
             try:
                 ts = i.to_pydatetime().timestamp()
-                update_consumption_plan(env, controller, controller.balancing, ts, 250)
+                _update_consumption_plan(
+                    env,
+                    controller,
+                    controller.balancing,
+                    ts,
+                    controller.industry_tariff,
+                )
             except ValueError as e:
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
-    # 2. Charge from balancing if in consumption plan
-    charge_from_consumption_plan(env, controller, fleet, timestep)
+    # 2. Charge from balancing if in consumption plan, regulary else
+    _charge_consumption_plan(env, controller, fleet, timestep)
 
 
 def intraday(env, controller, fleet, timestep):
@@ -49,25 +55,29 @@ def intraday(env, controller, fleet, timestep):
     # 1. Bid for 15-min timeslots
     if dt.minute % 15 == 0:
         try:
-            update_consumption_plan(
-                env, controller, controller.intraday, dt.timestamp(), 250
+            _update_consumption_plan(
+                env,
+                controller,
+                controller.intraday,
+                dt.timestamp(),
+                controller.industry_tariff,
             )
         except ValueError as e:
             controller.error(env, "Could not update consumption plan: %s" % e)
 
-    # 2. Charge from intraday if in consumption plan
-    charge_from_consumption_plan(env, controller, fleet, timestep)
+    # 2. Charge from balancing if in consumption plan, regulary else
+    _charge_consumption_plan(env, controller, fleet, timestep)
 
 
-def charge_from_consumption_plan(env, controller, fleet, timestep):
+def _charge_consumption_plan(env, controller, fleet, timestep):
     # 2. Charge from intraday if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
-    consumption_evs = int(controller.get_consumption(env.now) // 17.6)
+    consumption_evs = int(controller.get_consumption(env.now) // controller.ev_capacity)
     if consumption_evs > len(fleet):
         controller.error(
             env,
             "Overcommited %.2fkW capacity, account for imbalance costs!"
-            % ((consumption_evs - len(fleet)) * 17.6),
+            % ((consumption_evs - len(fleet)) * controller.ev_capacity),
         )
         consumption_evs = len(fleet)
 
@@ -98,7 +108,7 @@ def charge_from_consumption_plan(env, controller, fleet, timestep):
         controller.error(env, str(e))
 
 
-def update_consumption_plan(env, controller, market, timeslot, industry_tariff):
+def _update_consumption_plan(env, controller, market, timeslot, industry_tariff):
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 

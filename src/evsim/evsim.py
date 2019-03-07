@@ -69,6 +69,13 @@ def cli(ctx, debug, logs):
     show_default=True,
 )
 @click.option(
+    "-i",
+    "--industry-tariff",
+    default=250,
+    help="Flat industry tariff, which the fleet can charge regularly.",
+    show_default=True,
+)
+@click.option(
     "-s",
     "--charging-speed",
     default=3.6,
@@ -88,13 +95,21 @@ def cli(ctx, debug, logs):
     help="Save logs to file. Turning off improves speed.",
 )
 def simulate(
-    ctx, name, ev_capacity, ev_range, charging_speed, charging_strategy, stats
+    ctx,
+    name,
+    ev_capacity,
+    ev_range,
+    charging_speed,
+    charging_strategy,
+    industry_tariff,
+    stats,
 ):
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
+    click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
 
     if charging_strategy == "regular":
         s = strategy.regular
@@ -103,7 +118,7 @@ def simulate(
     elif charging_strategy == "intraday":
         s = strategy.intraday
 
-    sim = Simulation(name, charging_speed, ev_capacity, s, stats)
+    sim = Simulation(name, charging_speed, ev_capacity, industry_tariff, s, stats)
     start = time.time()
     sim.start()
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))

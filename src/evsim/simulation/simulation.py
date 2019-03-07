@@ -11,14 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 class Simulation:
-    def __init__(self, name, charging_speed, ev_capacity, strategy, save):
+    def __init__(
+        self, name, charging_speed, ev_capacity, industry_tariff, strategy, save
+    ):
 
         self.name = name
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
+        self.industry_tariff = industry_tariff
         self.save = save
 
-        self.controller = Controller(strategy)
+        self.controller = Controller(strategy, ev_capacity, industry_tariff)
 
     def start(self):
         df = data.load_car2go_trips(False)
@@ -92,7 +95,9 @@ class Simulation:
                 )
 
             # 5. TODO: Centrally control charging
-            self.controller.charge_fleet(env, vpp.evs.values(), 5)
+            self.controller.charge_fleet(
+                env, vpp.evs.values(), self.industry_tariff, timestep=5
+            )
 
             # 6. Save stats at each trip if enabled
             if stats is not None:
