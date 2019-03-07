@@ -51,7 +51,7 @@ def balancing(env, controller, fleet, timestep):
         controller.error(env, str(e))
 
     # 3. Charge remaining EVs regulary
-    num_regular_evs = len(fleet) - num_balancing_evs
+    num_regular_evs = max(0, len(fleet) - num_balancing_evs)
     try:
         controller.dispatch(
             env,
@@ -99,7 +99,7 @@ def intraday(env, controller, fleet, timestep):
         controller.error(env, str(e))
 
     # 3. Charge remaining EVs regulary
-    num_regular_evs = len(fleet) - num_intraday_evs
+    num_regular_evs = max(0, len(fleet) - num_intraday_evs)
     try:
         controller.dispatch(
             env,

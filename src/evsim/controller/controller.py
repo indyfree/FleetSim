@@ -44,11 +44,14 @@ class Controller:
         self.log(env, message, self.logger.warning)
 
     def dispatch(self, env, fleet, criteria, n, timestep, descending=False):
-        """Dispatches n EVs from fleet according to ascending EV criteria"""
+        """Dispatches n EVs from fleet according to EV attribute"""
         if n > len(fleet):
-            raise ValueError(
-                "Cannot dispatch %d EVs, only %d available" % (n, len(fleet))
+            self.error(
+                env,
+                "Cannot dispatch %d EVs, dispatching %d available EVs"
+                % (n, len(fleet)),
             )
+            n = len(fleet)
         elif n < 0:
             raise ValueError("Cannot dispatch negative number of EVs %d" % n)
 
