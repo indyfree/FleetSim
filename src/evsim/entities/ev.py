@@ -73,19 +73,29 @@ class EV:
             self.error("Not enough battery for the planned trip %d!" % rental)
             return
 
-        # 2. Interrupt if charging
+        # 2. Refuse rental if other EVs in VPP can not substitute capacity
+        if (
+            self.vpp.contains(self)
+            and self.vpp.commited_capacity >= self.vpp.capacity()
+        ):
+            self.error(
+                "Refusing rental! EV is commited to VPP. Account for oportunity costs."
+            )
+            return
+
+        # 3. Interrupt if charging
         if self.action is not None and not self.action.triggered:
             self.action.interrupt("Customer wants to rent car")
 
-        # 3. Remove VPP when applicable
+        # 4. Remove VPP when applicable
         if self.vpp.contains(self):
             self.vpp.remove(self)
 
-        # 4. Drive for the trip duration
+        # 5. Drive for the trip duration
         # TODO: Check for seconds and time sequence
         yield self.env.timeout(duration * 60 - 1)  # seconds
 
-        # 5. Adjust SoC
+        # 6. Adjust SoC
         self.log(
             "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
