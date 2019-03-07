@@ -72,12 +72,23 @@ def intraday(env, controller, fleet, timestep):
 def _charge_consumption_plan(env, controller, fleet, timestep):
     # 2. Charge from intraday if in consumption plan
     # TODO Pass EV capacity as param or use number EVs
-    consumption_evs = int(controller.get_consumption(env.now) // controller.ev_capacity)
+    consumption_evs = int(
+        controller.consumption_plan.get(env.now, 0) // controller.charger_capacity
+    )
+    controller.log(
+        env,
+        "Consumption plan for %s: %.2fkW, required EVs: %d."
+        % (
+            datetime.fromtimestamp(env.now),
+            controller.consumption_plan.get(env.now, 0),
+            consumption_evs,
+        ),
+    )
     if consumption_evs > len(fleet):
         controller.error(
             env,
             "Overcommited %.2fkW capacity, account for imbalance costs!"
-            % ((consumption_evs - len(fleet)) * controller.ev_capacity),
+            % ((consumption_evs - len(fleet)) * controller.charger_capacity),
         )
         consumption_evs = len(fleet)
 

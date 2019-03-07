@@ -7,7 +7,7 @@ from evsim.market import Market
 
 
 class Controller:
-    def __init__(self, strategy, ev_capacity, industry_tariff):
+    def __init__(self, strategy, charger_capacity, industry_tariff):
         self.logger = logging.getLogger(__name__)
 
         self.consumption_plan = dict()
@@ -16,7 +16,7 @@ class Controller:
         self.fleet_capacity = loader.load_car2go_capacity()
         self.strategy = strategy
 
-        self.ev_capacity = ev_capacity
+        self.charger_capacity = charger_capacity
         self.industry_tariff = industry_tariff
 
         self.vpp = None
@@ -85,9 +85,3 @@ class Controller:
         """
 
         return market.clearing_price(timeslot)
-
-    def get_consumption(self, timeslot):
-        if timeslot in self.consumption_plan:
-            return self.consumption_plan[timeslot]
-        else:
-            return 0

@@ -21,7 +21,7 @@ class Simulation:
         self.industry_tariff = industry_tariff
         self.save = save
 
-        self.controller = Controller(strategy, ev_capacity, industry_tariff)
+        self.controller = Controller(strategy, charging_speed, industry_tariff)
 
     def start(self):
         df = data.load_car2go_trips(False)
