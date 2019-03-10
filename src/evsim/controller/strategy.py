@@ -5,14 +5,12 @@ import pandas as pd
 def regular(env, controller, fleet, timestep):
     """ Charge all EVs at regular prices"""
 
-    evs = controller.dispatch(
-        fleet, criteria="battery.level", n=len(fleet) - 5, timestep=timestep
-    )
-    controller.log(env, "Charging %d EVs." % len(evs))
-    controller.log(env, evs)
-
-    for ev in evs:
-        ev.action = env.process(ev.charge_timestep(timestep))
+    try:
+        controller.dispatch(
+            env, fleet, criteria="battery.level", n=len(fleet), timestep=timestep
+        )
+    except ValueError as e:
+        controller.error(env, "Could not charge: %s" % str(e))
 
 
 def balancing(env, controller, fleet, timestep):
