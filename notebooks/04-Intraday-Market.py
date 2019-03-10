@@ -15,7 +15,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[1]:
 
 
 from datetime import datetime
@@ -39,24 +39,25 @@ from evsim.data import loader
 # - **LEAD TIME: 5 Minutes, Clearing every 15 Min**
 # - Till when do we trade when we assume average clearing prices?
 
-# In[4]:
+# In[6]:
 
 
 df = loader.load_intraday_prices()
-df["hour"] = df["delivery_date"].dt.hour
+df["hour"] = df["product_time"].dt.hour
 
 # Clip for better visibility of plots
-df["unit_price_eur_mwh"] = df["unit_price_eur_mwh"].clip(-200,200)
+df["clearing_price_mwh"] = df["clearing_price_mwh"].clip(-200,200)
 
 f, ax = plt.subplots(1, 1)
 f.set_size_inches(18.5, 10.5)
-sns.violinplot(x="hour", y="unit_price_eur_mwh", data=df, ax=ax);
+sns.violinplot(x="hour", y="clearing_price_mwh", data=df, ax=ax);
+print(df.dtypes)
 
 
-# In[5]:
+# In[10]:
 
 
 q = pd.read_pickle("../data/processed/procom_Q.pkl")
                  
-q[q["exec_time"] > '2018-01-29 18:55:00'].head(100)
+q[(q["exec_time"] > '2018-01-29') & (q["exec_time"] < '2018-01-30')].sort_values(['product_time', 'exec_time'], ascending=[True, False]).head(100)
 
