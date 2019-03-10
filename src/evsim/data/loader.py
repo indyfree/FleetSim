@@ -57,6 +57,11 @@ def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_
 
 
 def load_simulation_baseline():
+    if not os.path.isfile(SIMULATION_BASELINE_FILE):
+        raise FileNotFoundError(
+            "%s not found. Run baseline simulation first." % SIMULATION_BASELINE_FILE
+        )
+
     return pd.read_csv(SIMULATION_BASELINE_FILE)
 
 
