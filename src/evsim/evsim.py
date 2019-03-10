@@ -41,7 +41,7 @@ def cli(ctx, debug, name, logs):
 
     if logs:
         os.makedirs("./logs", exist_ok=True)
-        fh = logging.FileHandler("./logs/%s.log" % name)
+        fh = logging.FileHandler("./logs/%s.log" % name, mode="w")
         fh.setFormatter(f)
         fh.setLevel(logging.DEBUG)
         handlers = [sh, fh]
