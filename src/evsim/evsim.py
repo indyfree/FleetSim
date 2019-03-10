@@ -179,7 +179,7 @@ def trips(ev_range, infer_chargers):
     loader.load_car2go_trips(ev_range, infer_chargers, rebuild=True)
 
 
-@build.command(help="(Re)build car2go capacity data.")
+@build.command(name="capacity", help="(Re)build car2go capacity data.")
 @click.option(
     "-c", "--ev-capacity", default=17.6, help="Battery capacity of EV in kWh."
 )
@@ -191,7 +191,7 @@ def trips(ev_range, infer_chargers):
     help="Charging power of charging stations in kW.",
 )
 @click.option("--simulate-charging/--no-simulate-charging", default=False)
-def capacity(ev_capacity, ev_range, charging_speed, simulate_charging):
+def car2go_capacity(ev_capacity, ev_range, charging_speed, simulate_charging):
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
