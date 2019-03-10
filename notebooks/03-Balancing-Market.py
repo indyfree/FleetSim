@@ -97,13 +97,21 @@ print('Activated Control Reserve 2016 - Negative : %.2f TWh Positive %.2f TWh' %
 
 # __Calculated assumed 15-min clearing prices for negative control reserve by looking at actual activated reserve__
 
-# In[7]:
+# In[ ]:
 
 
-from evsim.data import load_balancing_data
 
-df_clearing_prices = load_balancing_data()
-df_clearing_prices.head()
+
+
+# In[5]:
+
+
+from evsim.data import load_balancing_prices
+
+df_clearing_prices = load_balancing_prices()
+print(df_clearing_prices.dtypes)
+
+#df_clearing_prices.clearing_price_mwh.astype(np.float64)
 
 
 # In[8]:
@@ -123,7 +131,7 @@ sns.violinplot(x="hour", y="clearing_price_mwh", data=clipped_data, ax=ax2)
 
 # SMARD: _Für die Sekundärregelung vorgehaltene Leistung bzw. Menge [MW], der durchschnittliche Leistungspreis der bezuschlagten Angebote [€/MW], die durchschnittlich abgerufene Leistung bzw. Menge [MWh] und der durchschnittliche Arbeitspreis aller jeweils aktivierten Angebote [€/MWh]_
 
-# In[9]:
+# In[ ]:
 
 
 df_smard = pd.read_csv("../data/raw/balancing/smard_activated_srl_2016_2017.csv", sep=';', index_col=False,
@@ -142,7 +150,7 @@ df_smard.drop("time", axis=1, inplace=True)
 df_smard.head()
 
 
-# In[10]:
+# In[ ]:
 
 
 df_smard["day"] = df_smard["date"].dt.weekday
@@ -155,7 +163,7 @@ sns.violinplot(x="hour", y="activated_neg_mwh", data=clipped_data, ax=ax1)
 sns.violinplot(x="hour", y="energy_price_neg", data=clipped_data, ax=ax2)
 
 
-# In[11]:
+# In[ ]:
 
 
 # Difference between average and clearing price
