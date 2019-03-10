@@ -90,6 +90,11 @@ def cli(ctx, debug, logs):
     show_default=True,
 )
 @click.option(
+    "--refuse-rentals/--no-refuse-rentals",
+    default=False,
+    help="Save logs to file. Turning off improves speed.",
+)
+@click.option(
     "--stats/--no-stats",
     default=True,
     help="Save logs to file. Turning off improves speed.",
@@ -102,6 +107,7 @@ def simulate(
     charging_speed,
     charging_strategy,
     industry_tariff,
+    refuse_rentals,
     stats,
 ):
     click.echo("--- Simulation Settings: ---")
@@ -111,6 +117,7 @@ def simulate(
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
+    click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
 
     if charging_strategy == "regular":
         s = strategy.regular
@@ -119,7 +126,8 @@ def simulate(
     elif charging_strategy == "intraday":
         s = strategy.intraday
 
-    sim = Simulation(name, charging_speed, ev_capacity, industry_tariff, s, stats)
+    controller = Controller(s, charging_speed, industry_tariff, refuse_rentals)
+    sim = Simulation(name, controller, charging_speed, ev_capacity, stats)
 
     click.echo("--- Starting Simulation: ---")
     start = time.time()

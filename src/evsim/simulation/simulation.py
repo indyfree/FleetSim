@@ -4,24 +4,20 @@ import numpy as np
 import pandas as pd
 import simpy
 
-from evsim.controller import Controller
 from evsim import data, entities
 
 logger = logging.getLogger(__name__)
 
 
 class Simulation:
-    def __init__(
-        self, name, charging_speed, ev_capacity, industry_tariff, strategy, save
-    ):
+    def __init__(self, name, controller, charging_speed, ev_capacity, save):
 
         self.name = name
         self.charging_speed = charging_speed
         self.ev_capacity = ev_capacity
-        self.industry_tariff = industry_tariff
         self.save = save
 
-        self.controller = Controller(strategy, charging_speed, industry_tariff)
+        self.controller = controller
 
     def start(self):
         df = data.load_car2go_trips(False)
@@ -92,21 +88,18 @@ class Simulation:
                         trip.trip_duration,  # Arrive before starting again
                         trip.start_soc - trip.end_soc,
                         trip.end_charging,
+                        refuse=self.controller.refuse_rentals,
                     )
                 )
 
             # 5. TODO: Centrally control charging
-            self.controller.charge_fleet(
-                env, vpp.evs.values(), self.industry_tariff, timestep=5
-            )
+            self.controller.charge_fleet(env, vpp.evs.values(), timestep=5)
 
             # 6. Save stats at each trip if enabled
             if stats is not None:
                 stats.append(
                     [
-                        datetime.fromtimestamp(env.now).replace(
-                            second=0, microsecond=0
-                        ),
+                        env.now,
                         int(len(evs)),
                         round(self._fleet_soc(evs), 2),
                         int(len(vpp.evs)),
