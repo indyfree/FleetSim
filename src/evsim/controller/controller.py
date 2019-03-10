@@ -1,4 +1,3 @@
-from operator import attrgetter
 from datetime import datetime
 import logging
 import sys
@@ -28,14 +27,6 @@ class Controller:
 
         self.vpp = None
 
-    def charge_fleet(self, env, fleet, timestep):
-        """ Perform a charging operation on the fleet for a given timestep.
-            Takes a a list of EVs as input and charges given its strategy.
-        """
-
-        self.vpp.commited_capacity = self.consumption_plan.get(env.now, 0)
-        self.strategy(env, self, fleet, timestep)
-
     def log(self, env, message, level=None):
         if level is None:
             level = self.logger.info
@@ -56,16 +47,16 @@ class Controller:
     def warning(self, env, message):
         self.log(env, message, self.logger.warning)
 
-    def dispatch(self, env, fleet, criteria, n, timestep, descending=False):
-        """Dispatches n EVs from fleet according to EV attribute"""
-        if n > len(fleet):
-            raise ValueError(
-                "Cannot dispatch %d EVs, only %d available" % (n, len(fleet))
-            )
-        elif n < 0:
-            raise ValueError("Cannot dispatch negative number of EVs %d" % n)
+    def charge_fleet(self, env, timestep):
+        """ Perform a charging operation on the fleet for a given timestep.
+            Takes a a list of EVs as input and charges given its strategy.
+        """
 
-        evs = sorted(fleet, key=attrgetter(criteria), reverse=descending)[:n]
+        self.vpp.commited_capacity = self.consumption_plan.get(env.now, 0)
+        self.strategy(env, self, timestep)
+
+    def dispatch(self, env, evs, timestep):
+        """Dispatches EVs to charging"""
         for ev in evs:
             ev.action = env.process(ev.charge_timestep(timestep))
 

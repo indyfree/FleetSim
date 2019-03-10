@@ -107,7 +107,7 @@ class Simulation:
                 )
 
             # 6. TODO: Centrally control charging
-            self.controller.charge_fleet(env, vpp.evs.values(), timestep=5)
+            self.controller.charge_fleet(env, timestep=5)
 
             t0 = t
 

@@ -1,19 +1,24 @@
 from datetime import datetime, timedelta, time
+from operator import attrgetter
 import pandas as pd
 
 
-def regular(env, controller, fleet, timestep):
+def regular(env, controller, timestep):
     """ Charge all EVs at regular prices"""
 
     try:
         controller.dispatch(
-            env, fleet, criteria="battery.level", n=len(fleet), timestep=timestep
+            env,
+            controller.vpp.evs.values(),
+            criteria="battery.level",
+            n=len(fleet),
+            timestep=timestep,
         )
     except ValueError as e:
         controller.error(env, "Could not charge: %s" % str(e))
 
 
-def balancing(env, controller, fleet, timestep):
+def balancing(env, controller, timestep):
     """ Charge predicted available EVs with balancing electricity
         charge others from regular electricity tariff"""
 
@@ -40,10 +45,10 @@ def balancing(env, controller, fleet, timestep):
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
     # 2. Charge from balancing if in consumption plan, regulary else
-    _charge_consumption_plan(env, controller, fleet, timestep)
+    _charge_consumption_plan(env, controller, timestep)
 
 
-def intraday(env, controller, fleet, timestep):
+def intraday(env, controller, timestep):
     """ Charge predicted available EVs with intraday electricity
         charge others from regular electricity tariff"""
 
@@ -64,60 +69,51 @@ def intraday(env, controller, fleet, timestep):
             controller.error(env, "Could not update consumption plan: %s" % e)
 
     # 2. Charge from balancing if in consumption plan, regulary else
-    _charge_consumption_plan(env, controller, fleet, timestep)
+    _charge_consumption_plan(env, controller, timestep)
 
 
-def _charge_consumption_plan(env, controller, fleet, timestep):
-    # 2. Charge from intraday if in consumption plan
-    # TODO Pass EV capacity as param or use number EVs
-    consumption_evs = int(
-        controller.consumption_plan.get(env.now, 0) // controller.charger_capacity
-    )
+def _charge_consumption_plan(env, controller, timestep):
+    cap = controller.charger_capacity
+    n_plan = int(controller.consumption_plan.get(env.now, 0) // cap)
+
     controller.log(
         env,
         "Consumption plan for %s: %.2fkW, required EVs: %d."
         % (
             datetime.fromtimestamp(env.now),
             controller.consumption_plan.get(env.now, 0),
-            consumption_evs,
+            n_plan,
         ),
     )
-    if consumption_evs > len(fleet):
+
+    if n_plan > len(controller.vpp.evs):
         controller.warning(
             env,
-            "Overcommited %.2fkW capacity, account for imbalance costs!"
-            % ((consumption_evs - len(fleet)) * controller.charger_capacity),
+            "Commited %.2fkW capacity, but only %.2fkw available,  account for imbalance costs!"
+            % (n_plan * cap, len(controller.vpp.evs) * cap),
         )
-        controller.vpp.imbalance += (
-            consumption_evs - len(fleet)
-        ) * controller.charger_capacity
-        consumption_evs = len(fleet)
+        controller.vpp.imbalance += (n_plan - len(controller.vpp.evs)) * cap
 
-    try:
-        controller.dispatch(
-            env, fleet, criteria="battery.level", n=consumption_evs, timestep=timestep
-        )
-        controller.log(
-            env,
-            "Charging %d/%d EVs from intraday market." % (consumption_evs, len(fleet)),
-        )
-    except ValueError as e:
-        controller.error(env, str(e))
+        # Charge all possible EVs from consumption plan
+        n_plan = len(controller.vpp.evs)
+
+    # TODO: When always charging ALL EVs, sorting and splitting makes no sense
+    # Sort fleet according to ascending battery level
+    fleet = sorted(
+        controller.vpp.evs.values(), key=attrgetter("battery.level"), reverse=True
+    )
+    plan_evs = fleet[: n_plan + 1]
+    regular_evs = fleet[n_plan + 1 :]
+
+    # 2. Charge from consumption plan
+    controller.dispatch(env, plan_evs, timestep=timestep)
+    controller.log(
+        env, "Charging %d/%d EVs from consumption plan." % (len(plan_evs), len(fleet))
+    )
 
     # 3. Charge remaining EVs regulary
-    regular_evs = max(0, len(fleet) - consumption_evs)
-    try:
-        controller.dispatch(
-            env,
-            fleet,
-            criteria="battery.level",
-            n=regular_evs,
-            descending=True,
-            timestep=timestep,
-        )
-        controller.log(env, "Charging %d/%d EVs regulary." % (regular_evs, len(fleet)))
-    except ValueError as e:
-        controller.error(env, str(e))
+    controller.dispatch(env, regular_evs, timestep=timestep)
+    controller.log(env, "Charging %d/%d EVs regulary." % (len(regular_evs), len(fleet)))
 
 
 def _update_consumption_plan(env, controller, market, timeslot, industry_tariff):
