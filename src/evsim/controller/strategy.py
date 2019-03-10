@@ -90,6 +90,9 @@ def _charge_consumption_plan(env, controller, fleet, timestep):
             "Overcommited %.2fkW capacity, account for imbalance costs!"
             % ((consumption_evs - len(fleet)) * controller.charger_capacity),
         )
+        controller.vpp.imbalance += (
+            consumption_evs - len(fleet)
+        ) * controller.charger_capacity
         consumption_evs = len(fleet)
 
     try:

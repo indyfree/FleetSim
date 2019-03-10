@@ -112,6 +112,7 @@ class Simulation:
                         int(len(vpp.evs)),
                         round(vpp.avg_soc(), 2),
                         round(vpp.capacity(), 2),
+                        round(vpp.imbalance, 2),
                     ]
                 )
 
@@ -134,6 +135,7 @@ class Simulation:
                 "ev_vpp",
                 "vpp_soc",
                 "vpp_capacity_kw",
+                "imbalance_kw",
             ],
         )
         df_stats = df_stats.groupby("timestamp").last()

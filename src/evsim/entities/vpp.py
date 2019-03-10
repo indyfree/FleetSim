@@ -9,10 +9,10 @@ class VPP:
         self.env = env
         self.evs = dict()
         self.name = name
-
         self.charger_capacity = charger_capacity
 
         self.commited_capacity = 0
+        self.imbalance = 0
 
     def log(self, message):
         self.logger.info(
