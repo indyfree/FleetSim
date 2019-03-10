@@ -65,7 +65,7 @@ class EV:
         except simpy.Interrupt as i:
             self.log("Charging interrupted! %s" % i.cause)
 
-    def drive(self, rental, duration, trip_charge, end_charger):
+    def drive(self, rental, duration, trip_charge, end_charger, refuse=False):
         self.log("Starting trip %d." % rental)
 
         # 1. Check if enough battery for trip left
@@ -75,7 +75,8 @@ class EV:
 
         # 2. Refuse rental if other EVs in VPP can not substitute capacity
         if (
-            self.vpp.contains(self)
+            refuse
+            and self.vpp.contains(self)
             and self.vpp.commited_capacity >= self.vpp.capacity()
         ):
             self.error(

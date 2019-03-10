@@ -14,8 +14,6 @@ PROJECT_DIR = str(Path(__file__).resolve().parents[3])
 RAW_DATA_PATH = PROJECT_DIR + "/data/raw"
 CAR2GO_PATH = RAW_DATA_PATH + "/car2go/"
 PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed"
-PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
-PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
 
 # Raw file paths
 CAR2GO_FILES = [
@@ -31,11 +29,19 @@ ACTIVATED_CONTROL_RESERVE_FILE = (
 TENDER_RESULTS_FILE = RAW_DATA_PATH + "/balancing/tender_results_2016_2017.csv"
 PROCOM_TRADES_FILE = RAW_DATA_PATH + "/intraday/procom_data.csv"
 
+
+# Processed Car2Go file paths
+PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
+PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
+
 # Processed files paths
 PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
 PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
 PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
 PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
+
+# Simulation result file paths
+SIMULATION_BASELINE_FILE = PROJECT_DIR + "/logs/stats-baseline.csv"
 
 # Default values
 CHARGING_SPEED = 3.6
@@ -48,6 +54,10 @@ def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_
     load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
     load_balancing_prices(rebuild=True)
     load_intraday_prices(rebuild=True)
+
+
+def load_simulation_baseline():
+    return pd.read_csv(SIMULATION_BASELINE_FILE)
 
 
 def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
