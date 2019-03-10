@@ -14,15 +14,22 @@ logger = logging.getLogger(__name__)
 @click.group(name="evsim")
 @click.option("--debug/--no-debug", default=False)
 @click.option(
+    "-n",
+    "--name",
+    default=str(datetime.now().strftime("%Y%m%d-%H%M%S")),
+    help="Name of the Simulation.",
+)
+@click.option(
     "--logs/--no-logs",
     default=True,
     help="Save logs to file. Turning off improves speed.",
 )
 @click.pass_context
-def cli(ctx, debug, logs):
+def cli(ctx, debug, name, logs):
     ctx.ensure_object(dict)
     ctx.obj["DEBUG"] = debug
     ctx.obj["LOGS"] = logs
+    ctx.obj["NAME"] = name
 
     f = logging.Formatter("%(levelname)-7s %(message)s")
 
@@ -34,9 +41,7 @@ def cli(ctx, debug, logs):
 
     if logs:
         os.makedirs("./logs", exist_ok=True)
-        fh = logging.FileHandler(
-            "./logs/%s.log" % str(datetime.now().strftime("%Y%m%d-%H%M%S"))
-        )
+        fh = logging.FileHandler("./logs/%s.log" % name)
         fh.setFormatter(f)
         fh.setLevel(logging.DEBUG)
         handlers = [sh, fh]
@@ -48,12 +53,6 @@ def cli(ctx, debug, logs):
 
 @cli.command(help="Start the EV Simulation.")
 @click.pass_context
-@click.option(
-    "-n",
-    "--name",
-    default=str(datetime.now().strftime("%Y%m%d-%H%M%S")),
-    help="Name of the Simulation.",
-)
 @click.option(
     "-c",
     "--ev-capacity",
@@ -101,7 +100,6 @@ def cli(ctx, debug, logs):
 )
 def simulate(
     ctx,
-    name,
     ev_capacity,
     ev_range,
     charging_speed,
@@ -127,7 +125,7 @@ def simulate(
         s = strategy.intraday
 
     controller = Controller(s, charging_speed, industry_tariff, refuse_rentals)
-    sim = Simulation(name, controller, charging_speed, ev_capacity, stats)
+    sim = Simulation(ctx.obj["NAME"], controller, charging_speed, ev_capacity, stats)
 
     click.echo("--- Starting Simulation: ---")
     start = time.time()
