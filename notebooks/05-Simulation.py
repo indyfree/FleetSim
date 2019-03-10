@@ -17,7 +17,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[4]:
 
 
 from datetime import datetime
@@ -29,7 +29,7 @@ import seaborn as sns
 from evsim.data import load_car2go_trips, load_car2go_capacity
 
 
-# In[3]:
+# In[8]:
 
 
 df = pd.read_csv("../logs/stats.csv", parse_dates=[0], infer_datetime_format=True)
@@ -39,7 +39,7 @@ df.describe()
 
 # # Real data comparison
 
-# In[4]:
+# In[2]:
 
 
 real_cap = load_car2go_capacity()
@@ -48,9 +48,15 @@ real_cap = real_cap.set_index("timestamp")
 real_cap.describe()
 
 
+# In[18]:
+
+
+df.ev_vpp - real_cap.vpp
+
+
 # ## Plot differences
 
-# In[5]:
+# In[6]:
 
 
 merge = df.merge(real_cap, left_index=True, right_index=True, how='left')
@@ -63,7 +69,7 @@ merge.plot(y='fleet_soc_y', label='Fleet SoC Real', ax=ax)
 plt.show()
 
 
-# In[6]:
+# In[7]:
 
 
 merge["fleet_cap"] = merge["vpp_capacity_kw_x"] - merge["vpp_capacity_kw_y"]
