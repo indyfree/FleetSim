@@ -4,16 +4,41 @@
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
 # <div class="toc"><ul class="toc-item"></ul></div>
 
-# In[1]:
+# In[2]:
 
 
-from datetime import datetime
+from datetime import datetime, timedelta, time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 from evsim.data import load_car2go_trips, load_car2go_capacity
+
+
+# In[21]:
+
+
+t = int(datetime.now().timestamp())
+dt = datetime.fromtimestamp(t)
+ts = dt.timestamp()
+datetime.fromtimestamp(ts)
+
+
+# In[43]:
+
+
+tomorrow = datetime(2016,11,2,18,5)
+
+
+intervals = pd.date_range(start=tomorrow, end=tomorrow + timedelta(days=1), freq='15min')[:-1]
+for t in intervals:
+    dt = t.to_pydatetime()
+    print(dt)
+    ts = dt.timestamp()
+    #print(ts)
+    print(datetime.fromtimestamp(ts))
+    
 
 
 # In[13]:
@@ -47,7 +72,7 @@ a["e"] = a.d.apply(lambda x: datetime.utcfromtimestamp(x))
 a
 
 
-# In[11]:
+# In[22]:
 
 
 time = "2017-02-23 00:00:00"
