@@ -6,10 +6,17 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # Default values
-CAR2GO_PRICE = 0.24
+CAR2GO_PRICE = 24  # 24 cent/km
+DURATION_THRESHOLD = 60 * 24 * 2  # 2 Days in seconds
 
 
-def process(df, ev_range, car2go_price=CAR2GO_PRICE, infer_chargers=False):
+def process(
+    df,
+    ev_range,
+    car2go_price=CAR2GO_PRICE,
+    duration_threshold=DURATION_THRESHOLD,
+    infer_chargers=False,
+):
     """Executes all preprocessing steps sequentially"""
 
     # Round GPS accuracy to 10 meters
@@ -44,7 +51,6 @@ def process(df, ev_range, car2go_price=CAR2GO_PRICE, infer_chargers=False):
         df_trips = _add_charging_stations(df_trips, df_stations)
 
     # Rental duration threshold is 2 days
-    duration_threshold = 60 * 24 * 2
     df_trips = _clean_trips(df_trips, duration_threshold)
     return df_trips
 
@@ -81,7 +87,7 @@ def _determine_charging_stations(df):
 # TODO: Check for long distances
 def _calculate_price(df, car2go_price):
     logger.info("Infering trip prices...")
-    df["trip_price"] = df["trip_duration"] * car2go_price
+    df["trip_price"] = round(df["trip_duration"] * car2go_price / 100, 2)
     return df
 
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import logging
 import os
 import pandas as pd
@@ -79,7 +77,7 @@ def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
             files.append(pd.read_csv(CAR2GO_PATH + f))
         df = pd.concat(files)
 
-        df_trips = car2go.process(df, ev_range, infer_chargers)
+        df_trips = car2go.process(df, ev_range, infer_chargers=infer_chargers)
         df_trips = (
             df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
         )
