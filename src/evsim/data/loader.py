@@ -46,6 +46,10 @@ CHARGING_SPEED = 3.6
 EV_CAPACITY = 17.6
 EV_RANGE = 160
 
+# Default values
+CAR2GO_PRICE = 24  # 24 cent/km
+DURATION_THRESHOLD = 60 * 24 * 2  # 2 Days in seconds
+
 
 def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_RANGE):
     load_car2go_trips(ev_range, rebuild=True)
@@ -63,7 +67,13 @@ def load_simulation_baseline():
     return pd.read_csv(SIMULATION_BASELINE_FILE)
 
 
-def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
+def load_car2go_trips(
+    ev_range=EV_RANGE,
+    car2go_price=CAR2GO_PRICE,
+    duration_threshold=DURATION_THRESHOLD,
+    infer_chargers=False,
+    rebuild=False,
+):
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
@@ -77,7 +87,9 @@ def load_car2go_trips(ev_range=EV_RANGE, infer_chargers=False, rebuild=False):
             files.append(pd.read_csv(CAR2GO_PATH + f))
         df = pd.concat(files)
 
-        df_trips = car2go.process(df, ev_range, infer_chargers=infer_chargers)
+        df_trips = car2go.process(
+            df, ev_range, car2go_price, duration_threshold, infer_chargers
+        )
         df_trips = (
             df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
         )
