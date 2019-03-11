@@ -5,8 +5,11 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+# Default values
+CAR2GO_PRICE = 0.24
 
-def process(df, ev_range, infer_chargers):
+
+def process(df, ev_range, car2go_price=CAR2GO_PRICE, infer_chargers=False):
     """Executes all preprocessing steps sequentially"""
 
     # Round GPS accuracy to 10 meters
@@ -15,7 +18,7 @@ def process(df, ev_range, infer_chargers):
     ].round(4)
 
     if infer_chargers:
-        df_stations = determine_charging_stations(df)
+        df_stations = _determine_charging_stations(df)
 
     # Round timestamp to minutes
     df["timestamp"] = df["timestamp"] // 60 * 60
@@ -35,16 +38,18 @@ def process(df, ev_range, infer_chargers):
         % (len(df_trips), len(df_trips[df_trips["end_charging"] == 1]))
     )
 
+    df_trips = _calculate_price(df_trips, car2go_price)
+
     if infer_chargers:
-        df_trips = add_charging_stations(df_trips, df_stations)
+        df_trips = _add_charging_stations(df_trips, df_stations)
 
     # Rental duration threshold is 2 days
     duration_threshold = 60 * 24 * 2
-    df_trips = clean_trips(df_trips, duration_threshold)
+    df_trips = _clean_trips(df_trips, duration_threshold)
     return df_trips
 
 
-def add_charging_stations(df_trips, df_stations):
+def _add_charging_stations(df_trips, df_stations):
     df_trips = df_trips.merge(
         df_stations,
         left_on=["end_lat", "end_lon"],
@@ -60,7 +65,7 @@ def add_charging_stations(df_trips, df_stations):
     return df_trips
 
 
-def determine_charging_stations(df):
+def _determine_charging_stations(df):
     """Find charging stations where EV has been charged once (charging==1)."""
 
     df_stations = df.groupby(["coordinates_lat", "coordinates_lon"])["charging"].max()
@@ -68,6 +73,16 @@ def determine_charging_stations(df):
     df_stations = df_stations.reset_index()
     logger.info("Determined %d charging stations in the dataset" % len(df_stations))
     return df_stations
+
+
+# TODO: When distance < 0, then returned earlier at charging station
+# Calculate this special case according to Kahlen:
+# [285 min - (98%-20%)* 300 min] * 0.29 $/min= $14.79
+# TODO: Check for long distances
+def _calculate_price(df, car2go_price):
+    logger.info("Infering trip prices...")
+    df["trip_price"] = df["trip_duration"] * car2go_price
+    return df
 
 
 def calculate_capacity(df, charging_speed, ev_capacity, sim_charging=False):
@@ -268,6 +283,8 @@ def calculate_trips(df_car, ev_range):
     )
 
 
+# TODO: When negative charge, calculate distance according to Kahlen
+# Driven distance: (42%-20%) * 70 miles = 15.4 miles
 def _trip_distance(trip_charge, ev_range):
     # EV has been charged on the trip. Not possible to infer distance
     if trip_charge < 0:
@@ -276,7 +293,7 @@ def _trip_distance(trip_charge, ev_range):
     return (trip_charge / 100) * ev_range
 
 
-def clean_trips(df, duration_threshold):
+def _clean_trips(df, duration_threshold):
     """
         Remove service trips (longer than 2 days) from trip data.
         When EV ended at a charging station, make
