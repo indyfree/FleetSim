@@ -73,7 +73,10 @@ def _charge_consumption_plan(env, controller, timestep):
     if n_plan > len(controller.vpp.evs):
         controller.warning(
             env,
-            "Commited %.2fkW capacity, but only %.2fkw available,  account for imbalance costs!"
+            (
+                "Commited %.2fkW capacity, but only %.2fkw available,  "
+                "account for imbalance costs!"
+            )
             % (n_plan * cap, len(controller.vpp.evs) * cap),
         )
         controller.vpp.imbalance += (n_plan - len(controller.vpp.evs)) * cap
