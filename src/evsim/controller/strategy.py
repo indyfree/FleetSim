@@ -147,6 +147,8 @@ def _update_consumption_plan(env, controller, market, timeslot):
             % (bid[1], bid[2], datetime.fromtimestamp(bid[0])),
         )
 
+        _account_bid(env, controller, bid)
+
         # TODO: Better data structure to save 15 min consumption plan
         # TODO: Save prices
         # TODO: Check timestamp() utc??
@@ -154,3 +156,19 @@ def _update_consumption_plan(env, controller, market, timeslot):
         for t in [0, 5, 10]:
             time = bid[0] + (60 * t)
             controller.consumption_plan[time] = bid[1]
+
+
+def _account_bid(env, controller, bid):
+    # Quantity MWh: (kw * h / 1000)
+    quantity_mwh = bid[1] * (15 / 60) / 1000
+    costs = quantity_mwh * bid[2]
+    regular_costs = quantity_mwh * controller.industry_tariff
+    revenue = regular_costs - costs
+
+    costs = (bid[1] * (15 / 60) / 1000) * (controller.industry_tariff - bid[2])
+    controller.account.add(revenue)
+    controller.log(
+        env,
+        "Charge %.2f EUR cheaper than with industry tariff. Current balance: %.2f EUR."
+        % (costs, controller.account.balance),
+    )

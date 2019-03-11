@@ -3,4 +3,4 @@ class Account:
         self.balance = balance
 
     def add(self, amount):
-        self.balance + -amount
+        self.balance += amount

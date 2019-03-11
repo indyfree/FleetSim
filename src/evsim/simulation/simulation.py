@@ -80,6 +80,7 @@ class Simulation:
                         int(len(vpp.evs)),
                         round(vpp.avg_soc(), 2),
                         round(vpp.capacity(), 2),
+                        round(self.account.balance, 2),
                         round(vpp.imbalance, 2),
                     ]
                 )
@@ -136,6 +137,7 @@ class Simulation:
                 "ev_vpp",
                 "vpp_soc",
                 "vpp_capacity_kw",
+                "balance_eur",
                 "imbalance_kw",
             ],
         )
