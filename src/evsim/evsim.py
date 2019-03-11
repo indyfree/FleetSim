@@ -182,7 +182,8 @@ def all(ev_capacity, ev_range, charging_speed):
 def trips(ev_range, infer_chargers):
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("Building car2go trip data...")
-    loader.load_car2go_trips(ev_range, infer_chargers, rebuild=True)
+    click.echo("Infer Chargers is %s." % (infer_chargers and "on" or "off"))
+    loader.load_car2go_trips(ev_range, infer_chargers=infer_chargers, rebuild=True)
 
 
 @build.command(name="capacity", help="(Re)build car2go capacity data.")
