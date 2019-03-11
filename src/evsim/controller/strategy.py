@@ -7,13 +7,7 @@ def regular(env, controller, timestep):
     """ Charge all EVs at regular prices"""
 
     try:
-        controller.dispatch(
-            env,
-            controller.vpp.evs.values(),
-            criteria="battery.level",
-            n=len(fleet),
-            timestep=timestep,
-        )
+        controller.dispatch(env, controller.vpp.evs.values(), timestep=timestep)
     except ValueError as e:
         controller.error(env, "Could not charge: %s" % str(e))
 
@@ -34,13 +28,7 @@ def balancing(env, controller, timestep):
         for i in intervals:
             try:
                 ts = i.to_pydatetime().timestamp()
-                _update_consumption_plan(
-                    env,
-                    controller,
-                    controller.balancing,
-                    ts,
-                    controller.industry_tariff,
-                )
+                _update_consumption_plan(env, controller, controller.balancing, ts)
             except ValueError as e:
                 controller.error(env, "Could not update consumption plan: %s" % e)
 
@@ -59,11 +47,7 @@ def intraday(env, controller, timestep):
     if dt.minute % 15 == 0:
         try:
             _update_consumption_plan(
-                env,
-                controller,
-                controller.intraday,
-                dt.timestamp(),
-                controller.industry_tariff,
+                env, controller, controller.intraday, dt.timestamp()
             )
         except ValueError as e:
             controller.error(env, "Could not update consumption plan: %s" % e)
@@ -116,7 +100,7 @@ def _charge_consumption_plan(env, controller, timestep):
     controller.log(env, "Charging %d/%d EVs regulary." % (len(regular_evs), len(fleet)))
 
 
-def _update_consumption_plan(env, controller, market, timeslot, industry_tariff):
+def _update_consumption_plan(env, controller, market, timeslot):
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 
@@ -126,7 +110,7 @@ def _update_consumption_plan(env, controller, market, timeslot, industry_tariff)
         controller.warning(env, e)
         return None
 
-    if predicted_clearing_price > industry_tariff:
+    if predicted_clearing_price > controller.industry_tariff:
         controller.log(env, "The industry tariff is cheaper.")
         return None
 
