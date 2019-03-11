@@ -18,14 +18,16 @@ class Controller:
         self.fleet_capacity = loader.load_simulation_baseline()
         self.strategy = strategy
 
+        # Reference simulation objects
+        self.account = None
+        self.vpp = None
+
         # Simulation parameters needed for strategy
         self.charger_capacity = charger_capacity
         self.industry_tariff = industry_tariff
 
         # Strategy specific optionals
         self.refuse_rentals = refuse_rentals
-
-        self.vpp = None
 
     def log(self, env, message, level=None):
         if level is None:

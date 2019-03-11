@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import simpy
 
+from . import Account
 from evsim import data, entities
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ class Simulation:
         self.ev_capacity = ev_capacity
         self.save = save
 
+        self.account = Account()
         self.controller = controller
 
     def start(self):
@@ -30,6 +32,9 @@ class Simulation:
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
+
+        # Pass references to controller
+        self.controller.account = self.account
         self.controller.vpp = vpp
 
         logger.info("---- STARTING SIMULATION: %s -----" % self.name)
