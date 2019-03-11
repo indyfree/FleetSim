@@ -96,7 +96,7 @@ class Controller:
             )
         return cap
 
-    # TODO: Distort data for Prediction
+    # TODO: Distort data for Prediction?
     def predict_clearing_price(self, market, timeslot, accuracy=100):
         """ Predict the clearing price for a 15-min contract at a given timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
