@@ -1,6 +1,5 @@
 [![CircleCI](https://circleci.com/gh/indyfree/evsim.svg?style=svg)](https://circleci.com/gh/indyfree/evsim) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-# FleetSim: An Electric Vehicle Charging Simulation to create Virtual Power Plants in Sustainable Smart Markets
-
+# FleetSim: An event-based Electric Vehicle Charging Simulation
 ## Requirements
 - python 3.6 or higher
 - GNU make
