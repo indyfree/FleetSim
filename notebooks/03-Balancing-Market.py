@@ -50,7 +50,7 @@ df_tenders.head(10)
 # 
 # **Caution: When aggregating take into account not to sum up HT and NT!**
 
-# In[4]:
+# In[ ]:
 
 
 df_results = pd.read_csv("../data/processed/tender_results.csv",
@@ -62,7 +62,7 @@ df_results[(df_results["from"] == '2017-10-23') & (df_results["product_type"] ==
 
 # # Activated Control Reserve from regelleistungen.net
 
-# In[5]:
+# In[ ]:
 
 
 df_activated = pd.read_csv("../data/processed/activated_control_reserve.csv",
@@ -80,7 +80,7 @@ df_activated.head(10)
 # 
 # Also shows this
 
-# In[6]:
+# In[ ]:
 
 
 # Aggregated activated is in 15-min intervals of Capacity in MW, divide by 4 to get Amount of used energy TWh
@@ -97,14 +97,14 @@ print('Activated Control Reserve 2016 - Negative : %.2f TWh Positive %.2f TWh' %
 
 # __Calculated assumed 15-min clearing prices for negative control reserve by looking at actual activated reserve__
 
-# In[7]:
+# In[ ]:
 
 
 df_clearing_prices = loader.load_balancing_prices()
 df_clearing_prices.head()
 
 
-# In[8]:
+# In[ ]:
 
 
 df_clearing_prices["hour"] = df_clearing_prices["product_time"].dt.hour
@@ -115,14 +115,14 @@ f.set_size_inches(18.5, 10.5)
 sns.lineplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax1)
 
 df_clearing_prices["clearing_price_mwh"] = df_clearing_prices["clearing_price_mwh"].clip(-200,200)
-sns.violinplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax2)
+sns.violinplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax2);
 
 
 # # SMARD Data
 
 # SMARD: _Für die Sekundärregelung vorgehaltene Leistung bzw. Menge [MW], der durchschnittliche Leistungspreis der bezuschlagten Angebote [€/MW], die durchschnittlich abgerufene Leistung bzw. Menge [MWh] und der durchschnittliche Arbeitspreis aller jeweils aktivierten Angebote [€/MWh]_
 
-# In[9]:
+# In[ ]:
 
 
 df_smard = pd.read_csv("../data/raw/balancing/smard_activated_srl_2016_2017.csv", sep=';', index_col=False,
@@ -140,7 +140,7 @@ df_smard.drop("time", axis=1, inplace=True)
 df_smard.head()
 
 
-# In[10]:
+# In[ ]:
 
 
 df_smard["hour"] = df_smard["date"].dt.hour
@@ -151,10 +151,10 @@ f.set_size_inches(18.5, 10.5)
 sns.lineplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax1)
 
 df_smard["energy_price_neg"] = df_smard["energy_price_neg"].clip(-50, 200)
-sns.violinplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax2)
+sns.violinplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax2);
 
 
-# In[11]:
+# In[ ]:
 
 
 # Difference between AVERAGE Smard data and clearing price
