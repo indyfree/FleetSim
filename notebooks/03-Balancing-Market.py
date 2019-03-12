@@ -50,7 +50,7 @@ df_tenders.head(10)
 # 
 # **Caution: When aggregating take into account not to sum up HT and NT!**
 
-# In[ ]:
+# In[4]:
 
 
 df_results = pd.read_csv("../data/processed/tender_results.csv",
@@ -62,7 +62,7 @@ df_results[(df_results["from"] == '2017-10-23') & (df_results["product_type"] ==
 
 # # Activated Control Reserve from regelleistungen.net
 
-# In[ ]:
+# In[5]:
 
 
 df_activated = pd.read_csv("../data/processed/activated_control_reserve.csv",
@@ -80,7 +80,7 @@ df_activated.head(10)
 # 
 # Also shows this
 
-# In[ ]:
+# In[6]:
 
 
 # Aggregated activated is in 15-min intervals of Capacity in MW, divide by 4 to get Amount of used energy TWh
@@ -97,14 +97,14 @@ print('Activated Control Reserve 2016 - Negative : %.2f TWh Positive %.2f TWh' %
 
 # __Calculated assumed 15-min clearing prices for negative control reserve by looking at actual activated reserve__
 
-# In[ ]:
+# In[7]:
 
 
 df_clearing_prices = loader.load_balancing_prices()
 df_clearing_prices.head()
 
 
-# In[ ]:
+# In[8]:
 
 
 df_clearing_prices["hour"] = df_clearing_prices["product_time"].dt.hour
@@ -122,7 +122,7 @@ sns.violinplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax2
 
 # SMARD: _Für die Sekundärregelung vorgehaltene Leistung bzw. Menge [MW], der durchschnittliche Leistungspreis der bezuschlagten Angebote [€/MW], die durchschnittlich abgerufene Leistung bzw. Menge [MWh] und der durchschnittliche Arbeitspreis aller jeweils aktivierten Angebote [€/MWh]_
 
-# In[ ]:
+# In[9]:
 
 
 df_smard = pd.read_csv("../data/raw/balancing/smard_activated_srl_2016_2017.csv", sep=';', index_col=False,
@@ -140,7 +140,7 @@ df_smard.drop("time", axis=1, inplace=True)
 df_smard.head()
 
 
-# In[ ]:
+# In[10]:
 
 
 df_smard["hour"] = df_smard["date"].dt.hour
@@ -154,7 +154,7 @@ df_smard["energy_price_neg"] = df_smard["energy_price_neg"].clip(-50, 200)
 sns.violinplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax2);
 
 
-# In[ ]:
+# In[11]:
 
 
 # Difference between AVERAGE Smard data and clearing price
