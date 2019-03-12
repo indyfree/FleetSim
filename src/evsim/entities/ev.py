@@ -101,7 +101,7 @@ class EV:
             % (rental, duration, trip_charge)
         )
         self.log("Adjusting battery level...")
-        self._adjust_soc(trip_charge)
+        yield self.env.process(self._adjust_soc(trip_charge))
 
         # 7. Add to VPP when parked at charger
         if end_charger == 1:
