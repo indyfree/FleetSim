@@ -71,22 +71,44 @@ Options:
 
 E.g.:
 
-``` sh
-> env/bin/evsim --debug simulate --charging-speed=3.6 --ev-capacity=17.6 --name=My-Simulation --charging-strategy=regular
+```
+> evsim --name=intraday --debug simulate --charging-strategy=intraday                                                       
+--- Simulation Settings: ---
 Debug is on.
-Charging speed is set to 3.6kW.
+Writing Logs to file is on.
+Maximal EV range is set to 160km.
 EV battery capacity is set to 17.6kWh.
-INFO    : ---- STARTING SIMULATION: My-Simulation -----
-INFO    : [2016-12-01 01:00:01] - S-GO2295(32.00/100) Added to fleet!
-INFO    : [2016-12-01 01:00:01] - S-GO2295(32.00/100) Starting trip 0.
-INFO    : [2016-12-01 01:00:01] - S-GO2453(45.00/100) Added to fleet!
-INFO    : [2016-12-01 01:00:01] - S-GO2453(45.00/100) Starting trip 1.
-INFO    : [2016-12-01 01:10:01] - ---------- TIMESLOT 2016-12-01 01:10:01 ----------
-INFO    : [2016-12-01 01:10:01] - S-GO2487(39.00/100) Added to fleet!
-INFO    : [2016-12-01 01:10:01] - S-GO2487(39.00/100) Starting trip 2.
-INFO    : [2016-12-01 01:15:00] - S-GO2453(45.00/100) End Trip 1: Drove for 15.00 minutes and consumed 3% charge.
-INFO    : [2016-12-01 01:15:00] - S-GO2453(45.00/100) Adjusting battery level...
-INFO    : [2016-12-01 01:15:00] - S-GO2453(42.00/100) Battery level has been decreased by 3%.
+Charging speed is set to 3.6kW.
+Industry electricity tariff is set to 250EUR/MWh.
+Refusing rentals is set to off.
+--- Starting Simulation: ---
+INFO    ---- STARTING SIMULATION: intraday -----
+INFO    [2017-02-23 00:00:00] - ---------- TIMESLOT 2017-02-23 00:00:00 ----------
+INFO    [2017-02-23 00:00:00] - S-GO2459(78.00/100) Added to fleet!
+INFO    [2017-02-23 00:00:00] - S-GO2450(66.00/100) Added to fleet!
+INFO    [2017-02-23 00:00:00] - S-GO2293(99.00/100) Added to fleet!
+INFO    [2017-02-23 00:00:00] - Controller(intraday) Bought 18.00 kW for -37.90 EUR/MWh for 15-min timeslot 2017-02-23 00:30:00
+INFO    [2017-02-23 00:00:00] - Controller(intraday) Charge 1.30 EUR cheaper than with industry tariff. Current balance: 1.30 EUR.
+INFO    [2017-02-23 00:00:00] - Controller(intraday) Consumption plan for 2017-02-23 00:00:00: 0.00kW, required EVs: 0.
+INFO    [2017-02-23 00:00:00] - Controller(intraday) Charging 0/0 EVs from consumption plan.
+INFO    [2017-02-23 00:00:00] - Controller(intraday) Charging 0/0 EVs regulary.
+INFO    [2017-02-23 00:00:00] - S-GO2459(78.00/100) Starting trip 0.
+INFO    [2017-02-23 00:00:00] - S-GO2450(66.00/100) Starting trip 1.
+INFO    [2017-02-23 00:00:00] - S-GO2293(99.00/100) Starting trip 2.
+...
+INFO    [2017-02-23 07:45:00] - ---------- TIMESLOT 2017-02-23 07:45:00 ----------
+INFO    [2017-02-23 07:45:00] - S-GO2555(100.00/100) Added to fleet!
+INFO    [2017-02-23 07:45:00] - Controller(intraday) Bought 54.00 kW for 36.00 EUR/MWh for 15-min timeslot 2017-02-23 08:15:00
+INFO    [2017-02-23 07:45:00] - Controller(intraday) Charge 2.89 EUR cheaper than with industry tariff. Current balance: 137.73 EUR.
+INFO    [2017-02-23 07:45:00] - Controller(intraday) Consumption plan for 2017-02-23 07:45:00: 61.20kW, required EVs: 17.
+INFO    [2017-02-23 07:45:00] - Controller(intraday) Charging 18/20 EVs from consumption plan.
+INFO    [2017-02-23 07:45:00] - Controller(intraday) Charging 2/20 EVs regulary.
+INFO    [2017-02-23 07:45:00] - S-GO2333(95.00/100) Starting trip 382.
+INFO    [2017-02-23 07:45:00] - S-GO2651(88.93/100) Starting trip 383.
+INFO    [2017-02-23 07:45:00] - BALANCING(68.4kW/61.2kW) Removed EV S-GO2651 from VPP.
+INFO    [2017-02-23 07:45:00] - BALANCING(64.8kW/61.2kW) Removed EV S-GO2463 from VPP.
+INFO    [2017-02-23 07:45:00] - S-GO2651(88.93/100) Charging interrupted! Customer wants to rent car
+INFO    [2017-02-23 07:45:00] - S-GO2463(95.36/100) Charging interrupted! Customer wants to rent car
 ```
 
 ## Autocompletion
