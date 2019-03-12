@@ -39,7 +39,7 @@ from evsim.data import loader
 # - **LEAD TIME: 5 Minutes, Clearing every 15 Min**
 # - Till when do we trade when we assume average clearing prices?
 
-# In[5]:
+# In[3]:
 
 
 df = loader.load_intraday_prices()
@@ -51,13 +51,5 @@ f.set_size_inches(18.5, 10.5)
 sns.lineplot(x="hour", y="clearing_price_mwh", data=df, ax=ax1)
 
 df["clearing_price_mwh"] = df["clearing_price_mwh"].clip(-200,200)
-sns.violinplot(x="hour", y="clearing_price_mwh", data=df, ax=ax2)
-
-
-# In[10]:
-
-
-q = pd.read_pickle("../data/processed/procom_Q.pkl")
-                 
-q[(q["exec_time"] > '2018-01-29') & (q["exec_time"] < '2018-01-30')].sort_values(['product_time', 'exec_time'], ascending=[True, False]).head(100)
+sns.violinplot(x="hour", y="clearing_price_mwh", data=df, ax=ax2);
 
