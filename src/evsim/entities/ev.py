@@ -88,7 +88,7 @@ class EV:
         if self.action is not None and not self.action.triggered:
             self.action.interrupt("Customer wants to rent car")
 
-        # 4. Remove VPP when applicable
+        # 4. Remove EV from VPP if allocated to it
         if self.vpp.contains(self):
             self.vpp.remove(self)
 
@@ -100,33 +100,10 @@ class EV:
             "End Trip %d: Drove for %.2f minutes and consumed %s%% charge."
             % (rental, duration, trip_charge)
         )
-
         self.log("Adjusting battery level...")
-        # Special case: Battery has been charged without appearing in data
-        if trip_charge < 0:
-            self.warning(
-                "EV was already at charging station. Battery level: %d. Trip charge: %d"
-                % (self.battery.level, trip_charge)
-            )
+        self._adjust_soc(trip_charge)
 
-            free_battery = self.battery.capacity - self.battery.level
-            if free_battery > 0 and -trip_charge >= free_battery:
-                yield self.battery.put(self.battery.capacity - self.battery.level)
-                self.warning(
-                    "Battery charged more than available space. Filled up to 100."
-                )
-            elif -trip_charge < free_battery:
-                yield self.battery.put(-trip_charge)
-                self.log("Battery level has been increased by %s%%." % -trip_charge)
-            else:
-                self.log("Battery is still full")
-        elif trip_charge > 0:
-            yield self.battery.get(trip_charge)
-            self.log("Battery level has been decreased by %s%%." % trip_charge)
-        else:
-            self.log("No consumed charge!")
-
-        # 6. Add to VPP when parked at charger
+        # 7. Add to VPP when parked at charger
         if end_charger == 1:
             self.log("At a charging station!")
 
@@ -141,6 +118,40 @@ class EV:
 
         else:
             self.log("Parked where no charger around")
+
+    def _adjust_soc(self, trip_charge):
+        """
+            Adjusts the EVs State of Charge according to the trip charge.
+            Handles special cases and data irregularities.
+        """
+
+        # Special case: Battery has been charged without beeing at the charger
+        if trip_charge < 0:
+            self.warning(
+                "EV was already at charging station. Battery level: %d. Trip charge: %d"
+                % (self.battery.level, trip_charge)
+            )
+
+            # Charged during the trip:  More than possible
+            free_battery = self.battery.capacity - self.battery.level
+            if free_battery > 0 and -trip_charge >= free_battery:
+                yield self.battery.put(self.battery.capacity - self.battery.level)
+                self.warning(
+                    "Battery charged more than available space. Filled up to 100."
+                )
+            # Charged during the trip: Adjust level
+            elif -trip_charge < free_battery:
+                yield self.battery.put(-trip_charge)
+                self.log("Battery level has been increased by %s%%." % -trip_charge)
+            else:
+                self.log("Battery is still full")
+        # Special case: No used SoC
+        elif trip_charge == 0:
+            self.log("No consumed charge!")
+        # Normal SoC usage
+        else:
+            yield self.battery.get(trip_charge)
+            self.log("Battery level has been decreased by %s%%." % trip_charge)
 
     def _charging_step(self, battery_capacity, charging_speed, control_period):
         """ Returns the SoC increase given the control period in minutes """
