@@ -93,7 +93,6 @@ class EV:
             self.vpp.remove(self)
 
         # 5. Drive for the trip duration
-        # TODO: Check for seconds and time sequence
         yield self.env.timeout(duration * 60 - 1)  # seconds
 
         # 6. Adjust SoC
@@ -140,8 +139,6 @@ class EV:
                     % (self.name, self.battery.capacity - self.battery.level)
                 )
 
-            # TODO: Check different charging behaviour with centralized
-            # self.action = self.env.process(self.charge_full())
         else:
             self.log("Parked where no charger around")
 
