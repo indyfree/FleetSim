@@ -41,6 +41,10 @@ class Simulation:
         env.process(self.lifecycle(env, vpp, df, stats))
         env.run(until=df.end_time.max())
 
+        logger.info("---- RESULTS: %s -----" % self.name)
+        logger.info("Charging power consumed: %.2fMW" % vpp.total_charged / 1000)
+        logger.info("Total balance: %.2fEUR" % self.account.balance)
+
         if self.save:
             self.save_stats(
                 stats,
