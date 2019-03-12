@@ -16,24 +16,25 @@ def balancing(env, controller, timestep):
     """ Charge predicted available EVs with balancing electricity
         charge others from regular electricity tariff"""
 
-    # 1. Bid for every 15-minute slot of the next day at 16:00
-    # NOTE: Look up exact balancing mechanism
-    dt = datetime.fromtimestamp(env.now)
-    if dt.time() == time(16, 0):
-        tomorrow = dt.date() + timedelta(days=1)
-        intervals = pd.date_range(
-            start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
-        )[:-1]
-
-        for i in intervals:
-            try:
-                ts = i.to_pydatetime().timestamp()
-                _update_consumption_plan(env, controller, controller.balancing, ts)
-            except ValueError as e:
-                controller.error(env, "Could not update consumption plan: %s" % e)
-
-    # 2. Charge from balancing if in consumption plan, regulary else
+    # 1. Charge from balancing if in consumption plan, regulary else
     _charge_consumption_plan(env, controller, timestep)
+
+    # 2. Bid for every 15-minute slot of the next day at 16:00
+    dt = datetime.fromtimestamp(env.now)
+    if dt.time() != time(16, 0):
+        return
+
+    tomorrow = dt.date() + timedelta(days=1)
+    intervals = pd.date_range(
+        start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
+    )[:-1]
+
+    for i in intervals:
+        try:
+            ts = i.to_pydatetime().timestamp()
+            _update_consumption_plan(env, controller, controller.balancing, ts)
+        except ValueError as e:
+            controller.error(env, "Could not update consumption plan: %s" % e)
 
 
 def intraday(env, controller, timestep):
