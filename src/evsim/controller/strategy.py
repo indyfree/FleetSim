@@ -94,6 +94,7 @@ def _charge_consumption_plan(env, controller, timestep):
 
     # 2. Charge from consumption plan
     controller.dispatch(env, plan_evs, timestep=timestep)
+    controller.vpp.total_charged += len(plan_evs) * cap
     controller.log(
         env, "Charging %d/%d EVs from consumption plan." % (len(plan_evs), len(fleet))
     )
