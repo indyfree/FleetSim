@@ -97,47 +97,37 @@ print('Activated Control Reserve 2016 - Negative : %.2f TWh Positive %.2f TWh' %
 
 # __Calculated assumed 15-min clearing prices for negative control reserve by looking at actual activated reserve__
 
-# In[ ]:
+# In[7]:
 
 
-
-
-
-# In[5]:
-
-
-from evsim.data import load_balancing_prices
-
-df_clearing_prices = load_balancing_prices()
-print(df_clearing_prices.dtypes)
-
-#df_clearing_prices.clearing_price_mwh.astype(np.float64)
+df_clearing_prices = loader.load_balancing_prices()
+df_clearing_prices.head()
 
 
 # In[8]:
 
 
-df_clearing_prices["day"] = df_clearing_prices["from"].dt.weekday
-df_clearing_prices["hour"] = df_clearing_prices["from"].dt.hour
+df_clearing_prices["hour"] = df_clearing_prices["product_time"].dt.hour
 
-clipped_data = df_clearing_prices[["day", "hour", "clearing_price_mwh", "capacity_mw"]].clip(-50, 200)
 f, (ax1, ax2) = plt.subplots(1, 2)
 f.set_size_inches(18.5, 10.5)
-sns.violinplot(x="hour", y="capacity_mw", data=clipped_data, ax=ax1)
-sns.violinplot(x="hour", y="clearing_price_mwh", data=clipped_data, ax=ax2)
+
+sns.lineplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax1)
+
+df_clearing_prices["clearing_price_mwh"] = df_clearing_prices["clearing_price_mwh"].clip(-200,200)
+sns.violinplot(x="hour", y="clearing_price_mwh", data=df_clearing_prices, ax=ax2)
 
 
 # # SMARD Data
 
 # SMARD: _Für die Sekundärregelung vorgehaltene Leistung bzw. Menge [MW], der durchschnittliche Leistungspreis der bezuschlagten Angebote [€/MW], die durchschnittlich abgerufene Leistung bzw. Menge [MWh] und der durchschnittliche Arbeitspreis aller jeweils aktivierten Angebote [€/MWh]_
 
-# In[ ]:
+# In[9]:
 
 
 df_smard = pd.read_csv("../data/raw/balancing/smard_activated_srl_2016_2017.csv", sep=';', index_col=False,
                          dayfirst=True, parse_dates=[0], infer_datetime_format=True)
 df_smard.columns=["date", "time", "acitvated_pos_mwh", "activated_neg_mwh", "energy_price_pos", "energy_price_neg", "allocated_pos_mw", "allocated_neg_mw", "capacity_price_pos", "capacity_price_neg"]
-
 
 # Merge date and time columns
 df_smard["date"] = pd.to_datetime(
@@ -150,23 +140,24 @@ df_smard.drop("time", axis=1, inplace=True)
 df_smard.head()
 
 
-# In[ ]:
+# In[10]:
 
 
-df_smard["day"] = df_smard["date"].dt.weekday
 df_smard["hour"] = df_smard["date"].dt.hour
 
-clipped_data = df_smard[["day", "hour", "energy_price_neg", "activated_neg_mwh"]].clip(-50, 200)
 f, (ax1, ax2) = plt.subplots(1, 2)
 f.set_size_inches(18.5, 10.5)
-sns.violinplot(x="hour", y="activated_neg_mwh", data=clipped_data, ax=ax1)
-sns.violinplot(x="hour", y="energy_price_neg", data=clipped_data, ax=ax2)
+
+sns.lineplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax1)
+
+df_smard["energy_price_neg"] = df_smard["energy_price_neg"].clip(-50, 200)
+sns.violinplot(x="hour", y="energy_price_neg", data=df_smard, ax=ax2)
 
 
-# In[ ]:
+# In[11]:
 
 
-# Difference between average and clearing price
+# Difference between AVERAGE Smard data and clearing price
 df_smard.groupby("hour")["energy_price_neg"].mean() - df_clearing_prices.groupby("hour")["clearing_price_mwh"].mean()
 
 
