@@ -70,7 +70,7 @@ def cli(ctx, debug, name, logs):
 @click.option(
     "-i",
     "--industry-tariff",
-    default=250,
+    default=190,
     help="Flat industry tariff, which the fleet can charge regularly.",
     show_default=True,
 )
