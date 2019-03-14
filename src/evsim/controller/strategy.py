@@ -75,7 +75,7 @@ def _charge_consumption_plan(env, controller, timestep):
         controller.warning(
             env,
             (
-                "Commited %.2fkW capacity, but only %.2fkw available,  "
+                "Commited %.2fkW charging power, but only %.2fkw available, "
                 "account for imbalance costs!"
             )
             % (n_plan * cap, len(controller.vpp.evs) * cap),
@@ -95,7 +95,7 @@ def _charge_consumption_plan(env, controller, timestep):
 
     # 2. Charge from consumption plan
     controller.dispatch(env, plan_evs, timestep=timestep)
-    controller.vpp.total_charged += len(plan_evs) * cap
+    controller.vpp.total_charged += (len(plan_evs) * cap) * (15 / 60)
     controller.log(
         env, "Charging %d/%d EVs from consumption plan." % (len(plan_evs), len(fleet))
     )
@@ -145,8 +145,8 @@ def _update_consumption_plan(env, controller, market, timeslot):
     else:
         controller.log(
             env,
-            "Bought %.2f kW for %.2f EUR/MWh for 15-min timeslot %s"
-            % (bid[1], bid[2], datetime.fromtimestamp(bid[0])),
+            "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
+            % (bid[1] * (15 / 60), bid[1], bid[2], datetime.fromtimestamp(bid[0])),
         )
 
         _account_bid(env, controller, bid)
@@ -171,6 +171,6 @@ def _account_bid(env, controller, bid):
     controller.account.add(revenue)
     controller.log(
         env,
-        "Charge %.2f EUR cheaper than with industry tariff. Current balance: %.2f EUR."
+        "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
         % (costs, controller.account.balance),
     )

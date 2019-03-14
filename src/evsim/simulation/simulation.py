@@ -28,7 +28,7 @@ class Simulation:
         env = simpy.Environment(initial_time=df.start_time.min())
         vpp = entities.VPP(
             env,
-            "BALANCING",
+            "VPP",
             num_evs=len(df.EV.unique()),
             charger_capacity=self.charging_speed,
         )
@@ -142,7 +142,7 @@ class Simulation:
                 "ev_vpp",
                 "vpp_soc",
                 "vpp_capacity_kw",
-                "vpp_charged_kw",
+                "vpp_charged_kwh",
                 "balance_eur",
                 "imbalance_kw",
             ],
