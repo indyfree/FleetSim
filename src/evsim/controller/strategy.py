@@ -5,11 +5,7 @@ import pandas as pd
 
 def regular(env, controller, timestep):
     """ Charge all EVs at regular prices"""
-
-    try:
-        controller.dispatch(env, controller.vpp.evs.values(), timestep=timestep)
-    except ValueError as e:
-        controller.error(env, "Could not charge: %s" % str(e))
+    pass
 
 
 def balancing(env, controller, timestep):
