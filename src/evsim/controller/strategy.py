@@ -7,9 +7,9 @@ def regular(env, controller, timestep):
     pass
 
 
-def balancing(env, controller, timestep):
-    """ Charge predicted available EVs with balancing electricity
-        charge others from regular electricity tariff"""
+# TODO: Change for weekly bids!
+def balancing(env, controller, timestep, ratio=1):
+    """ Benchmark bidding strategy for balancing market only"""
 
     # Bid for every 15-minute slot of the next day at 16:00
     dt = datetime.fromtimestamp(env.now)
@@ -38,7 +38,7 @@ def balancing(env, controller, timestep):
             controller.warning(env, "Could not update consumption plan: %s" % e)
 
 
-def intraday(env, controller, timestep):
+def intraday(env, controller, timestep, ratio=1):
     """ Benchmark bidding strategy for intraday market only"""
 
     # Bid for 15-min market periods 30 min ahead
@@ -68,24 +68,10 @@ def integrated(env, controller, timestep):
     3. Charge rest regulary(?)
 
     """
-    #
-    if dt.time() == time(16, 0):
-        tomorrow = dt.date() + timedelta(days=1)
-        intervals = pd.date_range(
-            start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
-        )[:-1]
-
-        for i in intervals:
-            ts = i.to_pydatetime().timestamp()
-            p_b = controller.predict_clearing_price(controller.balancing, ts)
-            p_i = controller.predict_clearing_price(controller.intraday, ts)
-            if p_b > p_i:
-                try:
-                    ts = i.to_pydatetime().timestamp()
-                    _update_consumption_plan(env, controller, controller.balancing, ts)
-                except ValueError as e:
-                    controller.error(env, "Could not update consumption plan: %s" % e)
-    pass
+    # TODO: Ratios do not come to same amount of charged VPP?
+    # Due to missing data, account for!
+    balancing(env, controller, timestep, 0.5)
+    intraday(env, controller, timestep, 0.5)
 
 
 def _update_consumption_plan(
@@ -104,18 +90,9 @@ def _update_consumption_plan(
         controller.log(env, "The industry tariff is cheaper.")
         return None
 
-    try:
-        available_capacity = controller.predict_min_capacity(env, timeslot)
-    except ValueError as e:
-        controller.warning(env, e)
-        return None
-    if available_capacity == 0:
-        controller.log(env, "No available capacity predicted.")
-        return None
-
     # NOTE: Simple strategy to always bid at predicted clearing price
     try:
-        bid = market.bid(timeslot, predicted_clearing_price, available_capacity)
+        bid = market.bid(timeslot, predicted_clearing_price, quantity)
     except ValueError as e:
         controller.warning(env, e)
         return None
