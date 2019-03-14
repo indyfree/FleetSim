@@ -83,7 +83,7 @@ def cli(ctx, debug, name, logs):
 )
 @click.option(
     "--charging-strategy",
-    type=click.Choice(["regular", "balancing", "intraday"]),
+    type=click.Choice(["regular", "balancing", "intraday", "integrated"]),
     default="regular",
     help="Charging strategy",
     show_default=True,
@@ -123,6 +123,8 @@ def simulate(
         s = strategy.balancing
     elif charging_strategy == "intraday":
         s = strategy.intraday
+    elif charging_strategy == "integrated":
+        s = strategy.integrated
 
     controller = Controller(s, charging_speed, industry_tariff, refuse_rentals)
     sim = Simulation(ctx.obj["NAME"], controller, charging_speed, ev_capacity, stats)
