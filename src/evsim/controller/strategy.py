@@ -77,7 +77,7 @@ def integrated(env, controller, timestep):
     pass
 
 
-def _update_consumption_plan(env, controller, market, timeslot):
+def _update_consumption_plan(env, controller, market, consumption_plan, timeslot):
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 
@@ -110,7 +110,7 @@ def _update_consumption_plan(env, controller, market, timeslot):
     if bid is None:
         controller.log(env, "Bid unsuccessful")
         return
-    elif bid[0] in controller.consumption_plan:
+    elif consumption_plan.get(timeslot) != 0:
         raise ValueError(
             "%s was already in consumption plan" % datetime.fromtimestamp(bid[0])
         )
@@ -118,18 +118,15 @@ def _update_consumption_plan(env, controller, market, timeslot):
         controller.log(
             env,
             "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
-            % (bid[1] * (15 / 60), bid[1], bid[2], datetime.fromtimestamp(bid[0])),
+            % (bid[1] * (15 / 60), bid[2], datetime.fromtimestamp(bid[0])),
         )
 
         _account_bid(env, controller, bid)
 
         # TODO: Better data structure to save 15 min consumption plan
-        # TODO: Save prices
-        # TODO: Check timestamp() utc??
-        # Bought capacity will be for 3 * 5-min timeslots
         for t in [0, 5, 10]:
             time = bid[0] + (60 * t)
-            controller.consumption_plan[time] = bid[1]
+            consumption_plan.add(time, bid[1])
 
 
 def _account_bid(env, controller, bid):
