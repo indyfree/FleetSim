@@ -57,6 +57,50 @@ class Controller:
         self.vpp.commited_capacity = self.consumption_plan.get(env.now, 0)
         self.strategy(env, self, timestep)
 
+    def charge_plan(self, env, available_evs, plan, timestep):
+        """ Charge according to a predifined consumption plan"""
+
+        num_plan_evs = int(plan.get(env.now) // self.charger_capacity)
+        self.log(
+            env,
+            "Consumption plan (%s) for %s: %.2fkW, required EVs: %d."
+            % (
+                plan.name,
+                datetime.fromtimestamp(env.now),
+                plan.get(env.now),
+                num_plan_evs,
+            ),
+        )
+
+        # 1. Handle overcommitments
+        if num_plan_evs > len(available_evs):
+            imbalance_kw = (num_plan_evs - len(available_evs)) * self.charger_capacity
+            self.vpp.imbalance += imbalance_kw
+            self.warning(
+                env,
+                (
+                    "Commited %d EVs, but only %d available,  "
+                    "account for %.2f imbalance costs!"
+                )
+                % (num_plan_evs, len(available_evs), imbalance_kw),
+            )
+
+            # Charge available EVs
+            num_plan_evs = len(available_evs)
+
+        # 2. Dispatch Charging from plan
+        plan_evs = available_evs[:num_plan_evs]
+        self.dispatch(env, plan_evs, timestep=timestep)
+        self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
+        self.log(
+            env,
+            "Charging %d/%d EVs from %s plan."
+            % (len(plan_evs), len(self.vpp.evs), plan.name),
+        )
+
+        rest_evs = available_evs[num_plan_evs:]
+        return rest_evs
+
     def dispatch(self, env, evs, timestep):
         """Dispatches EVs to charging"""
         for ev in evs:
