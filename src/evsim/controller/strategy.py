@@ -33,18 +33,17 @@ def balancing(env, controller, timestep):
 
 
 def intraday(env, controller, timestep):
-    """ Charge predicted available EVs with intraday electricity
-        charge others from regular electricity tariff"""
+    """ Benchmark bidding strategy for intraday market only"""
 
-    # 1. Charge from intraday if in consumption plan, regulary else
-    _charge_consumption_plan(env, controller, timestep)
-
-    # 2. Bid for 15-min market periods 30 min ahead
-    # NOTE: Assumption: 30min(!) ahead we can procure at price >= clearing price
+    # Bid for 15-min market periods 30 min ahead
+    # NOTE: Assumption: 30min(!) ahead we can always procure
+    # with a bidding price >= clearing price
     m_30 = env.now + (60 * 30)
     if int((m_30 / 60)) % 15 == 0:
         try:
-            _update_consumption_plan(env, controller, controller.intraday, m_30)
+            _update_consumption_plan(
+                env, controller, controller.intraday, controller.intraday_plan, m_30
+            )
         except ValueError as e:
             controller.error(env, "Could not update consumption plan: %s" % e)
 
