@@ -11,10 +11,7 @@ def balancing(env, controller, timestep):
     """ Charge predicted available EVs with balancing electricity
         charge others from regular electricity tariff"""
 
-    # 1. Charge from balancing if in consumption plan, regulary else
-    _charge_consumption_plan(env, controller, timestep)
-
-    # 2. Bid for every 15-minute slot of the next day at 16:00
+    # Bid for every 15-minute slot of the next day at 16:00
     dt = datetime.fromtimestamp(env.now)
     if dt.time() != time(16, 0):
         return
@@ -27,9 +24,18 @@ def balancing(env, controller, timestep):
     for i in intervals:
         try:
             ts = i.to_pydatetime().timestamp()
-            _update_consumption_plan(env, controller, controller.balancing, ts)
+            quantity = controller.predict_min_capacity(env, ts) * ratio
+
+            _update_consumption_plan(
+                env,
+                controller,
+                controller.balancing,
+                controller.balancing_plan,
+                ts,
+                quantity,
+            )
         except ValueError as e:
-            controller.error(env, "Could not update consumption plan: %s" % e)
+            controller.warning(env, "Could not update consumption plan: %s" % e)
 
 
 def intraday(env, controller, timestep):
@@ -41,11 +47,17 @@ def intraday(env, controller, timestep):
     m_30 = env.now + (60 * 30)
     if int((m_30 / 60)) % 15 == 0:
         try:
+            quantity = controller.predict_min_capacity(env, m_30) * ratio
             _update_consumption_plan(
-                env, controller, controller.intraday, controller.intraday_plan, m_30
+                env,
+                controller,
+                controller.intraday,
+                controller.intraday_plan,
+                m_30,
+                quantity,
             )
         except ValueError as e:
-            controller.error(env, "Could not update consumption plan: %s" % e)
+            controller.warning(env, "Could not update consumption plan: %s" % e)
 
 
 def integrated(env, controller, timestep):
@@ -76,7 +88,9 @@ def integrated(env, controller, timestep):
     pass
 
 
-def _update_consumption_plan(env, controller, market, consumption_plan, timeslot):
+def _update_consumption_plan(
+    env, controller, market, consumption_plan, timeslot, quantity
+):
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 
