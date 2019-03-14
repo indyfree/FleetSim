@@ -133,7 +133,7 @@ def simulate(
 
     click.echo("-- Simulation Results: %s ---")
     click.echo(
-        "Charging power consumed: %.2f MW" % (controller.vpp.total_charged / 1000)
+        "Energy charged as VPP: %.2f MWh" % (controller.vpp.total_charged / 1000)
     )
     click.echo("Total balance: %d EUR" % controller.account.balance)
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
