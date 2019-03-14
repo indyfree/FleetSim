@@ -104,3 +104,20 @@ class Controller:
         """
 
         return market.clearing_price(timeslot)
+
+
+class ConsumptionPlan:
+    def __init__(self, name):
+        self.name = name
+        self.plan = dict()
+
+    def add(self, timestamp, capacity):
+        if timestamp in self.plan:
+            raise ValueError(
+                "%s was already in consumption plan" % datetime.fromtimestamp(timestamp)
+            )
+
+        self.plan[timestamp] = capacity
+
+    def get(self, timestamp):
+        return self.plan.get(timestamp, 0)
