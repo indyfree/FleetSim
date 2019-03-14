@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+from operator import attrgetter
 import sys
 
 from evsim.data import loader
