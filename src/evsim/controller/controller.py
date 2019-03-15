@@ -95,11 +95,11 @@ class Controller:
         num_plan_evs = int(plan.get(env.now) // self.charger_capacity)
         self.log(
             env,
-            "Consumption plan (%s) for %s: %.2fkW, required EVs: %d."
+            "Consumption plan (%s) for %s: %.2fkWh, required EVs: %d."
             % (
                 plan.name,
                 datetime.fromtimestamp(env.now),
-                plan.get(env.now),
+                plan.get(env.now) * (15 / 60),
                 num_plan_evs,
             ),
         )
