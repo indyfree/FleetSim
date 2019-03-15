@@ -14,6 +14,7 @@ def balancing(controller, timeslot, ratio=1):
     # Bid for every 15-minute slot of the next day at 16:00
     dt = datetime.fromtimestamp(timeslot)
     if dt.time() != time(16, 0):
+        controller.log("Not bidding at %s." % datetime.fromtimestamp(timeslot))
         return
 
     tomorrow = dt.date() + timedelta(days=1)
@@ -25,6 +26,7 @@ def balancing(controller, timeslot, ratio=1):
         try:
             ts = i.to_pydatetime().timestamp()
             quantity = controller.predict_min_capacity(ts) * ratio
+            controller.log("Bidding for timeslot %s." % datetime.fromtimestamp(ts))
 
             _update_consumption_plan(
                 controller,
@@ -34,7 +36,7 @@ def balancing(controller, timeslot, ratio=1):
                 quantity,
             )
         except ValueError as e:
-            controller.warning("Could not update consumption plan: %s" % e)
+            controller.warning("Could not update consumption plan: %s." % e)
 
 
 def intraday(controller, timeslot, ratio=1):
@@ -45,6 +47,7 @@ def intraday(controller, timeslot, ratio=1):
     # with a bidding price >= clearing price
     m_30 = timeslot + (60 * 30)
     if int((m_30 / 60)) % 15 == 0:
+        controller.log("Bidding for timeslot %s." % datetime.fromtimestamp(m_30))
         try:
             quantity = controller.predict_min_capacity(m_30) * ratio
             _update_consumption_plan(
@@ -55,7 +58,9 @@ def intraday(controller, timeslot, ratio=1):
                 quantity,
             )
         except ValueError as e:
-            controller.warning("Could not update consumption plan: %s" % e)
+            controller.warning(e)
+    else:
+        controller.log("Not bidding at %s." % datetime.fromtimestamp(timeslot))
 
 
 def integrated(controller, timestamp):
