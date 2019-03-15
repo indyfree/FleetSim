@@ -2,17 +2,17 @@ from datetime import datetime, timedelta, time
 import pandas as pd
 
 
-def regular(controller, timestamp):
+def regular(controller, timeslot):
     """ Charge all EVs at regular prices"""
     pass
 
 
 # TODO: Change for weekly bids!
-def balancing(controller, timestamp, ratio=1):
+def balancing(controller, timeslot, ratio=1):
     """ Benchmark bidding strategy for balancing market only"""
 
     # Bid for every 15-minute slot of the next day at 16:00
-    dt = datetime.fromtimestamp(timestamp)
+    dt = datetime.fromtimestamp(timeslot)
     if dt.time() != time(16, 0):
         return
 
@@ -37,13 +37,13 @@ def balancing(controller, timestamp, ratio=1):
             controller.warning("Could not update consumption plan: %s" % e)
 
 
-def intraday(controller, timestamp, ratio=1):
+def intraday(controller, timeslot, ratio=1):
     """ Benchmark bidding strategy for intraday market only"""
 
     # Bid for 15-min market periods 30 min ahead
     # NOTE: Assumption: 30min(!) ahead we can always procure
     # with a bidding price >= clearing price
-    m_30 = timestamp + (60 * 30)
+    m_30 = timeslot + (60 * 30)
     if int((m_30 / 60)) % 15 == 0:
         try:
             quantity = controller.predict_min_capacity(m_30) * ratio
