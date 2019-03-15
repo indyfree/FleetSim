@@ -107,7 +107,7 @@ class Simulation:
             if stats is not None:
                 stats.append(
                     [
-                        env.now,
+                        env.now - 1,
                         int(len(evs)),
                         round(self._fleet_soc(evs), 2),
                         int(len(vpp.evs)),
