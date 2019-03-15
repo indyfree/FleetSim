@@ -43,7 +43,9 @@ class Simulation:
 
         logger.info("---- RESULTS: %s -----" % self.name)
         logger.info("Energy charged as VPP: %.2fMWh" % (vpp.total_charged / 1000))
-        logger.info("Unfulfilled commitments: %.2fkW" % vpp.imbalance)
+        logger.info(
+            "Energy that couldn't be charged : %.2fMWh" % (vpp.imbalance / 1000)
+        )
         logger.info("Total balance: %.2fEUR" % self.account.balance)
 
         if self.save:

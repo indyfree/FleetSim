@@ -107,14 +107,14 @@ class Controller:
         # 1. Handle overcommitments
         if num_plan_evs > len(available_evs):
             imbalance_kw = (num_plan_evs - len(available_evs)) * self.charger_capacity
-            self.vpp.imbalance += imbalance_kw
+            self.vpp.imbalance += imbalance_kw * (15 / 60)
             self.warning(
                 env,
                 (
                     "Commited %d EVs, but only %d available,  "
-                    "account for %.2f imbalance costs!"
+                    "account for imbalance costs of %.2fkWh !"
                 )
-                % (num_plan_evs, len(available_evs), imbalance_kw),
+                % (num_plan_evs, len(available_evs), imbalance_kw * (15 / 60)),
             )
 
             # Charge available EVs
