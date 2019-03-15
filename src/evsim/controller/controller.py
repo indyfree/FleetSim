@@ -71,10 +71,10 @@ class Controller:
         available_evs = self.charge_plan(timeslot, available_evs, self.intraday_plan)
 
         # 4. Charge remaining EVs regulary
-        self.dispatch(available_evs)
         self.log(
             "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs))
         )
+        self.dispatch(available_evs)
 
         # 5. Execute Bidding strategy
         self.strategy(self, timeslot)
@@ -110,12 +110,12 @@ class Controller:
 
         # 2. Dispatch Charging from plan
         plan_evs = available_evs[:num_plan_evs]
-        self.dispatch(plan_evs)
-        self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
         self.log(
             "Charging %d/%d EVs from %s plan."
             % (len(plan_evs), len(self.vpp.evs), plan.name)
         )
+        self.dispatch(plan_evs)
+        self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
 
         rest_evs = available_evs[num_plan_evs:]
         return rest_evs

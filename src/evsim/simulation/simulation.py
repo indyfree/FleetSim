@@ -100,6 +100,9 @@ class Simulation:
                     )
                 )
 
+            # NOTE: Wait 1 sec later let all trips start first
+            yield env.timeout(1)
+
             # 5. Save simulation stats if enabled
             if stats is not None:
                 stats.append(
@@ -117,10 +120,10 @@ class Simulation:
                 )
 
             # 6. Centrally control charging
-            self.controller.charge_fleet(env, timestep=5)
+            self.controller.charge_fleet(env.now - 1)
 
             # 7. Wait 5 min timestep
-            yield env.timeout(5 * 60)  # sec
+            yield env.timeout((5 * 60) - 1)
 
     def _fleet_soc(self, evs):
         if len(evs) == 0:
