@@ -81,7 +81,7 @@ class Controller:
         )
 
         # 5. Execute Bidding strategy
-        self.strategy(env, self, timestep)
+        self.strategy(self, env.now)
 
     def charge_plan(self, env, available_evs, plan, timestep):
         """ Charge according to a predifined consumption plan"""
