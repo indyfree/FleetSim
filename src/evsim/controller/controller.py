@@ -54,7 +54,7 @@ class Controller:
     def warning(self, message):
         self.log(message, self.logger.warning)
 
-    def charge_fleet(self, env, timestep):
+    def charge_fleet(self, env):
         """ Perform a charging operation on the fleet for a given timestep.
             Takes a a list of EVs as input and charges given its strategy.
         """
@@ -66,13 +66,9 @@ class Controller:
         )
 
         # 2. Charge balancing
-        available_evs = self.charge_plan(
-            env, available_evs, self.balancing_plan, timestep
-        )
+        available_evs = self.charge_plan(env, available_evs, self.balancing_plan)
         # 3. Charge intraday
-        available_evs = self.charge_plan(
-            env, available_evs, self.intraday_plan, timestep
-        )
+        available_evs = self.charge_plan(env, available_evs, self.intraday_plan)
 
         # 4. Charge remaining EVs regulary
         self.dispatch(available_evs)
@@ -83,7 +79,7 @@ class Controller:
         # 5. Execute Bidding strategy
         self.strategy(self, env.now)
 
-    def charge_plan(self, env, available_evs, plan, timestep):
+    def charge_plan(self, env, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
 
         num_plan_evs = int(plan.get(env.now) // self.charger_capacity)
