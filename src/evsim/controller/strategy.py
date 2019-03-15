@@ -24,7 +24,7 @@ def balancing(env, controller, timestep, ratio=1):
     for i in intervals:
         try:
             ts = i.to_pydatetime().timestamp()
-            quantity = controller.predict_min_capacity(env, ts) * ratio
+            quantity = controller.predict_min_capacity(ts) * ratio
 
             _update_consumption_plan(
                 env,
@@ -47,7 +47,7 @@ def intraday(env, controller, timestep, ratio=1):
     m_30 = env.now + (60 * 30)
     if int((m_30 / 60)) % 15 == 0:
         try:
-            quantity = controller.predict_min_capacity(env, m_30) * ratio
+            quantity = controller.predict_min_capacity(m_30) * ratio
             _update_consumption_plan(
                 env,
                 controller,

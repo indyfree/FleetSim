@@ -70,7 +70,37 @@ class Simulation:
                 % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
             )
 
-            # 1. Save simulation stats if enabled
+            # 1. Allocate consumption plan
+            vpp.commited_capacity = self.controller.planned_kw(env.now)
+
+            # 2. Find trips at the timeslot
+            trips = df.loc[df["start_time"] == env.now]
+            for trip in trips.itertuples():
+
+                # 3. Add EVs to Fleet
+                if trip.EV not in evs:
+                    evs[trip.EV] = entities.EV(
+                        env,
+                        vpp,
+                        trip.EV,
+                        trip.start_soc,
+                        self.ev_capacity,
+                        self.charging_speed,
+                    )
+
+                # 4. Start trip with EV
+                ev = evs[trip.EV]
+                env.process(
+                    ev.drive(
+                        trip.Index,
+                        trip.trip_duration,
+                        trip.start_soc - trip.end_soc,
+                        trip.end_charging,
+                        refuse=self.controller.refuse_rentals,
+                    )
+                )
+
+            # 5. Save simulation stats if enabled
             if stats is not None:
                 stats.append(
                     [
@@ -84,36 +114,6 @@ class Simulation:
                         round(self.account.balance, 2),
                         round(vpp.imbalance, 2),
                     ]
-                )
-
-            # 2. Allocate consumption plan
-            vpp.commited_capacity = self.controller.planned_kw(env.now)
-
-            # 3. Find trips at the timeslot
-            trips = df.loc[df["start_time"] == env.now]
-            for trip in trips.itertuples():
-
-                # 4. Add new EVs to Fleet
-                if trip.EV not in evs:
-                    evs[trip.EV] = entities.EV(
-                        env,
-                        vpp,
-                        trip.EV,
-                        trip.start_soc,
-                        self.ev_capacity,
-                        self.charging_speed,
-                    )
-
-                # 5. Start trip with EV
-                ev = evs[trip.EV]
-                env.process(
-                    ev.drive(
-                        trip.Index,
-                        trip.trip_duration,
-                        trip.start_soc - trip.end_soc,
-                        trip.end_charging,
-                        refuse=self.controller.refuse_rentals,
-                    )
                 )
 
             # 6. Centrally control charging

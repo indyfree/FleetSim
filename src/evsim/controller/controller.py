@@ -74,7 +74,7 @@ class Controller:
         )
 
         # 4. Charge remaining EVs regulary
-        self.dispatch(env, available_evs, timestep=timestep)
+        self.dispatch(available_evs)
         self.log(
             env,
             "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs)),
@@ -116,7 +116,7 @@ class Controller:
 
         # 2. Dispatch Charging from plan
         plan_evs = available_evs[:num_plan_evs]
-        self.dispatch(env, plan_evs, timestep=timestep)
+        self.dispatch(plan_evs)
         self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
         self.log(
             env,
@@ -127,16 +127,16 @@ class Controller:
         rest_evs = available_evs[num_plan_evs:]
         return rest_evs
 
-    def dispatch(self, env, evs, timestep):
+    def dispatch(self, evs):
         """Dispatches EVs to charging"""
         for ev in evs:
-            ev.action = env.process(ev.charge_timestep(timestep))
+            ev.action = ev.charge_timestep()
 
     def planned_kw(self, t):
         return self.balancing_plan.get(t) + self.intraday_plan.get(t)
 
     # TODO: Distort data for Prediction
-    def predict_capacity(self, env, timeslot):
+    def predict_capacity(self, timeslot):
         """ Predict the available capacity for a given 5min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted fleet capacity in kW.
@@ -150,7 +150,7 @@ class Controller:
                 % datetime.fromtimestamp(timeslot)
             )
 
-    def predict_min_capacity(self, env, timeslot):
+    def predict_min_capacity(self, timeslot):
         """ Predict the minimum available capacity for a given 15min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted fleet capacity in kW.
@@ -158,7 +158,7 @@ class Controller:
         cap = sys.maxsize
         for t in [0, 5, 10]:
             try:
-                cap = min(cap, self.predict_capacity(env, timeslot + (60 * t)))
+                cap = min(cap, self.predict_capacity(timeslot + (60 * t)))
             except ValueError:
                 pass
 
