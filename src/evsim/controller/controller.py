@@ -73,12 +73,6 @@ class Controller:
             env, available_evs, self.intraday_plan, timestep
         )
 
-        # 4. Save commitments for denying rentals
-        # TODO: Use EVs not kw
-        self.vpp.commited_capacity = (
-            len(self.vpp.evs) - len(available_evs)
-        ) * self.charger_capacity
-
         # 4. Charge remaining EVs regulary
         self.dispatch(env, available_evs, timestep=timestep)
         self.log(
@@ -137,6 +131,9 @@ class Controller:
         """Dispatches EVs to charging"""
         for ev in evs:
             ev.action = env.process(ev.charge_timestep(timestep))
+
+    def planned_kw(self, t):
+        return self.balancing_plan.get(t) + self.intraday_plan.get(t)
 
     # TODO: Distort data for Prediction
     def predict_capacity(self, env, timeslot):

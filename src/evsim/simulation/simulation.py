@@ -87,7 +87,7 @@ class Simulation:
                 )
 
             # 2. Allocate consumption plan
-            vpp.commited_capacity = self.controller.get_planned_kw(env)
+            vpp.commited_capacity = self.controller.planned_kw(env.now)
 
             # 3. Find trips at the timeslot
             trips = df.loc[df["start_time"] == env.now]
