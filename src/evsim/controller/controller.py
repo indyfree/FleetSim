@@ -112,7 +112,7 @@ class Controller:
                 env,
                 (
                     "Commited %d EVs, but only %d available,  "
-                    "account for imbalance costs of %.2fkWh !"
+                    "account for imbalance costs of %.2fkWh!"
                 )
                 % (num_plan_evs, len(available_evs), imbalance_kw * (15 / 60)),
             )
