@@ -93,7 +93,8 @@ class EV:
             self.vpp.remove(self)
 
         # 5. Drive for the trip duration
-        yield self.env.timeout(duration * 60 - 1)  # seconds
+        # NOTE: Arrive one second early, to be able to start again
+        yield self.env.timeout((duration * 60) - 1)  # seconds
 
         # 6. Adjust SoC
         self.log(

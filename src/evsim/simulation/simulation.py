@@ -59,25 +59,18 @@ class Simulation:
         evs = {}
 
         # Timerange from start to end in 5 minute intervals
-        # https://stackoverflow.com/a/15204235
-        timeslots = (
-            pd.date_range(
-                datetime.utcfromtimestamp(df.start_time.min()),
-                datetime.utcfromtimestamp(df.end_time.max()),
-                freq="5min",
-            ).astype(np.int64)
-            // 10 ** 9
+        timeslots = pd.date_range(
+            datetime.utcfromtimestamp(df.start_time.min()),
+            datetime.utcfromtimestamp(df.end_time.max()),
+            freq="5min",
         )
-        t0 = timeslots[0]
         for t in timeslots:
-            # 1. Wait 5 min timestep
-            yield env.timeout(t - t0)  # sec
             logger.info(
                 "[%s] - ---------- TIMESLOT %s ----------"
                 % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
             )
 
-            # 2. Save simulation stats if enabled
+            # 1. Save simulation stats if enabled
             if stats is not None:
                 stats.append(
                     [
@@ -93,8 +86,11 @@ class Simulation:
                     ]
                 )
 
+            # 2. Allocate consumption plan
+            vpp.commited_capacity = self.controller.get_planned_kw(env)
+
             # 3. Find trips at the timeslot
-            trips = df.loc[df["start_time"] == t]
+            trips = df.loc[df["start_time"] == env.now]
             for trip in trips.itertuples():
 
                 # 4. Add new EVs to Fleet
@@ -113,17 +109,18 @@ class Simulation:
                 env.process(
                     ev.drive(
                         trip.Index,
-                        trip.trip_duration,  # Arrive before starting again
+                        trip.trip_duration,
                         trip.start_soc - trip.end_soc,
                         trip.end_charging,
                         refuse=self.controller.refuse_rentals,
                     )
                 )
 
-            # 6. TODO: Centrally control charging
+            # 6. Centrally control charging
             self.controller.charge_fleet(env, timestep=5)
 
-            t0 = t
+            # 7. Wait 5 min timestep
+            yield env.timeout(5 * 60)  # sec
 
     def _fleet_soc(self, evs):
         if len(evs) == 0:
