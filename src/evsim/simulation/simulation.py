@@ -34,6 +34,7 @@ class Simulation:
         )
 
         # Pass references to controller
+        self.controller.env = env
         self.controller.account = self.account
         self.controller.vpp = vpp
 

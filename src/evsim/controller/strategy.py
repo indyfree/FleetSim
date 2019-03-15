@@ -27,7 +27,6 @@ def balancing(env, controller, timestep, ratio=1):
             quantity = controller.predict_min_capacity(ts) * ratio
 
             _update_consumption_plan(
-                env,
                 controller,
                 controller.balancing,
                 controller.balancing_plan,
@@ -35,7 +34,7 @@ def balancing(env, controller, timestep, ratio=1):
                 quantity,
             )
         except ValueError as e:
-            controller.warning(env, "Could not update consumption plan: %s" % e)
+            controller.warning("Could not update consumption plan: %s" % e)
 
 
 def intraday(env, controller, timestep, ratio=1):
@@ -49,7 +48,6 @@ def intraday(env, controller, timestep, ratio=1):
         try:
             quantity = controller.predict_min_capacity(m_30) * ratio
             _update_consumption_plan(
-                env,
                 controller,
                 controller.intraday,
                 controller.intraday_plan,
@@ -57,7 +55,7 @@ def intraday(env, controller, timestep, ratio=1):
                 quantity,
             )
         except ValueError as e:
-            controller.warning(env, "Could not update consumption plan: %s" % e)
+            controller.warning("Could not update consumption plan: %s" % e)
 
 
 def integrated(env, controller, timestep):
@@ -68,37 +66,35 @@ def integrated(env, controller, timestep):
     3. Charge rest regulary(?)
 
     """
-    # TODO: Ratios do not come to same amount of charged VPP?
-    # Due to missing data, account for!
-    balancing(env, controller, timestep, 0.5)
-    intraday(env, controller, timestep, 0.5)
+    # NOTE: Nice to have: If cannot bid at one market, bid at other
+    # TODO: If intraday better price than balancing
+    # balancing(env, controller, timestep, 0.5)
+    intraday(env, controller, timestep, 1.1)
 
 
-def _update_consumption_plan(
-    env, controller, market, consumption_plan, timeslot, quantity
-):
+def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
     """ Updates the consumption plan for a given timeslot (POSIX timestamp)
     """
 
     try:
         predicted_clearing_price = controller.predict_clearing_price(market, timeslot)
     except ValueError as e:
-        controller.warning(env, e)
+        controller.warning(e)
         return None
 
     if predicted_clearing_price > controller.industry_tariff:
-        controller.log(env, "The industry tariff is cheaper.")
+        controller.log("The industry tariff is cheaper.")
         return None
 
     # NOTE: Simple strategy to always bid at predicted clearing price
     try:
         bid = market.bid(timeslot, predicted_clearing_price, quantity)
     except ValueError as e:
-        controller.warning(env, e)
+        controller.warning(e)
         return None
 
     if bid is None:
-        controller.log(env, "Bid unsuccessful")
+        controller.log("Bid unsuccessful")
         return
     elif consumption_plan.get(timeslot) != 0:
         raise ValueError(
@@ -106,12 +102,11 @@ def _update_consumption_plan(
         )
     else:
         controller.log(
-            env,
             "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
-            % (bid[1] * (15 / 60), bid[2], datetime.fromtimestamp(bid[0])),
+            % (bid[1] * (15 / 60), bid[2], datetime.fromtimestamp(bid[0]))
         )
 
-        _account_bid(env, controller, bid)
+        _account_bid(controller, bid)
 
         # TODO: Better data structure to save 15 min consumption plan
         for t in [0, 5, 10]:
@@ -119,7 +114,7 @@ def _update_consumption_plan(
             consumption_plan.add(time, bid[1])
 
 
-def _account_bid(env, controller, bid):
+def _account_bid(controller, bid):
     # Quantity MWh: (kw * h / 1000)
     quantity_mwh = bid[1] * (15 / 60) / 1000
     costs = quantity_mwh * bid[2]
@@ -129,7 +124,6 @@ def _account_bid(env, controller, bid):
     costs = (bid[1] * (15 / 60) / 1000) * (controller.industry_tariff - bid[2])
     controller.account.add(revenue)
     controller.log(
-        env,
         "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
-        % (costs, controller.account.balance),
+        % (costs, controller.account.balance)
     )

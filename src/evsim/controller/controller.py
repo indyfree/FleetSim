@@ -23,6 +23,7 @@ class Controller:
         self.strategy = strategy
 
         # Reference simulation objects
+        self.env = None
         self.account = None
         self.vpp = None
 
@@ -33,25 +34,25 @@ class Controller:
         # Strategy specific optionals
         self.refuse_rentals = refuse_rentals
 
-    def log(self, env, message, level=None):
+    def log(self, message, level=None):
         if level is None:
             level = self.logger.info
 
         level(
             "[%s] - %s(%s) %s"
             % (
-                datetime.fromtimestamp(env.now),
+                datetime.fromtimestamp(self.env.now),
                 type(self).__name__,
                 self.strategy.__name__,
                 message,
             )
         )
 
-    def error(self, env, message):
-        self.log(env, message, self.logger.error)
+    def error(self, message):
+        self.log(message, self.logger.error)
 
-    def warning(self, env, message):
-        self.log(env, message, self.logger.warning)
+    def warning(self, message):
+        self.log(message, self.logger.warning)
 
     def charge_fleet(self, env, timestep):
         """ Perform a charging operation on the fleet for a given timestep.
@@ -76,8 +77,7 @@ class Controller:
         # 4. Charge remaining EVs regulary
         self.dispatch(available_evs)
         self.log(
-            env,
-            "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs)),
+            "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs))
         )
 
         # 5. Execute Bidding strategy
@@ -88,14 +88,13 @@ class Controller:
 
         num_plan_evs = int(plan.get(env.now) // self.charger_capacity)
         self.log(
-            env,
             "Consumption plan (%s) for %s: %.2fkWh, required EVs: %d."
             % (
                 plan.name,
                 datetime.fromtimestamp(env.now),
                 plan.get(env.now) * (15 / 60),
                 num_plan_evs,
-            ),
+            )
         )
 
         # 1. Handle overcommitments
@@ -103,12 +102,11 @@ class Controller:
             imbalance_kw = (num_plan_evs - len(available_evs)) * self.charger_capacity
             self.vpp.imbalance += imbalance_kw * (15 / 60)
             self.warning(
-                env,
                 (
                     "Commited %d EVs, but only %d available,  "
                     "account for imbalance costs of %.2fkWh!"
                 )
-                % (num_plan_evs, len(available_evs), imbalance_kw * (15 / 60)),
+                % (num_plan_evs, len(available_evs), imbalance_kw * (15 / 60))
             )
 
             # Charge available EVs
@@ -119,9 +117,8 @@ class Controller:
         self.dispatch(plan_evs)
         self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
         self.log(
-            env,
             "Charging %d/%d EVs from %s plan."
-            % (len(plan_evs), len(self.vpp.evs), plan.name),
+            % (len(plan_evs), len(self.vpp.evs), plan.name)
         )
 
         rest_evs = available_evs[num_plan_evs:]
