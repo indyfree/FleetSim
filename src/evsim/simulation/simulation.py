@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-import numpy as np
 import pandas as pd
 import simpy
 
@@ -65,7 +64,7 @@ class Simulation:
             datetime.utcfromtimestamp(df.end_time.max()),
             freq="5min",
         )
-        for t in timeslots:
+        for _ in timeslots:
             logger.info(
                 "[%s] - ---------- TIMESLOT %s ----------"
                 % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
