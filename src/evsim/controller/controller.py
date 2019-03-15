@@ -13,9 +13,12 @@ class Controller:
     ):
         self.logger = logging.getLogger(__name__)
 
-        self.consumption_plan = dict()
         self.balancing = Market(loader.load_balancing_prices())
+        self.balancing_plan = ConsumptionPlan("Balancing")
+
         self.intraday = Market(loader.load_intraday_prices())
+        self.intraday_plan = ConsumptionPlan("Intraday")
+
         self.fleet_capacity = loader.load_simulation_baseline()
         self.strategy = strategy
 
@@ -55,7 +58,35 @@ class Controller:
             Takes a a list of EVs as input and charges given its strategy.
         """
 
-        self.vpp.commited_capacity = self.consumption_plan.get(env.now, 0)
+        # 1. Sort according to charging priority
+        # TODO: Improve dispatch order
+        available_evs = sorted(
+            self.vpp.evs.values(), key=attrgetter("battery.level"), reverse=True
+        )
+
+        # 2. Charge balancing
+        available_evs = self.charge_plan(
+            env, available_evs, self.balancing_plan, timestep
+        )
+        # 3. Charge intraday
+        available_evs = self.charge_plan(
+            env, available_evs, self.intraday_plan, timestep
+        )
+
+        # 4. Save commitments for denying rentals
+        # TODO: Use EVs not kw
+        self.vpp.commited_capacity = (
+            len(self.vpp.evs) - len(available_evs)
+        ) * self.charger_capacity
+
+        # 4. Charge remaining EVs regulary
+        self.dispatch(env, available_evs, timestep=timestep)
+        self.log(
+            env,
+            "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs)),
+        )
+
+        # 5. Execute Bidding strategy
         self.strategy(env, self, timestep)
 
     def charge_plan(self, env, available_evs, plan, timestep):
