@@ -135,7 +135,6 @@ def simulate(
 
     click.echo("--- Simulation Results: ---")
     click.echo("Energy charged as VPP: %.2fMWh" % (controller.vpp.total_charged / 1000))
-    click.echo("Unfulfilled commitments: %.2fkW" % controller.vpp.imbalance)
     click.echo(
         "Energy that couldn't be charged : %.2fMWh" % (controller.vpp.imbalance / 1000)
     )
