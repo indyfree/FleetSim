@@ -82,13 +82,14 @@ class Controller:
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
 
-        num_plan_evs = int(plan.get(timeslot) // self.charger_capacity)
+        planned_kw = plan.pop(timeslot)
+        num_plan_evs = int(planned_kw // self.charger_capacity)
         self.log(
             "Consumption plan (%s) for %s: %.2fkWh, required EVs: %d."
             % (
                 plan.name,
                 datetime.fromtimestamp(timeslot),
-                plan.get(timeslot) * (15 / 60),
+                planned_kw * (15 / 60),
                 num_plan_evs,
             )
         )
@@ -190,3 +191,6 @@ class ConsumptionPlan:
 
     def get(self, timestamp):
         return self.plan.get(timestamp, 0)
+
+    def pop(self, timestamp):
+        return self.plan.pop(timestamp, 0)
