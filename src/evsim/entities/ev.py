@@ -75,7 +75,7 @@ class EV:
         if trip_charge > 0 and self.battery.level < trip_charge:
             self.warning("Not enough battery for the planned trip %d!" % rental)
             self.log(
-                "Account for lost profits of %.2f EUR. Current balance %.2f."
+                "Account for lost profits of %.2f EUR. Current balance %.2f EUR."
                 % (trip_price, account.balance)
             )
             account.subtract(trip_price)
@@ -89,12 +89,12 @@ class EV:
         ):
             self.warning(
                 (
-                    "Refusing rental! ",
-                    "EV is commited to VPP and no replacement EV is available.",
+                    "Refusing rental! "
+                    "EV is commited to VPP and no replacement EV is available."
                 )
             )
             self.log(
-                "Account for lost profits of %.2f EUR. Current balance %.2f."
+                "Account for lost profits of %.2f EUR. Current balance %.2f EUR."
                 % (trip_price, account.balance)
             )
             account.subtract(trip_price)
