@@ -2,11 +2,12 @@ autopep8
 click
 flake8
 flake8-bugbear
+gym
 jupyter
 jupyter-contrib-nbextensions
 jupyter-nbextensions-configurator
 matplotlib
 pandas
-seaborn
 scikit-learn
+seaborn
 simpy

@@ -8,7 +8,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
-    install_requires=["Click"],
+    install_requires=["Click", "gym"],
     entry_points="""
             [console_scripts]
             evsim=evsim.evsim:cli
