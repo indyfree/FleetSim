@@ -70,10 +70,9 @@ def integrated(controller, timestamp):
     3. Charge rest regulary(?)
 
     """
-    # NOTE: Nice to have: If cannot bid at one market, bid at other
-    # TODO: If intraday better price than balancing
-    # balancing(controller, timestamp, 0.5)
-    intraday(controller, timestamp, 1.1)
+    # TODO: Skip bidding balancing if intraday price better
+    balancing(controller, timestamp, risk=0.7)
+    intraday(controller, timestamp, risk=0)
 
 
 def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
