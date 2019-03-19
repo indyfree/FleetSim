@@ -8,7 +8,7 @@ def regular(controller, timeslot):
 
 
 # TODO: Change for weekly bids!
-def balancing(controller, timeslot, ratio=1):
+def balancing(controller, timeslot, accuracy=100, risk=0):
     """ Benchmark bidding strategy for balancing market only"""
 
     # Bid for every 15-minute slot of the next day at 16:00
@@ -18,14 +18,15 @@ def balancing(controller, timeslot, ratio=1):
         return
 
     tomorrow = dt.date() + timedelta(days=1)
-    intervals = pd.date_range(
+    market_periods = pd.date_range(
         start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
     )[:-1]
 
-    for i in intervals:
+    for m in market_periods:
         try:
-            ts = i.to_pydatetime().timestamp()
-            quantity = controller.predict_min_capacity(ts) * ratio
+            ts = m.to_pydatetime().timestamp()
+            available_capacity = controller.predict_min_capacity(ts, accuracy)
+            quantity = available_capacity * (1 - risk)
             controller.log("Bidding for timeslot %s." % datetime.fromtimestamp(ts))
 
             _update_consumption_plan(
@@ -39,23 +40,21 @@ def balancing(controller, timeslot, ratio=1):
             controller.warning("Could not update consumption plan: %s." % e)
 
 
-def intraday(controller, timeslot, ratio=1):
+def intraday(controller, timeslot, accuracy=100, risk=0):
     """ Benchmark bidding strategy for intraday market only"""
 
-    # Bid for 15-min market periods 30 min ahead
+    # Bid for 15-min market period m 30 min ahead
     # NOTE: Assumption: 30min(!) ahead we can always procure
     # with a bidding price >= clearing price
-    m_30 = timeslot + (60 * 30)
-    if int((m_30 / 60)) % 15 == 0:
-        controller.log("Bidding for timeslot %s." % datetime.fromtimestamp(m_30))
+    m = timeslot + (60 * 30)
+    if int((m / 60)) % 15 == 0:
+        controller.log("Bidding for timeslot %s." % datetime.fromtimestamp(m))
         try:
-            quantity = controller.predict_min_capacity(m_30) * ratio
+            available_capacity = controller.predict_min_capacity(m, accuracy)
+            charging_balancing = controller.balancing_plan.get(m)
+            quantity = (available_capacity - charging_balancing) * (1 - risk)
             _update_consumption_plan(
-                controller,
-                controller.intraday,
-                controller.intraday_plan,
-                m_30,
-                quantity,
+                controller, controller.intraday, controller.intraday_plan, m, quantity
             )
         except ValueError as e:
             controller.warning(e)

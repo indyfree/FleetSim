@@ -129,7 +129,7 @@ class Controller:
         return self.balancing_plan.get(t) + self.intraday_plan.get(t)
 
     # TODO: Distort data for Prediction
-    def predict_capacity(self, timeslot):
+    def predict_capacity(self, timeslot, accuracy=100):
         """ Predict the available capacity for a given 5min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted fleet capacity in kW.
@@ -143,7 +143,7 @@ class Controller:
                 % datetime.fromtimestamp(timeslot)
             )
 
-    def predict_min_capacity(self, timeslot):
+    def predict_min_capacity(self, timeslot, accuracy=100):
         """ Predict the minimum available capacity for a given 15min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted fleet capacity in kW.
