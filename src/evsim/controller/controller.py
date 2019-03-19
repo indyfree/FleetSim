@@ -177,6 +177,9 @@ class ConsumptionPlan:
         self.name = name
         self.plan = dict()
 
+    def __repr__(self):
+        return repr((self.plan))
+
     def add(self, timestamp, capacity):
         if timestamp in self.plan:
             raise ValueError(
