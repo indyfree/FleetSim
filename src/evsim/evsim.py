@@ -90,8 +90,8 @@ def cli(ctx, debug, name, logs):
 )
 @click.option(
     "--refuse-rentals/--no-refuse-rentals",
-    default=False,
-    help="Save logs to file. Turning off improves speed.",
+    default=True,
+    help="Refuses rentals of EV that are commited to VPP.",
 )
 @click.option(
     "--stats/--no-stats",

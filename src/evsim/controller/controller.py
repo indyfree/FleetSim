@@ -9,7 +9,7 @@ from evsim.market import Market
 
 class Controller:
     def __init__(
-        self, strategy, charger_capacity=0, industry_tariff=0, refuse_rentals=False
+        self, strategy, charger_capacity=0, industry_tariff=0, refuse_rentals=True
     ):
         self.logger = logging.getLogger(__name__)
 
