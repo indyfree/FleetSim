@@ -59,12 +59,26 @@ class EV:
             self.debug("Remove from VPP. Too full!")
             self.vpp.remove(self)
 
-    def drive(self, rental, duration, trip_charge, end_charger, refuse=False):
+    def drive(
+        self,
+        rental,
+        duration,
+        trip_charge,
+        end_charger,
+        trip_price,
+        account,
+        refuse=True,
+    ):
         self.log("Starting trip %d." % rental)
 
         # 1. Check if enough battery for trip left
         if trip_charge > 0 and self.battery.level < trip_charge:
-            self.error("Not enough battery for the planned trip %d!" % rental)
+            self.warning("Not enough battery for the planned trip %d!" % rental)
+            self.log(
+                "Account for lost profits of %.2f EUR. Current balance %.2f."
+                % (trip_price, account.balance)
+            )
+            account.subtract(trip_price)
             return
 
         # 2. Refuse rental if other EVs in VPP can not substitute capacity
@@ -73,9 +87,17 @@ class EV:
             and self.vpp.contains(self)
             and self.vpp.commited_capacity >= self.vpp.capacity()
         ):
-            self.error(
-                "Refusing rental! EV is commited to VPP. Account for oportunity costs."
+            self.warning(
+                (
+                    "Refusing rental! ",
+                    "EV is commited to VPP and no replacement EV is available.",
+                )
             )
+            self.log(
+                "Account for lost profits of %.2f EUR. Current balance %.2f."
+                % (trip_price, account.balance)
+            )
+            account.subtract(trip_price)
             return
 
         # 3. Remove EV from VPP if allocated to it

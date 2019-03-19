@@ -96,6 +96,8 @@ class Simulation:
                         trip.trip_duration,
                         trip.start_soc - trip.end_soc,
                         trip.end_charging,
+                        trip.trip_price,
+                        account=self.account,
                         refuse=self.controller.refuse_rentals,
                     )
                 )
