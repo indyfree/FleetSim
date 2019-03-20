@@ -5,8 +5,8 @@ from datetime import datetime
 @dataclass(frozen=True)
 class Bid:
     marketperiod: int
-    quantity: float
     price: float
+    quantity: float
 
 
 class Market:
