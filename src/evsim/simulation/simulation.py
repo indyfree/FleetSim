@@ -1,5 +1,5 @@
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import pandas as pd
 import simpy
@@ -44,10 +44,10 @@ class Simulation:
         logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
         self.env.process(self.lifecycle())
 
-        while self.env.peek() < self.trips.end_time.max():
-            self.env.step()
+        # while self.env.peek() < self.trips.end_time.max():
+        #     self.env.step()
 
-        # env.run(until=self.trips.end_time.max())
+        self.env.run(until=self.trips.end_time.max())
 
         logger.info("---- RESULTS: %s -----" % self.cfg.name)
         logger.info("Energy charged as VPP: %.2fMWh" % (self.vpp.total_charged / 1000))

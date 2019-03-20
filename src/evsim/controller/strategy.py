@@ -92,9 +92,9 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         return None
 
     # NOTE: Simple strategy to always bid at predicted clearing price
-    b = Bid(timeslot, predicted_clearing_price, quantity)
+    bid = Bid(timeslot, predicted_clearing_price, quantity)
     try:
-        successful = market.bid(b)
+        successful = market.place_bid(bid)
     except ValueError as e:
         controller.warning(e)
         return None
@@ -105,20 +105,24 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
     elif consumption_plan.get(timeslot) != 0:
         raise ValueError(
             "%s was already in consumption plan"
-            % datetime.fromtimestamp(b.marketperiod)
+            % datetime.fromtimestamp(bid.marketperiod)
         )
     else:
         controller.log(
             "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
-            % (b.quantity * (15 / 60), b.price, datetime.fromtimestamp(b.marketperiod))
+            % (
+                bid.quantity * (15 / 60),
+                bid.price,
+                datetime.fromtimestamp(bid.marketperiod),
+            )
         )
 
-        _account_bid(controller, b)
+        _account_bid(controller, bid)
 
         # TODO: Better data structure to save 15 min consumption plan
         for t in [0, 5, 10]:
-            time = b.marketperiod + (60 * t)
-            consumption_plan.add(time, b.quantity)
+            time = bid.marketperiod + (60 * t)
+            consumption_plan.add(time, bid.quantity)
 
 
 def _account_bid(controller, bid):

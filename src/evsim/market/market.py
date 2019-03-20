@@ -13,17 +13,17 @@ class Market:
     def __init__(self, data):
         self.data = data
 
-    def bid(self, timeslot, price, quantity):
+    def place_bid(self, bid):
         """ Bid at intraday market given the price in EUR/MWh and quantity in kW
             at a given timeslot (POSIX timestamp).
             Takes dataframe of the market as input.
         """
 
         # NOTE: Simplified bidding behavior
-        cp = self.clearing_price(timeslot)
+        cp = self.clearing_price(bid.marketperiod)
         if cp is None:
             return False
-        elif price >= cp:
+        elif bid.price >= cp:
             return True
 
     def clearing_price(self, timeslot):
