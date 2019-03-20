@@ -117,7 +117,9 @@ def simulate(
     elif charging_strategy == "integrated":
         s = strategy.integrated
 
-    cfg = SimulationConfig(ctx.obj["NAME"], charging_speed, ev_capacity, stats)
+    cfg = SimulationConfig(
+        ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff, stats
+    )
 
     controller = Controller(cfg, s, refuse_rentals)
     sim = Simulation(cfg, controller)
