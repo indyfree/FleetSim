@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, time
 import pandas as pd
 
+from evsim.market import Bid
+
 
 def regular(controller, timeslot):
     """ Charge all EVs at regular prices"""
@@ -90,41 +92,45 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         return None
 
     # NOTE: Simple strategy to always bid at predicted clearing price
+    b = Bid(timeslot, predicted_clearing_price, quantity)
     try:
-        bid = market.bid(timeslot, predicted_clearing_price, quantity)
+        successful = market.bid(b)
     except ValueError as e:
         controller.warning(e)
         return None
 
-    if bid is None:
+    if successful is False:
         controller.log("Bid unsuccessful")
         return
     elif consumption_plan.get(timeslot) != 0:
         raise ValueError(
-            "%s was already in consumption plan" % datetime.fromtimestamp(bid[0])
+            "%s was already in consumption plan"
+            % datetime.fromtimestamp(b.marketperiod)
         )
     else:
         controller.log(
             "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
-            % (bid[1] * (15 / 60), bid[2], datetime.fromtimestamp(bid[0]))
+            % (b.quantity * (15 / 60), b.price, datetime.fromtimestamp(b.marketperiod))
         )
 
-        _account_bid(controller, bid)
+        _account_bid(controller, b)
 
         # TODO: Better data structure to save 15 min consumption plan
         for t in [0, 5, 10]:
-            time = bid[0] + (60 * t)
-            consumption_plan.add(time, bid[1])
+            time = b.marketperiod + (60 * t)
+            consumption_plan.add(time, b.quantity)
 
 
 def _account_bid(controller, bid):
     # Quantity MWh: (kw * h / 1000)
-    quantity_mwh = bid[1] * (15 / 60) / 1000
-    costs = quantity_mwh * bid[2]
+    quantity_mwh = bid.quantity * (15 / 60) / 1000
+    costs = quantity_mwh * bid.price
     regular_costs = quantity_mwh * controller.cfg.industry_tariff
     revenue = regular_costs - costs
 
-    costs = (bid[1] * (15 / 60) / 1000) * (controller.cfg.industry_tariff - bid[2])
+    costs = (bid.quantity * (15 / 60) / 1000) * (
+        controller.cfg.industry_tariff - bid.price
+    )
     controller.account.add(revenue)
     controller.log(
         "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."

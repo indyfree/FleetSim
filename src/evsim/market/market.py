@@ -1,4 +1,12 @@
+from dataclasses import dataclass
 from datetime import datetime
+
+
+@dataclass(frozen=True)
+class Bid:
+    marketperiod: int
+    quantity: float
+    price: float
 
 
 class Market:
@@ -14,9 +22,9 @@ class Market:
         # NOTE: Simplified bidding behavior
         cp = self.clearing_price(timeslot)
         if cp is None:
-            return None
+            return False
         elif price >= cp:
-            return (timeslot, quantity, price)
+            return True
 
     def clearing_price(self, timeslot):
         """ Get the clearing price for a 15-min contract at a given timeslot.
