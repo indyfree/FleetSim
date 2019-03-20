@@ -93,7 +93,10 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         return None
 
     if predicted_clearing_price > controller.cfg.industry_tariff:
-        controller.log("The industry tariff is cheaper.")
+        controller.log(
+            "The industry tariff is cheaper (%.2f > %.2f)"
+            % (predicted_clearing_price, controller.cfg.industry_tariff)
+        )
         return None
 
     # NOTE: Simple strategy to always bid at predicted clearing price
