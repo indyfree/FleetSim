@@ -6,7 +6,7 @@ import time
 
 from evsim.controller import Controller, strategy
 from evsim.data import loader
-from evsim.simulation import Simulation
+from evsim.simulation import Simulation, SimulationConfig
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,9 @@ def simulate(
         s = strategy.integrated
 
     controller = Controller(s, charging_speed, industry_tariff, refuse_rentals)
-    sim = Simulation(ctx.obj["NAME"], controller, charging_speed, ev_capacity, stats)
+
+    cfg = SimulationConfig(ctx.obj["NAME"], charging_speed, ev_capacity, stats)
+    sim = Simulation(cfg, controller)
 
     click.echo("--- Starting Simulation: ---")
     start = time.time()

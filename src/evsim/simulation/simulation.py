@@ -1,4 +1,5 @@
 from datetime import datetime
+from dataclasses import dataclass
 import logging
 import pandas as pd
 import simpy
@@ -9,27 +10,32 @@ from evsim import data, entities
 logger = logging.getLogger(__name__)
 
 
-class Simulation:
-    def __init__(self, name, controller, charging_speed, ev_capacity, save):
+@dataclass
+class SimulationConfig:
+    name: str
+    charging_speed: float
+    ev_capacity: float
+    save: bool
 
-        self.name = name
-        self.charging_speed = charging_speed
-        self.ev_capacity = ev_capacity
-        self.save = save
+
+class Simulation:
+    def __init__(self, cfg, controller):
+
+        self.cfg = cfg
 
         self.account = Account()
         self.controller = controller
 
     def start(self):
         df = data.load_car2go_trips(False)
-        stats = list() if self.save else None
+        stats = list() if self.cfg.save else None
 
         env = simpy.Environment(initial_time=df.start_time.min())
         vpp = entities.VPP(
             env,
             "VPP",
             num_evs=len(df.EV.unique()),
-            charger_capacity=self.charging_speed,
+            charger_capacity=self.cfg.charging_speed,
         )
 
         # Pass references to controller
@@ -37,23 +43,30 @@ class Simulation:
         self.controller.account = self.account
         self.controller.vpp = vpp
 
-        logger.info("---- STARTING SIMULATION: %s -----" % self.name)
+        logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
         env.process(self.lifecycle(env, vpp, df, stats))
-        env.run(until=df.end_time.max())
 
-        logger.info("---- RESULTS: %s -----" % self.name)
+        while env.peek() < df.end_time.max():
+            env.step()
+
+        # env.run(until=df.end_time.max())
+
+        logger.info("---- RESULTS: %s -----" % self.cfg.name)
         logger.info("Energy charged as VPP: %.2fMWh" % (vpp.total_charged / 1000))
         logger.info(
             "Energy that couldn't be charged : %.2fMWh" % (vpp.imbalance / 1000)
         )
         logger.info("Total balance: %.2fEUR" % self.account.balance)
 
-        if self.save:
+        if self.cfg.save:
             self.save_stats(
                 stats,
-                "./logs/stats-%s.csv" % self.name,
+                "./logs/stats-%s.csv" % self.cfg.name,
                 datetime.fromtimestamp(env.now),
             )
+
+    def step(self):
+        pass
 
     def lifecycle(self, env, vpp, df, stats):
         evs = {}
@@ -84,8 +97,8 @@ class Simulation:
                         vpp,
                         trip.EV,
                         trip.start_soc,
-                        self.ev_capacity,
-                        self.charging_speed,
+                        self.cfg.ev_capacity,
+                        self.cfg.charging_speed,
                     )
 
                 # 4. Start trip with EV
