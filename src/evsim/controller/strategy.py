@@ -85,7 +85,7 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         controller.warning(e)
         return None
 
-    if predicted_clearing_price > controller.industry_tariff:
+    if predicted_clearing_price > controller.cfg.industry_tariff:
         controller.log("The industry tariff is cheaper.")
         return None
 
@@ -121,10 +121,10 @@ def _account_bid(controller, bid):
     # Quantity MWh: (kw * h / 1000)
     quantity_mwh = bid[1] * (15 / 60) / 1000
     costs = quantity_mwh * bid[2]
-    regular_costs = quantity_mwh * controller.industry_tariff
+    regular_costs = quantity_mwh * controller.cfg.industry_tariff
     revenue = regular_costs - costs
 
-    costs = (bid[1] * (15 / 60) / 1000) * (controller.industry_tariff - bid[2])
+    costs = (bid[1] * (15 / 60) / 1000) * (controller.cfg.industry_tariff - bid[2])
     controller.account.add(revenue)
     controller.log(
         "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
