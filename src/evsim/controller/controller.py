@@ -7,10 +7,10 @@ from evsim.market import Market
 
 
 class Controller:
-    def __init__(
-        self, strategy, charger_capacity=0, industry_tariff=0, refuse_rentals=True
-    ):
+    def __init__(self, cfg, strategy, refuse_rentals=True):
         self.logger = logging.getLogger(__name__)
+
+        self.cfg = cfg
 
         self.balancing = Market(loader.load_balancing_prices())
         self.balancing_plan = ConsumptionPlan("Balancing")
@@ -25,10 +25,6 @@ class Controller:
         self.env = None
         self.account = None
         self.vpp = None
-
-        # Simulation parameters needed for strategy
-        self.charger_capacity = charger_capacity
-        self.industry_tariff = industry_tariff
 
         # Strategy specific optionals
         self.refuse_rentals = refuse_rentals
@@ -82,7 +78,7 @@ class Controller:
         """ Charge according to a predifined consumption plan"""
 
         planned_kw = plan.pop(timeslot)
-        num_plan_evs = int(planned_kw // self.charger_capacity)
+        num_plan_evs = int(planned_kw // self.cfg.charging_power)
         self.log(
             "Consumption plan (%s) for %s: %.2fkWh, required EVs: %d."
             % (
@@ -95,7 +91,7 @@ class Controller:
 
         # 1. Handle overcommitments
         if num_plan_evs > len(available_evs):
-            imbalance_kw = (num_plan_evs - len(available_evs)) * self.charger_capacity
+            imbalance_kw = (num_plan_evs - len(available_evs)) * self.cfg.charging_power
             self.vpp.imbalance += imbalance_kw * (15 / 60)
             self.warning(
                 (
@@ -115,7 +111,7 @@ class Controller:
             % (len(plan_evs), len(self.vpp.evs), plan.name)
         )
         self.dispatch(plan_evs)
-        self.vpp.total_charged += (len(plan_evs) * self.charger_capacity) * (15 / 60)
+        self.vpp.total_charged += (len(plan_evs) * self.cfg.charging_power) * (15 / 60)
 
         rest_evs = available_evs[num_plan_evs:]
         return rest_evs
