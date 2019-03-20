@@ -1,5 +1,8 @@
 import gym
 
+from evsim.controller import Controller, strategy
+from evsim.simulation import Simulation, SimulationConfig
+
 # from gym import error, spaces, utils
 # from gym.utils import seeding
 
@@ -12,10 +15,13 @@ class FleetEnv(gym.Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(self):
-        pass
+
+        cfg = SimulationConfig()
+        controller = Controller(cfg, strategy.intraday)
+        self.sim = Simulation(cfg, controller)
 
     def step(self, action):
-        pass
+        self.sim.step()
 
     def reset(self):
         pass

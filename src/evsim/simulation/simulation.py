@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class SimulationConfig:
-    name: str
+    name: str = str(datetime.now().strftime("%Y%m%d-%H%M%S"))
     charging_power: float = 3.6
     ev_capacity: float = 17.6
     industry_tariff: float = 150
-    save_stats: bool = True
+    save_stats: bool = False
 
 
 class Simulation:
@@ -30,7 +30,8 @@ class Simulation:
         self.trips = data.load_car2go_trips(False)
         self.stats = list()
 
-        self.env = simpy.Environment(initial_time=self.trips.start_time.min())
+        self.sim_time = self.trips.start_time.min()
+        self.env = simpy.Environment(initial_time=self.sim_time)
         self.vpp = entities.VPP(
             self.env, "VPP", len(self.trips.EV.unique()), cfg.charging_power
         )
@@ -59,8 +60,8 @@ class Simulation:
         if self.cfg.save_stats is True:
             self.save_stats("./logs/stats-%s.csv" % self.cfg.name)
 
-    def step(self):
-        pass
+    def step(self, minutes=5):
+        self.env.run(until=(self.env.now + (60 * minutes)))
 
     def lifecycle(self):
         evs = {}
