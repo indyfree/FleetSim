@@ -10,12 +10,13 @@ from evsim import data, entities
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SimulationConfig:
     name: str
-    charging_speed: float
-    ev_capacity: float
-    save: bool
+    charging_power: float = 3.6
+    ev_capacity: float = 17.6
+    industry_tariff: float = 150
+    save_stats: bool = True
 
 
 class Simulation:
@@ -26,84 +27,80 @@ class Simulation:
         self.account = Account()
         self.controller = controller
 
-    def start(self):
-        df = data.load_car2go_trips(False)
-        stats = list() if self.cfg.save else None
+        self.trips = data.load_car2go_trips(False)
+        self.stats = list()
 
-        env = simpy.Environment(initial_time=df.start_time.min())
-        vpp = entities.VPP(
-            env,
-            "VPP",
-            num_evs=len(df.EV.unique()),
-            charger_capacity=self.cfg.charging_speed,
+        self.env = simpy.Environment(initial_time=self.trips.start_time.min())
+        self.vpp = entities.VPP(
+            self.env, "VPP", len(self.trips.EV.unique()), cfg.charging_power
         )
 
         # Pass references to controller
-        self.controller.env = env
+        self.controller.env = self.env
         self.controller.account = self.account
-        self.controller.vpp = vpp
+        self.controller.vpp = self.vpp
 
+    def start(self):
         logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
-        env.process(self.lifecycle(env, vpp, df, stats))
+        self.env.process(self.lifecycle())
 
-        while env.peek() < df.end_time.max():
-            env.step()
+        while self.env.peek() < self.trips.end_time.max():
+            self.env.step()
 
-        # env.run(until=df.end_time.max())
+        # env.run(until=self.trips.end_time.max())
 
         logger.info("---- RESULTS: %s -----" % self.cfg.name)
-        logger.info("Energy charged as VPP: %.2fMWh" % (vpp.total_charged / 1000))
+        logger.info("Energy charged as VPP: %.2fMWh" % (self.vpp.total_charged / 1000))
         logger.info(
-            "Energy that couldn't be charged : %.2fMWh" % (vpp.imbalance / 1000)
+            "Energy that couldn't be charged : %.2fMWh" % (self.vpp.imbalance / 1000)
         )
         logger.info("Total balance: %.2fEUR" % self.account.balance)
 
-        if self.cfg.save:
-            self.save_stats(
-                stats,
-                "./logs/stats-%s.csv" % self.cfg.name,
-                datetime.fromtimestamp(env.now),
-            )
+        if self.cfg.save_stats is True:
+            self.save_stats("./logs/stats-%s.csv" % self.cfg.name)
 
     def step(self):
         pass
 
-    def lifecycle(self, env, vpp, df, stats):
+    def lifecycle(self):
         evs = {}
 
         # Timerange from start to end in 5 minute intervals
         timeslots = pd.date_range(
-            datetime.utcfromtimestamp(df.start_time.min()),
-            datetime.utcfromtimestamp(df.end_time.max()),
+            datetime.utcfromtimestamp(self.trips.start_time.min()),
+            datetime.utcfromtimestamp(self.trips.end_time.max()),
             freq="5min",
         )
         for _ in timeslots:
             logger.info(
                 "[%s] - ---------- TIMESLOT %s ----------"
-                % (datetime.fromtimestamp(env.now), datetime.fromtimestamp(env.now))
+                % (
+                    datetime.fromtimestamp(self.env.now),
+                    datetime.fromtimestamp(self.env.now),
+                )
             )
 
             # 1. Allocate consumption plan
-            vpp.commited_capacity = self.controller.planned_kw(env.now)
+            self.vpp.commited_capacity = self.controller.planned_kw(self.env.now)
 
             # 2. Find trips at the timeslot
-            trips = df.loc[df["start_time"] == env.now]
-            for trip in trips.itertuples():
+            starting_trips = self.trips.loc[self.trips["start_time"] == self.env.now]
+            for trip in starting_trips.itertuples():
 
                 # 3. Add EVs to Fleet
                 if trip.EV not in evs:
                     evs[trip.EV] = entities.EV(
-                        env,
-                        vpp,
+                        self.env,
+                        self.vpp,
                         trip.EV,
                         trip.start_soc,
                         self.cfg.ev_capacity,
-                        self.cfg.charging_speed,
+                        self.cfg.charging_power,
                     )
 
                 # 4. Start trip with EV
                 ev = evs[trip.EV]
-                env.process(
+                self.env.process(
                     ev.drive(
                         trip.Index,
                         trip.trip_duration,
@@ -116,29 +113,29 @@ class Simulation:
                 )
 
             # NOTE: Wait 1 sec later let all trips start first
-            yield env.timeout(1)
+            yield self.env.timeout(1)
 
             # 5. Save simulation stats if enabled
-            if stats is not None:
-                stats.append(
+            if self.cfg.save_stats:
+                self.stats.append(
                     [
-                        env.now - 1,
+                        self.env.now - 1,
                         int(len(evs)),
                         round(self._fleet_soc(evs), 2),
-                        int(len(vpp.evs)),
-                        round(vpp.avg_soc(), 2),
-                        round(vpp.capacity(), 2),
-                        round(vpp.total_charged, 2),
+                        int(len(self.vpp.evs)),
+                        round(self.vpp.avg_soc(), 2),
+                        round(self.vpp.capacity(), 2),
+                        round(self.vpp.total_charged, 2),
                         round(self.account.balance, 2),
-                        round(vpp.imbalance, 2),
+                        round(self.vpp.imbalance, 2),
                     ]
                 )
 
             # 6. Centrally control charging
-            self.controller.charge_fleet(env.now - 1)
+            self.controller.charge_fleet(self.env.now - 1)
 
             # 7. Wait 5 min timestep
-            yield env.timeout((5 * 60) - 1)
+            yield self.env.timeout((5 * 60) - 1)
 
     def _fleet_soc(self, evs):
         if len(evs) == 0:
@@ -150,9 +147,9 @@ class Simulation:
 
         return round(soc / len(evs), 2)
 
-    def save_stats(self, stats, filename, timestamp):
+    def save_stats(self, filename):
         df_stats = pd.DataFrame(
-            data=stats,
+            data=self.stats,
             columns=[
                 "timestamp",
                 "fleet",
