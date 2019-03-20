@@ -3,14 +3,14 @@ import logging
 
 
 class VPP:
-    def __init__(self, env, name, num_evs, charger_capacity):
+    def __init__(self, env, name, num_evs, charging_power):
         self.logger = logging.getLogger(__name__)
 
         self.env = env
-        self.evs = dict()
         self.name = name
-        self.charger_capacity = charger_capacity
+        self.charging_power = charging_power
 
+        self.evs = dict()
         self.commited_capacity = 0
         self.imbalance = 0
         self.total_charged = 0
@@ -52,7 +52,7 @@ class VPP:
             return 0
 
     def capacity(self):
-        return len(self.evs) * self.charger_capacity
+        return len(self.evs) * self.charging_power
 
     def contains(self, ev):
         if ev.name in self.evs:
