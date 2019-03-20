@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
 from operator import attrgetter
-import sys
 
 from evsim.data import loader
 from evsim.market import Market
@@ -149,14 +148,14 @@ class Controller:
         Takes a dataframe and timeslot (POSIX timestamp) as input.
         Returns the predicted fleet capacity in kW.
         """
-        cap = sys.maxsize
+        cap = float("inf")
         for t in [0, 5, 10]:
             try:
                 cap = min(cap, self.predict_capacity(timeslot + (60 * t)))
             except ValueError:
                 pass
 
-        if cap == sys.maxsize:
+        if cap == float("inf"):
             raise ValueError(
                 "Capacity prediction failed: 15 min timeslot %s is not in data."
                 % datetime.fromtimestamp(timeslot)
