@@ -61,13 +61,6 @@ def cli(ctx, debug, name, logs):
     show_default=True,
 )
 @click.option(
-    "-r",
-    "--ev-range",
-    default=160,
-    help="Maximal Range of EV in km.",
-    show_default=True,
-)
-@click.option(
     "-i",
     "--industry-tariff",
     default=150,
@@ -101,7 +94,6 @@ def cli(ctx, debug, name, logs):
 def simulate(
     ctx,
     ev_capacity,
-    ev_range,
     charging_speed,
     charging_strategy,
     industry_tariff,
@@ -111,7 +103,6 @@ def simulate(
     click.echo("--- Simulation Settings: ---")
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
     click.echo("Writing Logs to file is %s." % (ctx.obj["LOGS"] and "on" or "off"))
-    click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
@@ -126,9 +117,9 @@ def simulate(
     elif charging_strategy == "integrated":
         s = strategy.integrated
 
-    controller = Controller(s, charging_speed, industry_tariff, refuse_rentals)
-
     cfg = SimulationConfig(ctx.obj["NAME"], charging_speed, ev_capacity, stats)
+
+    controller = Controller(cfg, s, refuse_rentals)
     sim = Simulation(cfg, controller)
 
     click.echo("--- Starting Simulation: ---")
