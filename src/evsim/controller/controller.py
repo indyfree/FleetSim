@@ -80,13 +80,8 @@ class Controller:
         planned_kw = plan.pop(timeslot)
         num_plan_evs = int(planned_kw // self.cfg.charging_power)
         self.log(
-            "Consumption plan (%s) for %s: %.2fkWh, required EVs: %d."
-            % (
-                plan.name,
-                datetime.fromtimestamp(timeslot),
-                planned_kw * (15 / 60),
-                num_plan_evs,
-            )
+            "Consumption plan (%s): %.2fkWh, required EVs: %d."
+            % (plan.name, planned_kw * (15 / 60), num_plan_evs)
         )
 
         # 1. Handle overcommitments
