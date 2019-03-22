@@ -1,19 +1,12 @@
 import logging
 import os
 import pandas as pd
-from pathlib import Path
 
-from evsim.data import balancing, car2go, intraday
+from evsim.data import balancing, car2go, files, intraday
 
 logger = logging.getLogger(__name__)
 
-# Base Paths
-PROJECT_DIR = str(Path(__file__).resolve().parents[3])
-RAW_DATA_PATH = PROJECT_DIR + "/data/raw"
-CAR2GO_PATH = RAW_DATA_PATH + "/car2go/"
-PROCESSED_DATA_PATH = PROJECT_DIR + "/data/processed"
-
-# Raw file paths
+# CAR2GO Files to include
 CAR2GO_FILES = [
     # "stuttgart.2016.03.22-2016.11.30.csv",
     # "stuttgart.2016.12.01-2017.02.22.csv",
@@ -21,25 +14,6 @@ CAR2GO_FILES = [
     # "stuttgart.2017.05.01-2017.10.31.csv",
     # "stuttgart.2017.11.01-2018.01.31.csv",
 ]
-ACTIVATED_CONTROL_RESERVE_FILE = (
-    RAW_DATA_PATH + "/balancing/activated_control_reserve_2016_2017.csv"
-)
-TENDER_RESULTS_FILE = RAW_DATA_PATH + "/balancing/tender_results_2016_2017.csv"
-PROCOM_TRADES_FILE = RAW_DATA_PATH + "/intraday/procom_data.csv"
-
-
-# Processed Car2Go file paths
-PROCESSED_TRIPS_FILE = PROCESSED_DATA_PATH + "/trips.pkl"
-PROCESSED_CAPACITY_FILE = PROCESSED_DATA_PATH + "/capacity.pkl"
-
-# Processed files paths
-PROCESSED_CONTROL_RESERVE_FILE = PROCESSED_DATA_PATH + "/activated_control_reserve.csv"
-PROCESSED_TENDER_RESULTS_FILE = PROCESSED_DATA_PATH + "/tender_results.csv"
-PROCESSED_BALANCING_PRICES_FILE = PROCESSED_DATA_PATH + "/balancing_prices.csv"
-PROCESSED_INTRADAY_PRICES_FILE = PROCESSED_DATA_PATH + "/intraday_prices.csv"
-
-# Simulation result file paths
-SIMULATION_BASELINE_FILE = PROJECT_DIR + "/logs/stats-baseline.csv"
 
 # Default values
 CHARGING_SPEED = 3.6
@@ -59,12 +33,11 @@ def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_
 
 
 def load_simulation_baseline():
-    if not os.path.isfile(SIMULATION_BASELINE_FILE):
+    if not files.simulation_baseline.is_file():
         raise FileNotFoundError(
-            "%s not found. Run baseline simulation first." % SIMULATION_BASELINE_FILE
+            "%s not found. Run baseline simulation first." % files.simulation_baseline
         )
-
-    return pd.read_csv(SIMULATION_BASELINE_FILE)
+    return pd.read_csv(files.simulation_baseline)
 
 
 def load_car2go_trips(
