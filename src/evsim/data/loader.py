@@ -1,19 +1,9 @@
 import logging
-import os
 import pandas as pd
 
 from evsim.data import balancing, car2go, files, intraday
 
 logger = logging.getLogger(__name__)
-
-# CAR2GO Files to include
-CAR2GO_FILES = [
-    # "stuttgart.2016.03.22-2016.11.30.csv",
-    # "stuttgart.2016.12.01-2017.02.22.csv",
-    "stuttgart.2017.02.23-2017-05-01.csv",
-    # "stuttgart.2017.05.01-2017.10.31.csv",
-    # "stuttgart.2017.11.01-2018.01.31.csv",
-]
 
 # Default values
 CHARGING_SPEED = 3.6
@@ -50,15 +40,14 @@ def load_car2go_trips(
     """Loads processed trip data into a dataframe, process again if needed"""
 
     # Return early if processed files is present
-    if rebuild is True or not os.path.isfile(PROCESSED_TRIPS_FILE):
-        if not os.path.exists(PROCESSED_DATA_PATH):
-            os.makedirs(PROCESSED_DATA_PATH)
+    if rebuild is True or not files.trips.is_file():
+        files.processed_data_dir.mkdir(parents=True, exist_ok=True)
 
-        files = []
-        for f in CAR2GO_FILES:
+        df = []
+        for f in files.car2go:
             logger.info("Reading %s..." % f)
-            files.append(pd.read_csv(CAR2GO_PATH + f))
-        df = pd.concat(files)
+            df.append(pd.read_csv(files.car2go_dir / f))
+        df = pd.concat(df)
 
         df_trips = car2go.process(
             df, ev_range, car2go_price, duration_threshold, infer_chargers
@@ -66,11 +55,12 @@ def load_car2go_trips(
         df_trips = (
             df_trips.sort_values(["start_time"]).reset_index().drop(["index"], axis=1)
         )
-        df_trips.to_csv(PROCESSED_TRIPS_FILE.strip(".pkl") + ".csv")
-        pd.to_pickle(df_trips, PROCESSED_TRIPS_FILE)
-        logger.info("Wrote all processed trips files to %s" % PROCESSED_TRIPS_FILE)
 
-    return pd.read_pickle(PROCESSED_TRIPS_FILE)
+        df_trips.to_csv(_change_ext(files.trips, ".csv"))
+        pd.to_pickle(df_trips, files.trips)
+        logger.info("Wrote all processed trips files to %s" % files.trips)
+
+    return pd.read_pickle(files.trips)
 
 
 def load_car2go_capacity(
@@ -83,55 +73,53 @@ def load_car2go_capacity(
     """Loads processed capacity data into a dataframe, process again if needed"""
     df_trips = load_car2go_trips(ev_range)
 
-    if rebuild is True or not os.path.isfile(PROCESSED_CAPACITY_FILE):
-        logger.info("Processing %s..." % PROCESSED_CAPACITY_FILE)
+    if rebuild is True or not files.capacity.is_file():
+        logger.info("Processing %s..." % files.capacity)
         df = car2go.calculate_capacity(
             df_trips, charging_speed, ev_capacity, simulate_charging
         )
-        df.to_csv(PROCESSED_CAPACITY_FILE.strip(".pkl") + ".csv")
-        pd.to_pickle(df, PROCESSED_CAPACITY_FILE)
-        logger.info("Wrote calculated car2go demand to %s" % PROCESSED_CAPACITY_FILE)
+        df.to_csv(_change_ext(files.capacity, ".csv"))
+        pd.to_pickle(df, files.capacity)
+        logger.info("Wrote calculated car2go demand to %s" % files.capacity)
 
-    return pd.read_pickle(PROCESSED_CAPACITY_FILE)
+    return pd.read_pickle(files.capacity)
 
 
 def load_intraday_prices(rebuild=False):
     """Loads intraday prices, calculate again if needed"""
 
-    if rebuild is True or not os.path.isfile(PROCESSED_INTRADAY_PRICES_FILE):
-        logger.info("Processing %s..." % PROCOM_TRADES_FILE)
+    if rebuild is True or not files.intraday_prices.is_file():
+        logger.info("Processing %s..." % files.procom_trades)
         df = pd.read_csv(
-            PROCOM_TRADES_FILE,
+            files.procom_trades,
             sep=",",
             index_col=False,
             dayfirst=True,
             parse_dates=[1, 9],
             infer_datetime_format=True,
         )
-        df[df["product"] == "H"].to_pickle(PROCESSED_DATA_PATH + "/procom_H.pkl")
-        df[df["product"] == "Q"].to_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
-        df[df["product"] == "B"].to_pickle(PROCESSED_DATA_PATH + "/procom_B.pkl")
+        df[df["product"] == "H"].to_pickle(files.processed_data_dir / "procom_H.pkl")
+        df[df["product"] == "Q"].to_pickle(files.processed_data_dir / "procom_Q.pkl")
+        df[df["product"] == "B"].to_pickle(files.processed_data_dir / "procom_B.pkl")
 
-        df_q = pd.read_pickle(PROCESSED_DATA_PATH + "/procom_Q.pkl")
-
+        df_q = pd.read_pickle(files.processed_data_dir / "procom_Q.pkl")
         df_q = intraday.calculate_clearing_prices(df_q)
-        df_q.to_csv(PROCESSED_INTRADAY_PRICES_FILE, index=False)
+        df_q.to_csv(files.intraday_prices, index=False)
         logger.info(
-            "Wrote calculated intraday clearing prices to %s"
-            % PROCESSED_INTRADAY_PRICES_FILE
+            "Wrote calculated intraday clearing prices to %s" % files.intraday_prices
         )
 
     return pd.read_csv(
-        PROCESSED_INTRADAY_PRICES_FILE, parse_dates=[0], infer_datetime_format=True
+        files.intraday_prices, parse_dates=[0], infer_datetime_format=True
     )
 
 
 def load_balancing_prices(rebuild=False):
     """Loads balancing prices, process again if needed"""
 
-    if rebuild is True or not os.path.isfile(PROCESSED_TENDER_RESULTS_FILE):
+    if rebuild is True or files.processed_tender_results.is_file():
         df_results = pd.read_csv(
-            TENDER_RESULTS_FILE,
+            files.tender_results,
             sep=";",
             decimal=",",
             dayfirst=True,
@@ -140,17 +128,17 @@ def load_balancing_prices(rebuild=False):
         )
 
         df_results = balancing.process_tender_results(df_results)
-        df_results.to_csv(PROCESSED_TENDER_RESULTS_FILE, index=False)
+        df_results.to_csv(files.processed_tender_results, index=False)
         logger.info(
-            "Wrote processed tender results to %s" % PROCESSED_TENDER_RESULTS_FILE
+            "Wrote processed tender results to %s" % files.processed_tender_results
         )
     df_results = pd.read_csv(
-        PROCESSED_TENDER_RESULTS_FILE, parse_dates=[0, 1], infer_datetime_format=True
+        files.processed_tender_results, parse_dates=[0, 1], infer_datetime_format=True
     )
 
-    if rebuild is True or not os.path.isfile(PROCESSED_CONTROL_RESERVE_FILE):
+    if rebuild is True or files.control_reserve.is_file():
         df_activated_srl = pd.read_csv(
-            ACTIVATED_CONTROL_RESERVE_FILE,
+            files.activated_balancing,
             sep=";",
             decimal=",",
             thousands=".",
@@ -160,21 +148,23 @@ def load_balancing_prices(rebuild=False):
         )
 
         df_activated_srl = balancing.process_activated_reserve(df_activated_srl)
-        df_activated_srl.to_csv(PROCESSED_CONTROL_RESERVE_FILE, index=False)
+        df_activated_srl.to_csv(files.control_reserve, index=False)
         logger.info(
-            "Wrote processed activated control reserve to %s"
-            % PROCESSED_CONTROL_RESERVE_FILE
+            "Wrote processed activated control reserve to %s" % files.control_reserve
         )
-    df_activated_srl = pd.read_csv(PROCESSED_CONTROL_RESERVE_FILE)
+    df_activated_srl = pd.read_csv(files.control_reserve)
 
-    if rebuild is True or not os.path.isfile(PROCESSED_BALANCING_PRICES_FILE):
+    if rebuild is True or files.balancing_prices.is_file():
         df = balancing.calculate_clearing_prices(df_results, df_activated_srl)
-        df.to_csv(PROCESSED_BALANCING_PRICES_FILE, index=False)
+        df.to_csv(files.balancing_prices, index=False)
         logger.info(
-            "Wrote processed balancing clearing prices to %s"
-            % PROCESSED_BALANCING_PRICES_FILE
+            "Wrote processed balancing clearing prices to %s" % files.balancing_prices
         )
 
     return pd.read_csv(
-        PROCESSED_BALANCING_PRICES_FILE, parse_dates=[0], infer_datetime_format=True
+        files.balancing_prices, parse_dates=[0], infer_datetime_format=True
     )
+
+
+def _change_ext(path, ext):
+    return path.parent / (path.stem + ext)
