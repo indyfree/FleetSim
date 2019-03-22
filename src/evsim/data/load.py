@@ -16,13 +16,13 @@ DURATION_THRESHOLD = 60 * 24 * 2  # 2 Days in seconds
 
 
 def rebuild(charging_speed=CHARGING_SPEED, ev_capacity=EV_CAPACITY, ev_range=EV_RANGE):
-    load_car2go_trips(ev_range, rebuild=True)
-    load_car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
-    load_balancing_prices(rebuild=True)
-    load_intraday_prices(rebuild=True)
+    car2go_trips(ev_range, rebuild=True)
+    car2go_capacity(charging_speed, ev_capacity, ev_range, rebuild=True)
+    balancing_prices(rebuild=True)
+    intraday_prices(rebuild=True)
 
 
-def load_simulation_baseline():
+def simulation_baseline():
     if not files.simulation_baseline.is_file():
         raise FileNotFoundError(
             "%s not found. Run baseline simulation first." % files.simulation_baseline
@@ -30,7 +30,7 @@ def load_simulation_baseline():
     return pd.read_csv(files.simulation_baseline)
 
 
-def load_car2go_trips(
+def car2go_trips(
     ev_range=EV_RANGE,
     car2go_price=CAR2GO_PRICE,
     duration_threshold=DURATION_THRESHOLD,
@@ -63,7 +63,7 @@ def load_car2go_trips(
     return pd.read_pickle(files.trips)
 
 
-def load_car2go_capacity(
+def car2go_capacity(
     charging_speed=CHARGING_SPEED,
     ev_capacity=EV_CAPACITY,
     ev_range=EV_RANGE,
@@ -71,7 +71,7 @@ def load_car2go_capacity(
     rebuild=False,
 ):
     """Loads processed capacity data into a dataframe, process again if needed"""
-    df_trips = load_car2go_trips(ev_range)
+    df_trips = car2go_trips(ev_range)
 
     if rebuild is True or not files.capacity.is_file():
         logger.info("Processing %s..." % files.capacity)
@@ -85,7 +85,7 @@ def load_car2go_capacity(
     return pd.read_pickle(files.capacity)
 
 
-def load_intraday_prices(rebuild=False):
+def intraday_prices(rebuild=False):
     """Loads intraday prices, calculate again if needed"""
 
     if rebuild is True or not files.intraday_prices.is_file():
@@ -114,7 +114,7 @@ def load_intraday_prices(rebuild=False):
     )
 
 
-def load_balancing_prices(rebuild=False):
+def balancing_prices(rebuild=False):
     """Loads balancing prices, process again if needed"""
 
     if rebuild is True or files.processed_tender_results.is_file():

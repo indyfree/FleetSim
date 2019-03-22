@@ -5,7 +5,7 @@ import os
 import time
 
 from evsim.controller import Controller, strategy
-from evsim.data import loader
+from evsim.data import load
 from evsim.simulation import Simulation, SimulationConfig
 
 logger = logging.getLogger(__name__)
@@ -167,7 +167,7 @@ def build(ctx):
 )
 def all(ev_capacity, ev_range, charging_speed):
     click.echo("Building all data sources...")
-    loader.rebuild(charging_speed, ev_capacity, ev_range)
+    load.rebuild(charging_speed, ev_capacity, ev_range)
 
 
 @build.command(help="(Re)build car2go trip data.")
@@ -187,7 +187,7 @@ def trips(ev_range, infer_chargers):
     click.echo("Maximal EV range is set to %skm." % ev_range)
     click.echo("Building car2go trip data...")
     click.echo("Infer Chargers is %s." % (infer_chargers and "on" or "off"))
-    loader.load_car2go_trips(ev_range, infer_chargers=infer_chargers, rebuild=True)
+    load.car2go_trips(ev_range, infer_chargers=infer_chargers, rebuild=True)
 
 
 @build.command(name="capacity", help="(Re)build car2go capacity data.")
@@ -207,7 +207,7 @@ def car2go_capacity(ev_capacity, ev_range, charging_speed, simulate_charging):
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Building car2go capacity data...")
-    loader.load_car2go_capacity(
+    load.car2go_capacity(
         charging_speed,
         ev_capacity,
         ev_range,
@@ -219,13 +219,13 @@ def car2go_capacity(ev_capacity, ev_range, charging_speed, simulate_charging):
 @build.command(help="(Re)build intraday price data.")
 def intraday_prices():
     click.echo("Rebuilding intraday price data...")
-    loader.load_intraday_prices(rebuild=True)
+    load.intraday_prices(rebuild=True)
 
 
 @build.command(help="(Re)build balancing price data.")
 def balancing_prices():
     click.echo("Rebuilding balanacing price data...")
-    loader.load_balancing_prices(rebuild=True)
+    load.balancing_prices(rebuild=True)
 
 
 @cli.group(help="EV Fleet Controller")

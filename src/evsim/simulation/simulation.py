@@ -5,7 +5,8 @@ import pandas as pd
 import simpy
 
 from . import Account
-from evsim import data, entities
+from evsim import entities
+from evsim.data import load
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class Simulation:
         self.account = Account()
         self.controller = controller
 
-        self.trips = data.load_car2go_trips(False)
+        self.trips = load.car2go_trips(False)
         self.stats = list()
 
         self.sim_time = self.trips.start_time.min()

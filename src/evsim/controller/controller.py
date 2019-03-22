@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 from operator import attrgetter
 
-from evsim.data import loader
+from evsim.data import load
 from evsim.market import Market
 
 
@@ -12,13 +12,13 @@ class Controller:
 
         self.cfg = cfg
 
-        self.balancing = Market(loader.load_balancing_prices())
+        self.balancing = Market(load.balancing_prices())
         self.balancing_plan = ConsumptionPlan("Balancing")
 
-        self.intraday = Market(loader.load_intraday_prices())
+        self.intraday = Market(load.intraday_prices())
         self.intraday_plan = ConsumptionPlan("Intraday")
 
-        self.fleet_capacity = loader.load_simulation_baseline()
+        self.fleet_capacity = load.simulation_baseline()
         self.strategy = strategy
 
         # Reference simulation objects
