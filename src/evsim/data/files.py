@@ -2,9 +2,9 @@ from pathlib import Path
 
 # Search data dir
 search_dirs = [
-    Path(__file__).resolve().parents[3] / "data",
     Path("./data"),
     Path("../data"),
+    Path(__file__).resolve().parents[3] / "data",
 ]
 data_dir = None
 for p in search_dirs:
