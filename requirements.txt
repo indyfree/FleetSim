@@ -1,7 +1,7 @@
 # Package dependencies
 setuptools==40.8.0
 gym==0.12.0
-numpy==1.16.0
+numpy==1.16.2
 seaborn==0.9.0
 Click==7.0
 simpy==3.0.11
