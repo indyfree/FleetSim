@@ -117,7 +117,7 @@ def intraday_prices(rebuild=False):
 def balancing_prices(rebuild=False):
     """Loads balancing prices, process again if needed"""
 
-    if rebuild is True or files.processed_tender_results.is_file():
+    if rebuild is True or not files.processed_tender_results.is_file():
         df_results = pd.read_csv(
             files.tender_results,
             sep=";",
@@ -136,7 +136,7 @@ def balancing_prices(rebuild=False):
         files.processed_tender_results, parse_dates=[0, 1], infer_datetime_format=True
     )
 
-    if rebuild is True or files.control_reserve.is_file():
+    if rebuild is True or not files.control_reserve.is_file():
         df_activated_srl = pd.read_csv(
             files.activated_balancing,
             sep=";",
@@ -154,7 +154,7 @@ def balancing_prices(rebuild=False):
         )
     df_activated_srl = pd.read_csv(files.control_reserve)
 
-    if rebuild is True or files.balancing_prices.is_file():
+    if rebuild is True or not files.balancing_prices.is_file():
         df = balancing.calculate_clearing_prices(df_results, df_activated_srl)
         df.to_csv(files.balancing_prices, index=False)
         logger.info(
