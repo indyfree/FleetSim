@@ -1,13 +1,18 @@
+# Package dependencies
+setuptools==40.8.0
+gym==0.12.0
+numpy==1.16.0
+seaborn==0.9.0
+Click==7.0
+simpy==3.0.11
+pandas==0.23.4
+matplotlib==3.0.2
+dataclasses==0.6
+
+# Project dependencies
 autopep8
-click
 flake8
 flake8-bugbear
-gym
 jupyter
 jupyter-contrib-nbextensions
 jupyter-nbextensions-configurator
-matplotlib
-pandas
-scikit-learn
-seaborn
-simpy
