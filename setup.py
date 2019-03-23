@@ -8,7 +8,14 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
-    install_requires=["click", "gym", "pandas", "numpy>=1.16.1", "simpy >=3.0.0"],
+    install_requires=[
+        "Click>=7.0",
+        "dataclasses>=0.6",
+        "gym>=0.12",
+        "numpy>=1.16.1",
+        "pandas>=0.23.4",
+        "simpy >=3.0.11",
+    ],
     entry_points="""
             [console_scripts]
             evsim=evsim.evsim:cli
