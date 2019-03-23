@@ -8,7 +8,7 @@ search_dirs = [
 ]
 data_dir = None
 for p in search_dirs:
-    if p.is_dir:
+    if p.is_dir():
         data_dir = p
         break
 
