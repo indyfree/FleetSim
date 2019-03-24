@@ -31,8 +31,7 @@ class Simulation:
         self.trips = load.car2go_trips(False)
         self.stats = list()
 
-        self.sim_time = self.trips.start_time.min()
-        self.env = simpy.Environment(initial_time=self.sim_time)
+        self.env = simpy.Environment(initial_time=self.trips.start_time.min())
         self.vpp = entities.VPP(
             self.env, "VPP", len(self.trips.EV.unique()), cfg.charging_power
         )
