@@ -7,7 +7,7 @@ from evsim.market import Market
 
 
 class Controller:
-    def __init__(self, cfg, strategy, refuse_rentals=True):
+    def __init__(self, cfg, strategy, risk=0, refuse_rentals=True):
         self.logger = logging.getLogger(__name__)
 
         self.cfg = cfg
@@ -20,6 +20,9 @@ class Controller:
 
         self.fleet_capacity = load.simulation_baseline()
         self.strategy = strategy
+
+        # Risk parameter set from outside
+        self._risk = risk
 
         # Reference simulation objects
         self.env = None
@@ -82,7 +85,7 @@ class Controller:
         self.dispatch(available_evs)
 
         # 5. Execute Bidding strategy
-        self.strategy(self, timeslot)
+        self.strategy(self, timeslot, self.risk)
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""

@@ -4,13 +4,13 @@ import pandas as pd
 from evsim.market import Bid
 
 
-def regular(controller, timeslot):
+def regular(controller, timeslot, risk, accuracy=100):
     """ Charge all EVs at regular prices"""
     pass
 
 
 # TODO: Change for weekly bids!
-def balancing(controller, timeslot, accuracy=100, risk=0):
+def balancing(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for balancing market only"""
 
     # Bid for every 15-minute slot of the next day at 16:00
@@ -45,7 +45,7 @@ def balancing(controller, timeslot, accuracy=100, risk=0):
             controller.warning("Could not update consumption plan: %s." % e)
 
 
-def intraday(controller, timeslot, accuracy=100, risk=0):
+def intraday(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for intraday market only"""
 
     # Bid for 15-min market period m 30 min ahead
@@ -69,7 +69,7 @@ def intraday(controller, timeslot, accuracy=100, risk=0):
         controller.log("Not a bidding period at intraday market.")
 
 
-def integrated(controller, timestamp):
+def integrated(controller, timeslot, risk, accuracy=100):
     """ Charge predicted available EVs according to an integrated strategy:
 
     1. Charge predicted amount from balancing one week ahead if cheaper than intraday
@@ -78,8 +78,8 @@ def integrated(controller, timestamp):
 
     """
     # TODO: Skip bidding balancing if intraday price better
-    balancing(controller, timestamp, risk=0.7)
-    intraday(controller, timestamp, risk=0)
+    balancing(controller, timeslot, risk=risk)
+    intraday(controller, timeslot, risk=0)
 
 
 def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
