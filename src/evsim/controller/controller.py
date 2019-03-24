@@ -87,7 +87,7 @@ class Controller:
         self.dispatch(available_evs)
 
         # 5. Execute Bidding strategy
-        self.strategy(self, timeslot, self._risk)
+        self.strategy(self, timeslot, self.risk)
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
