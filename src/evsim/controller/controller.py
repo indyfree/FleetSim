@@ -49,6 +49,16 @@ class Controller:
     def warning(self, message):
         self.log(message, self.logger.warning)
 
+    @property
+    def risk(self):
+        return self._property
+
+    @risk.setter
+    def risk(self, value):
+        if 0 >= value or value >= 1:
+            raise ValueError("Only risk factors between 0 and 1 are valid.")
+        self._risk = value
+
     def charge_fleet(self, timeslot):
         """ Perform a charging operation on the fleet for a given timeslot.
             Takes a a list of EVs as input and charges given its strategy.
