@@ -30,6 +30,11 @@ class FleetEnv(gym.Env):
         self.observation_space = spaces.Box(low, high, dtype=np.int64)
 
         self.curr_balance = 0
+        self._realtime = self.sim.env.now
+
+    @property
+    def realtime(self):
+        return datetime.fromtimestamp(self._realtime)
 
     def step(self, action):
         """
