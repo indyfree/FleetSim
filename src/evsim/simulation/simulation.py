@@ -44,10 +44,11 @@ class Simulation:
         self.controller.account = self.account
         self.controller.vpp = self.vpp
 
-    def start(self):
-        logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
+        # Start lifecycle
         self.env.process(self.lifecycle())
 
+    def start(self):
+        logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
         while not self.done:
             self.step()
 
