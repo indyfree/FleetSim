@@ -27,7 +27,7 @@ class FleetEnv(gym.Env):
         pass
 
     def render(self, mode="human"):
-        pass
+        print(self.sim.env.now)
 
     def close(self):
         pass
