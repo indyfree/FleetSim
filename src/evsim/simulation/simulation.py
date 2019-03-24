@@ -36,6 +36,8 @@ class Simulation:
             self.env, "VPP", len(self.trips.EV.unique()), cfg.charging_power
         )
 
+        self.done = False
+
         # Pass references to controller
         self.controller.env = self.env
         self.controller.account = self.account
@@ -45,8 +47,8 @@ class Simulation:
         logger.info("---- STARTING SIMULATION: %s -----" % self.cfg.name)
         self.env.process(self.lifecycle())
 
-        while self.env.peek() < self.trips.end_time.max():
-            self.step(minutes=5)
+        while not self.done:
+            self.step()
 
         logger.info("---- RESULTS: %s -----" % self.cfg.name)
         logger.info("Energy charged as VPP: %.2fMWh" % (self.vpp.total_charged / 1000))
@@ -58,8 +60,14 @@ class Simulation:
         if self.cfg.save_stats is True:
             self.save_stats("./logs/stats-%s.csv" % self.cfg.name)
 
-    def step(self, minutes=5):
-        self.env.run(until=(self.env.now + (60 * minutes)))
+    def step(self, risk=None, minutes=5):
+        if self.env.peek() > self.trips.end_time.max():
+            self.done = True
+        else:
+            self.controller.risk = random.randint(0, 10) / 10
+            self.env.run(until=(self.env.now + (60 * minutes)))
+
+        return self.account.balance, self.done
 
     def lifecycle(self):
         evs = {}
