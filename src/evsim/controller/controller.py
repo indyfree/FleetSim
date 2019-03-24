@@ -58,8 +58,10 @@ class Controller:
 
     @risk.setter
     def risk(self, value):
-        if 0 >= value or value >= 1:
-            raise ValueError("Only risk factors between 0 and 1 are valid.")
+        if 0 > value or value > 1:
+            raise ValueError(
+                "Only risk factors between 0 and 1 are valid: %.2f" % value
+            )
         self._risk = value
 
     def charge_fleet(self, timeslot):
@@ -85,7 +87,7 @@ class Controller:
         self.dispatch(available_evs)
 
         # 5. Execute Bidding strategy
-        self.strategy(self, timeslot, self.risk)
+        self.strategy(self, timeslot, self._risk)
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
