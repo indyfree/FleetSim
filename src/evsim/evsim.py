@@ -315,8 +315,21 @@ def capacity(ctx, timeslot):
 
     try:
         ts = int(datetime.fromisoformat(timeslot).timestamp())
-        click.echo(
-            "%.2f kW" % controller.predict_capacity(controller.fleet_capacity, ts)
-        )
+        click.echo("%.2f kW" % controller.predict_capacity(ts))
+    except ValueError as e:
+        logger.error(e)
+
+
+@predict.command(help="Predict minimum available fleet capacity in market period.")
+@click.option(
+    "-t", "--timeslot", help="15-min timeslot as string e.g. '2018-01-01 08:05'."
+)
+@click.pass_context
+def min_capacity(ctx, timeslot):
+    controller = ctx.obj["CONTROLLER"]
+
+    try:
+        ts = int(datetime.fromisoformat(timeslot).timestamp())
+        click.echo("%.2f kW" % controller.predict_min_capacity(ts))
     except ValueError as e:
         logger.error(e)
