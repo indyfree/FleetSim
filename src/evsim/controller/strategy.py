@@ -10,7 +10,7 @@ def regular(controller, timeslot, risk, accuracy=100):
 
 
 # TODO: Change for weekly bids!
-def balancing(controller, timeslot, risk, accuracy=100):
+def balancing_real(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for balancing market only"""
 
     # Bid for every 15-minute slot of the next day at 16:00
@@ -43,6 +43,29 @@ def balancing(controller, timeslot, risk, accuracy=100):
             )
         except ValueError as e:
             controller.warning("Could not update consumption plan: %s." % e)
+
+
+def balancing(controller, timeslot, risk, accuracy=100):
+    """ Benchmark bidding strategy for balancing market only"""
+
+    # Bid for 15-min market period 'm' one week ahead
+    # Assumption: Always get accepted with a bidding price >= clearing price
+    # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
+    m = timeslot + 7 * (60 * 60 * 24)
+    if int((m / 60)) % 15 == 0:
+        controller.log(
+            "Bidding for timeslot %s at balancing market." % datetime.fromtimestamp(m)
+        )
+        try:
+            available_capacity = controller.predict_min_capacity(m, accuracy)
+            quantity = available_capacity * (1 - risk)
+            _update_consumption_plan(
+                controller, controller.balancing, controller.balancing_plan, m, quantity
+            )
+        except ValueError as e:
+            controller.warning(e)
+    else:
+        controller.log("Not a bidding period at balancing market.")
 
 
 def intraday(controller, timeslot, risk, accuracy=100):
