@@ -51,14 +51,22 @@ def balancing(controller, timeslot, risk, accuracy=100):
     # Bid for 15-min market period 'm' one week ahead
     # Assumption: Always get accepted with a bidding price >= clearing price
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
-    m = timeslot + 7 * (60 * 60 * 24)
+    m = timeslot + (7 * (60 * 60 * 24))
     if int((m / 60)) % 15 == 0:
         controller.log(
             "Bidding for timeslot %s at balancing market." % datetime.fromtimestamp(m)
         )
         try:
             available_capacity = controller.predict_min_capacity(m, accuracy)
+            controller.log(
+                "Predicted %.2f available charging power at %s."
+                % (available_capacity, datetime.fromtimestamp(m))
+            )
             quantity = available_capacity * (1 - risk)
+            controller.log(
+                "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
+                % (quantity, datetime.fromtimestamp(m), risk)
+            )
             _update_consumption_plan(
                 controller, controller.balancing, controller.balancing_plan, m, quantity
             )
