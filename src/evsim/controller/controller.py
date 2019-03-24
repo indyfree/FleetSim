@@ -54,7 +54,7 @@ class Controller:
 
     @property
     def risk(self):
-        return self._property
+        return self._risk
 
     @risk.setter
     def risk(self, value):
