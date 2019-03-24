@@ -16,7 +16,7 @@ class FleetEnv(gym.Env):
 
         # Initialize evsim
         cfg = SimulationConfig()
-        controller = Controller(cfg, strategy.intraday)
+        controller = Controller(cfg, strategy.integrated)
         self.sim = Simulation(cfg, controller)
 
         # Define what the agent can do:
@@ -64,12 +64,14 @@ class FleetEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        balance, done = self.sim.step(action)
+        balance, done = self.sim.step(action, minutes=15)
         reward = balance - self.curr_balance
-        self.curr_balance = balance
 
-        hour = datetime.fromtimestamp(self.sim.env.now).hour
-        ob = np.array[hour]
+        self.curr_balance = balance
+        self._realtime = self.sim.env.now
+
+        hour = self.realtime.hour
+        ob = hour
 
         return ob, reward, done, {}
 
