@@ -82,6 +82,13 @@ def cli(ctx, debug, name, logs):
     show_default=True,
 )
 @click.option(
+    "-r",
+    "--risk",
+    default=0,
+    help="Bidding risk to account for uncertainty",
+    show_default=True,
+)
+@click.option(
     "--refuse-rentals/--no-refuse-rentals",
     default=True,
     help="Refuses rentals of EV that are commited to VPP.",
@@ -98,6 +105,7 @@ def simulate(
     charging_strategy,
     industry_tariff,
     refuse_rentals,
+    risk,
     stats,
 ):
     click.echo("--- Simulation Settings: ---")
@@ -107,6 +115,7 @@ def simulate(
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
     click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
+    click.echo("Bidding risk is set to %.2f." % risk)
 
     if charging_strategy == "regular":
         s = strategy.regular
@@ -121,7 +130,7 @@ def simulate(
         ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff, stats
     )
 
-    controller = Controller(cfg, s, refuse_rentals)
+    controller = Controller(cfg, s, risk=risk, refuse_rentals=refuse_rentals)
     sim = Simulation(cfg, controller)
 
     click.echo("--- Starting Simulation: ---")
@@ -231,7 +240,8 @@ def balancing_prices():
 @cli.group(help="EV Fleet Controller")
 @click.pass_context
 def controller(ctx):
-    c = Controller(strategy.regular)
+    cfg = SimulationConfig()
+    c = Controller(cfg, strategy.regular)
     ctx.obj["CONTROLLER"] = c
     return True
 
