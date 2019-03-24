@@ -63,10 +63,12 @@ class Simulation:
             self.save_stats("./logs/stats-%s.csv" % self.cfg.name)
 
     def step(self, risk=None, minutes=5):
+        if risk:
+            self.controller.risk = risk
+
         if self.env.peek() > self.trips.end_time.max():
             self.done = True
         else:
-            self.controller.risk = random.randint(0, 10) / 10
             self.env.run(until=(self.env.now + (60 * minutes)))
 
         return self.account.balance, self.done
