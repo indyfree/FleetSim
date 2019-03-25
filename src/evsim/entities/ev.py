@@ -73,7 +73,7 @@ class EV:
 
         # 1. Check if enough battery for trip left
         if trip_charge > 0 and self.battery.level < trip_charge:
-            self.warning("Not enough battery for the planned trip %d!" % rental)
+            self.log("Not enough battery for the planned trip %d!" % rental)
             self.log(
                 "Account for lost profits of %.2f EUR. Current balance %.2f EUR."
                 % (trip_price, account.balance)
@@ -140,7 +140,7 @@ class EV:
 
         # Special case: Battery has been charged without beeing at the charger
         if trip_charge < 0:
-            self.warning(
+            self.log(
                 "EV was already at charging station. Battery level: %d. Trip charge: %d"
                 % (self.battery.level, trip_charge)
             )
