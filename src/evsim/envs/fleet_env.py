@@ -16,8 +16,8 @@ class FleetEnv(gym.Env):
 
         # Initialize evsim
         cfg = SimulationConfig()
-        controller = Controller(cfg, strategy.integrated)
-        self.sim = Simulation(cfg, controller)
+        self.controller = Controller(cfg, strategy.integrated)
+        self.sim = Simulation(cfg, self.controller)
 
         # Define what the agent can do:
         # Set Risk factors from lambda = [0.0, 0.1, ..., 1.0]
@@ -76,7 +76,11 @@ class FleetEnv(gym.Env):
         return ob, reward, done, {}
 
     def reset(self):
-        pass
+        del self.sim
+        self.sim = Simulation(SimulationConfig(), self.controller)
+        self._realtime = self.sim.env.now
+        self.curr_balance = 0
+        return self.realtime.hour
 
     def render(self):
         print(self.sim.env.now)
