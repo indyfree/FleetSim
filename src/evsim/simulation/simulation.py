@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import pandas as pd
-import random
 import simpy
 
 from . import Account
