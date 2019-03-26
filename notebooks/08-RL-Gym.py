@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-0.1"><span class="toc-item-num">0.1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li></ul></li><li><span><a href="#Intraday" data-toc-modified-id="Intraday-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Intraday</a></span></li><li><span><a href="#Balancing" data-toc-modified-id="Balancing-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Balancing</a></span></li><li><span><a href="#Comparison" data-toc-modified-id="Comparison-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Comparison</a></span><ul class="toc-item"><li><span><a href="#Plot-differences" data-toc-modified-id="Plot-differences-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Plot differences</a></span></li></ul></li><li><span><a href="#Demand-Patterns" data-toc-modified-id="Demand-Patterns-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Demand Patterns</a></span><ul class="toc-item"><li><span><a href="#Yearly-rental-patterns" data-toc-modified-id="Yearly-rental-patterns-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Yearly rental patterns</a></span></li><li><span><a href="#Weekly-Pattern-of-connected-EVS" data-toc-modified-id="Weekly-Pattern-of-connected-EVS-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Weekly Pattern of connected EVS</a></span></li><li><span><a href="#Daily-Pattern-of-connected-EVS" data-toc-modified-id="Daily-Pattern-of-connected-EVS-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>Daily Pattern of connected EVS</a></span></li><li><span><a href="#2.4.-Average-Daily-Pattern" data-toc-modified-id="2.4.-Average-Daily-Pattern-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>2.4. Average Daily Pattern</a></span></li></ul></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li></ul></div>
 
 # ## Imports and Data loading
 
@@ -17,26 +17,64 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[1]:
+# In[2]:
 
 
-from datetime import datetime
-import matplotlib.pyplot as plt
+import evsim
 import numpy as np
-import pandas as pd
 import gym
 
-from evsim.data import load_car2go_trips, load_car2go_capacity
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import Adam
+
+from rl.agents.dqn import DQNAgent
+from rl.policy import BoltzmannQPolicy
+from rl.memory import SequentialMemory
 
 
-# In[6]:
+# ENV_NAME = 'CartPole-v0'
+ENV_NAME = 'evsim-v0'
 
 
-env = gym.make('evsim-v0')
+# Get the environment and extract the number of actions.
+env = gym.make(ENV_NAME)
+np.random.seed(123)
+env.seed(123)
+nb_actions = env.action_space.n
 
+# Next, we build a very simple model.
+model = Sequential()
+model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(nb_actions))
+model.add(Activation('linear'))
+print(model.summary())
 
-# In[10]:
+# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# even the metrics!
+memory = SequentialMemory(limit=50000, window_length=1)
+policy = BoltzmannQPolicy()
+dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
+               target_model_update=1e-2, policy=policy)
+dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
+# Okay, now it's time to learn something! We visualize the training here for show, but this
+# slows down training quite a lot. You can always safely abort the training prematurely using
+# Ctrl + C.
 
-type(env.action_space)
+dqn.fit(env, nb_steps=6700, visualize=False, verbose=2)
+
+# After training is done, we save the final weights.
+
+dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+
+# Finally, evaluate our algorithm for 5 episodes.
+
+dqn.test(env, nb_episodes=1, visualize=False)
 
