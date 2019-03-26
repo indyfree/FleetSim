@@ -87,7 +87,7 @@ class EV:
             and self.vpp.contains(self)
             and self.vpp.commited_capacity >= self.vpp.capacity()
         ):
-            self.warning(
+            self.log(
                 (
                     "Refusing rental! "
                     "EV is commited to VPP and no replacement EV is available."
@@ -149,9 +149,7 @@ class EV:
             free_battery = self.battery.capacity - self.battery.level
             if free_battery > 0 and -trip_charge >= free_battery:
                 yield self.battery.put(self.battery.capacity - self.battery.level)
-                self.warning(
-                    "Battery charged more than available space. Filled up to 100."
-                )
+                self.log("Battery charged more than available space. Filled up to 100.")
             # Charged during the trip: Adjust level
             elif -trip_charge < free_battery:
                 yield self.battery.put(-trip_charge)
