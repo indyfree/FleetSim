@@ -64,14 +64,14 @@ class FleetEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        balance, done = self.sim.step(action, minutes=15)
+        balance, done = self.sim.step(action / 10, minutes=15)
         reward = balance - self.curr_balance
 
         self.curr_balance = balance
         self._realtime = self.sim.env.now
 
         hour = self.realtime.hour
-        ob = hour
+        ob = [hour]
 
         return ob, reward, done, {}
 
@@ -80,7 +80,7 @@ class FleetEnv(gym.Env):
         self.sim = Simulation(SimulationConfig(), self.controller)
         self._realtime = self.sim.env.now
         self.curr_balance = 0
-        return self.realtime.hour
+        return [self.realtime.hour]
 
     def render(self):
         print(self.sim.env.now)
