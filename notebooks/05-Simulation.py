@@ -6,7 +6,7 @@
 
 # ## Imports and Data loading
 
-# In[1]:
+# In[16]:
 
 
 # Display plots inline
@@ -17,7 +17,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[31]:
 
 
 from datetime import datetime
@@ -26,7 +26,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from evsim.data import load_car2go_trips, load_car2go_capacity
+from evsim.data import load_car2go_trips, load_car2go_capacity, load_simulation_baseline, load_intraday_prices
+
+
+# In[ ]:
+
+
+load_intraday_prices(rebuild=True)
 
 
 # In[9]:
