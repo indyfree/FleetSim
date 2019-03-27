@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 from operator import attrgetter
+import random
 
 from evsim.data import load
 from evsim.market import Market
@@ -140,7 +141,7 @@ class Controller:
     def planned_kw(self, t):
         return self.balancing_plan.get(t) + self.intraday_plan.get(t)
 
-    # TODO: Distort data for Prediction
+    # TODO: Better distort data for prediction
     def predict_capacity(self, timeslot, accuracy=100):
         """ Predict the available capacity for a given 5min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
@@ -148,7 +149,13 @@ class Controller:
         """
         df = self.fleet_capacity
         try:
-            return df.loc[df["timestamp"] == timeslot, "vpp_capacity_kw"].iat[0]
+
+            # NOTE: Simple uniform distorion.
+            # Improve by gaussian with mean = accuracy
+            range = 1 - (accuracy / 100)
+            distortion = random.uniform(1 - range, 1 + range)  # e.g. [0.9, 1.1]
+            cap = df.loc[df["timestamp"] == timeslot, "vpp_capacity_kw"].iat[0]
+            return cap * distortion
         except IndexError:
             raise ValueError(
                 "Capacity prediction failed: %s is not in data."
@@ -174,7 +181,6 @@ class Controller:
             )
         return cap
 
-    # TODO: Distort data for Prediction?
     def predict_clearing_price(self, market, timeslot, accuracy=100):
         """ Predict the clearing price for a 15-min contract at a given timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
