@@ -12,6 +12,8 @@ class FleetEnv(gym.Env):
     Environment wrapper for simulation to be compatible with openai gym
     """
 
+    metadata = {"render.modes": ["human"]}
+
     def __init__(self):
 
         # Initialize evsim
@@ -82,7 +84,7 @@ class FleetEnv(gym.Env):
         self.curr_balance = 0
         return [self.realtime.hour]
 
-    def render(self):
+    def render(self, mode="human", close=False):
         print(self.sim.env.now)
 
     def close(self):
