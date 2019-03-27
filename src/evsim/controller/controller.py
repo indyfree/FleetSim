@@ -101,17 +101,23 @@ class Controller:
 
         # 1. Handle overcommitments
         if num_plan_evs > len(available_evs):
-            imbalance_kw = (num_plan_evs - len(available_evs)) * self.cfg.charging_power
-            self.vpp.imbalance += imbalance_kw * (15 / 60)
+            imbalance_kwh = (
+                (num_plan_evs - len(available_evs))
+                * self.cfg.charging_power
+                * (15 / 60)
+            )
+            self.vpp.imbalance += imbalance_kwh
             self.warning(
                 (
                     "Commited %d EVs, but only %d available,  "
                     "account for imbalance costs of %.2fkWh!"
                 )
-                % (num_plan_evs, len(available_evs), imbalance_kw * (15 / 60))
+                % (num_plan_evs, len(available_evs), imbalance_kwh)
             )
+            # NOTE: Assume artificially high imbalance costs of 1000EUR/MWh
+            self.account.subtract(imbalance_kwh * 1000)
 
-            # Charge available EVs
+            # Charge remaining available EVs
             num_plan_evs = len(available_evs)
 
         # 2. Dispatch Charging from plan
