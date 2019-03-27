@@ -82,6 +82,9 @@ def cli(ctx, debug, name, logs):
     show_default=True,
 )
 @click.option(
+    "-a", "--accuracy", default=100, help="Prediction accuracy.", show_default=True
+)
+@click.option(
     "-r",
     "--risk",
     default=0,
@@ -105,6 +108,7 @@ def simulate(
     charging_strategy,
     industry_tariff,
     refuse_rentals,
+    accuracy,
     risk,
     stats,
 ):
@@ -115,6 +119,8 @@ def simulate(
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
     click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
+    click.echo("Charging strategy is set to %s" % charging_strategy)
+    click.echo("Prediction accuracy is set to %d%%." % accuracy)
     click.echo("Bidding risk is set to %.2f." % risk)
 
     if charging_strategy == "regular":
@@ -130,7 +136,9 @@ def simulate(
         ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff, stats
     )
 
-    controller = Controller(cfg, s, risk=risk, refuse_rentals=refuse_rentals)
+    controller = Controller(
+        cfg, s, accuracy=accuracy, risk=risk, refuse_rentals=refuse_rentals
+    )
     sim = Simulation(cfg, controller)
 
     click.echo("--- Starting Simulation: ---")

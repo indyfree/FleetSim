@@ -8,7 +8,7 @@ from evsim.market import Market
 
 
 class Controller:
-    def __init__(self, cfg, strategy, risk=0, refuse_rentals=True):
+    def __init__(self, cfg, strategy, accuracy=100, risk=0, refuse_rentals=True):
         self.logger = logging.getLogger(__name__)
 
         self.cfg = cfg
@@ -21,8 +21,9 @@ class Controller:
 
         self.fleet_capacity = load.simulation_baseline()
         self.strategy = strategy
+        self.accuracy = accuracy
 
-        # Risk parameter set from outside
+        # Risk parameter set from outside, i.e. RL Agent
         self._risk = risk
 
         # Reference simulation objects
@@ -88,7 +89,7 @@ class Controller:
         self.dispatch(available_evs)
 
         # 5. Execute Bidding strategy
-        self.strategy(self, timeslot, self.risk)
+        self.strategy(self, timeslot, self.risk, self.accuracy)
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
@@ -170,7 +171,7 @@ class Controller:
         cap = float("inf")
         for t in [0, 5, 10]:
             try:
-                cap = min(cap, self.predict_capacity(timeslot + (60 * t)))
+                cap = min(cap, self.predict_capacity(timeslot + (60 * t), accuracy))
             except ValueError:
                 pass
 
