@@ -88,7 +88,7 @@ def intraday(controller, timeslot, risk, accuracy=100):
             "Bidding for timeslot %s at intraday market." % datetime.fromtimestamp(m)
         )
         try:
-            available_capacity = controller.predict_min_capacity(m, accuracy)
+            available_capacity = 1.1 * controller.predict_min_capacity(m, accuracy)
             charging_balancing = controller.balancing_plan.get(m)
             quantity = (available_capacity - charging_balancing) * (1 - risk)
             _update_consumption_plan(
