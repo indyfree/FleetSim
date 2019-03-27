@@ -87,7 +87,7 @@ def cli(ctx, debug, name, logs):
 @click.option(
     "-r",
     "--risk",
-    default=0,
+    default=0.0,
     help="Bidding risk to account for uncertainty",
     show_default=True,
 )
