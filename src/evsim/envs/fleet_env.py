@@ -18,7 +18,7 @@ class FleetEnv(gym.Env):
 
         # Initialize evsim
         cfg = SimulationConfig()
-        self.controller = Controller(cfg, strategy.intraday)
+        self.controller = Controller(cfg, strategy.intraday, accuracy=90, risk=10)
         self.sim = Simulation(cfg, self.controller)
 
         # Define what the agent can do:
