@@ -39,17 +39,25 @@ def car2go_trips(
 ):
     """Loads processed trip data into a dataframe, process again if needed"""
 
-    # Return early if processed files is present
-    if rebuild is True or not files.trips.is_file():
+    if rebuild is True:
         files.processed_data_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("Preprocessing and dropping columns.")
+        for f in files.car2go:
+            logger.info("Converting to pickle: %s..." % f)
+            df = pd.read_csv(files.car2go_dir / f)
+            df = car2go.preprocess(df)
+            pd.to_pickle(df, _change_ext(files.car2go_dir / f, ".pkl"))
 
+    # Return early if processed files is present
+    if rebuild is True or files.trips.is_file():
         df = []
         for f in files.car2go:
-            logger.info("Reading %s..." % f)
-            df.append(pd.read_csv(files.car2go_dir / f))
+            pkl_path = _change_ext(files.car2go_dir / f, ".pkl")
+            logger.info("Reading %s..." % pkl_path.name)
+            df.append(pd.read_pickle(pkl_path))
         df = pd.concat(df)
 
-        df_trips = car2go.process(
+        df_trips = car2go.determine_trips(
             df, ev_range, car2go_price, duration_threshold, infer_chargers
         )
         df_trips = (
