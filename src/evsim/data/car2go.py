@@ -6,20 +6,11 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def process(df, ev_range, car2go_price, duration_threshold, infer_chargers):
-    """Executes all preprocessing steps sequentially"""
-
-    # Round GPS accuracy to 10 meters
-    df[["coordinates_lat", "coordinates_lon"]] = df[
-        ["coordinates_lat", "coordinates_lon"]
-    ].round(4)
+def determine_trips(df, ev_range, car2go_price, duration_threshold, infer_chargers):
+    """Determine and clean trips"""
 
     if infer_chargers:
         df_stations = _determine_charging_stations(df)
-
-    # Round timestamp to minutes
-    df["timestamp"] = df["timestamp"] // 60 * 60
-    df.sort_values("timestamp", inplace=True)
 
     trips = list()
     cars = df["name"].unique()
@@ -43,6 +34,36 @@ def process(df, ev_range, car2go_price, duration_threshold, infer_chargers):
     # Rental duration threshold is 2 days
     df_trips = _clean_trips(df_trips, duration_threshold)
     return df_trips
+
+
+def preprocess(df):
+    """Drop unused columns, round values, and save DataFrame as pickle"""
+    df.columns = [
+        "name",
+        "vin",
+        "coordinates_lat",
+        "coordinates_lon",
+        "interior",
+        "exterior",
+        "address",
+        "fuel",
+        "engineType",
+        "charging",
+        "timestamp",
+    ]
+    df.drop(
+        ["vin", "interior", "exterior", "address", "engineType"], axis=1, inplace=True
+    )
+
+    # Round GPS accuracy to 10 meters
+    df[["coordinates_lat", "coordinates_lon"]] = df[
+        ["coordinates_lat", "coordinates_lon"]
+    ].round(4)
+
+    # Round timestamp to minutes
+    df["timestamp"] = df["timestamp"] // 60 * 60
+    df.sort_values("timestamp", inplace=True)
+    return df
 
 
 def _add_charging_stations(df_trips, df_stations):
