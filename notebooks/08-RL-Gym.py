@@ -6,7 +6,7 @@
 
 # ## Imports and Data loading
 
-# In[1]:
+# In[13]:
 
 
 # Display plots inline
@@ -17,7 +17,14 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[14]:
+
+
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+
+
+# In[16]:
 
 
 import evsim
@@ -33,7 +40,6 @@ from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 
 
-# ENV_NAME = 'CartPole-v0'
 ENV_NAME = 'evsim-v0'
 
 
@@ -42,6 +48,9 @@ env = gym.make(ENV_NAME)
 np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
+
+# Set the prediction accuracy of simulation
+env.prediction_accuracy(10)
 
 # Next, we build a very simple model.
 model = Sequential()
@@ -68,7 +77,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 
-dqn.fit(env, nb_steps=6700, visualize=False, verbose=2)
+dqn.fit(env, nb_steps=6700, visualize=False, verbose=1, log_interval=100)
 
 # After training is done, we save the final weights.
 
@@ -77,4 +86,10 @@ dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 # Finally, evaluate our algorithm for 5 episodes.
 
 dqn.test(env, nb_episodes=1, visualize=False)
+
+
+# In[ ]:
+
+
+
 
