@@ -69,7 +69,9 @@ def preprocess(df):
     # NOTE: Rounding only works properly on int64
     # Round timestamp to minutes
     df["timestamp"] = df["timestamp"].astype(np.int64)
-    df["timestamp"] = df["timestamp"] // 60 * 60
+    df["timestamp"] = (df["timestamp"] // 60) * 60
+    # TODO: Round to 5 minutes due to simulation run?
+    # df["timestamp"] = (df["timestamp"] // 5 * 60) * (5 * 60)
 
     return df
 
