@@ -12,16 +12,17 @@ class Controller:
         self.logger = logging.getLogger(__name__)
 
         self.cfg = cfg
-
-        self.balancing = Market(load.balancing_prices())
-        self.balancing_plan = ConsumptionPlan("Balancing")
-
-        self.intraday = Market(load.intraday_prices())
-        self.intraday_plan = ConsumptionPlan("Intraday")
-
-        self.fleet_capacity = load.simulation_baseline()
         self.strategy = strategy
         self.accuracy = accuracy
+
+        self.balancing_plan = ConsumptionPlan("Balancing")
+        self.intraday_plan = ConsumptionPlan("Intraday")
+
+        # NOTE: When regular strategy no need for capacity and price data
+        if strategy.__name__ != "regular":
+            self.fleet_capacity = load.simulation_baseline()
+            self.balancing = Market(load.balancing_prices())
+            self.intraday = Market(load.intraday_prices())
 
         # Risk parameter set from outside, i.e. RL Agent
         self._risk = risk
