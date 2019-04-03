@@ -36,6 +36,7 @@ simulation_baseline = processed_data_dir / "sim-baseline.csv"
 
 # car2go Files
 car2go = [
+    # "stuttgart.test.csv"
     # "stuttgart.2016.03.22-2016.11.30.csv",
     # "stuttgart.2016.12.01-2017.02.22.csv",
     "stuttgart.2017.02.23-2017-05-01.csv",
