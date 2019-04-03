@@ -95,6 +95,10 @@ class Simulation:
 
             # 2. Find trips at the timeslot
             starting_trips = self.trips.loc[self.trips["start_time"] == self.env.now]
+
+            # starting_trips = self.trips.query("start_time == %d" % self.env.now)
+            # x = self.trips.start_time.values
+            # starting_trips = self.trips[numexpr.evaluate("(x == %d)" % self.env.now)]
             for trip in starting_trips.itertuples():
 
                 # 3. Add EVs to Fleet
