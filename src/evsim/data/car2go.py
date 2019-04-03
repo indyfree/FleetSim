@@ -66,7 +66,9 @@ def preprocess(df):
     df["coordinates_lat"] = df["coordinates_lat"].astype(np.float64).round(4)
     df["coordinates_lon"] = df["coordinates_lon"].astype(np.float64).round(4)
 
+    # NOTE: Rounding only works properly on int64
     # Round timestamp to minutes
+    df["timestamp"] = df["timestamp"].astype(np.int64)
     df["timestamp"] = df["timestamp"] // 60 * 60
 
     return df
