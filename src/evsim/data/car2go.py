@@ -31,12 +31,12 @@ def determine_trips(df, ev_range, car2go_price, duration_threshold, infer_charge
     if infer_chargers:
         df_trips = _add_charging_stations(df_trips, df_stations)
 
-    # Rental duration threshold is 2 days
     df_trips = _clean_trips(df_trips, duration_threshold)
+    df_trips = df_trips.apply(pd.to_numeric, errors="ignore", downcast="integer")
     return df_trips
 
 
-def preprocess(df):
+def drop_unused(df):
     """Drop unused columns, round values, and save DataFrame as pickle"""
     df.columns = [
         "name",
@@ -54,15 +54,21 @@ def preprocess(df):
     df.drop(
         ["vin", "interior", "exterior", "address", "engineType"], axis=1, inplace=True
     )
+    df = df.apply(pd.to_numeric, errors="ignore", downcast="float")
+    return df
+
+
+def preprocess(df):
+    logger.info("Rounding coordinates and timestamps.")
 
     # Round GPS accuracy to 10 meters
-    df[["coordinates_lat", "coordinates_lon"]] = df[
-        ["coordinates_lat", "coordinates_lon"]
-    ].round(4)
+    # NOTE: Rounding only works properly on float64
+    df["coordinates_lat"] = df["coordinates_lat"].astype(np.float64).round(4)
+    df["coordinates_lon"] = df["coordinates_lon"].astype(np.float64).round(4)
 
     # Round timestamp to minutes
     df["timestamp"] = df["timestamp"] // 60 * 60
-    df.sort_values("timestamp", inplace=True)
+
     return df
 
 
@@ -98,7 +104,7 @@ def _determine_charging_stations(df):
 # TODO: Check for long distances
 def _calculate_price(df, car2go_price):
     logger.info("Infering trip prices...")
-    df["trip_price"] = round(df["trip_duration"] * car2go_price / 100, 2)
+    df["trip_price"] = df["trip_duration"] * car2go_price / 100
     return df
 
 
@@ -242,7 +248,6 @@ def calculate_trips(df_car, ev_range):
     charging = False
     prev_row = df_car.iloc[0]
     for row in df_car.itertuples():
-
         # New trip detected when location changes.
         if (row.coordinates_lat != prev_row.coordinates_lat) | (
             row.coordinates_lon != prev_row.coordinates_lon

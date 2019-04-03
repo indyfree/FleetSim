@@ -45,18 +45,19 @@ def car2go_trips(
         for f in files.car2go:
             logger.info("Converting to pickle: %s..." % f)
             df = pd.read_csv(files.car2go_dir / f)
-            df = car2go.preprocess(df)
+            df = car2go.drop_unused(df)
             pd.to_pickle(df, _change_ext(files.car2go_dir / f, ".pkl"))
 
     # Return early if processed files is present
-    if rebuild is True or files.trips.is_file():
-        df = []
+    if rebuild is True or not files.trips.is_file():
+        df_list = []
         for f in files.car2go:
             pkl_path = _change_ext(files.car2go_dir / f, ".pkl")
             logger.info("Reading %s..." % pkl_path.name)
-            df.append(pd.read_pickle(pkl_path))
-        df = pd.concat(df)
+            df = pd.read_pickle(pkl_path)
+            df_list.append(df)
 
+        df = car2go.preprocess(pd.concat(df_list))
         df_trips = car2go.determine_trips(
             df, ev_range, car2go_price, duration_threshold, infer_chargers
         )
