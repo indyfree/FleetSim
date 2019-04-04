@@ -156,7 +156,7 @@ class Controller:
             # Improve by gaussian with mean = accuracy
             range = 1 - (accuracy / 100)
             distortion = random.uniform(1 - range, 1 + range)  # e.g. [0.9, 1.1]
-            cap = df.loc[df["timestamp"] == timeslot, "vpp_capacity_kw"].iat[0]
+            cap = df.loc[df["timestamp"] == timeslot, "vpp_charging_power_kw"].iat[0]
             return cap * distortion
         except IndexError:
             raise ValueError(
