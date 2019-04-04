@@ -339,7 +339,7 @@ def _clean_trips(df, duration_threshold):
     logger.info("Removed %d trips that were longer than 2 days." % len(df_service))
 
     # 4. Remove outliers
-    outliers = ["S-GO2331", "S-GO2644", "S-GO2262", "B-GO8954E"]
+    outliers = ["S-GO2331", "S-GO2644", "S-GO2262", "B-GO8954E", "B-GO8924E"]
     df = df[~df["EV"].isin(outliers)]
 
     return df
