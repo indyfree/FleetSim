@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import simpy
 
-from . import Account, Statistic, Entry
+from . import Account, Statistic, SimEntry
 from evsim import entities
 from evsim.data import load
 
@@ -26,6 +26,7 @@ class Simulation:
 
         self.account = Account()
         self.stats = Statistic()
+        self.results = Statistic()
 
         self.controller = controller
 
@@ -130,7 +131,7 @@ class Simulation:
 
             # 5. Save simulation stats
             self.stats.add(
-                Entry(
+                SimEntry(
                     timestamp=self.env.now - 1,
                     fleet_evs=len(evs),
                     fleet_soc=self._fleet_soc(evs),
@@ -139,10 +140,6 @@ class Simulation:
                     vpp_soc=self.vpp.avg_soc(),
                     vpp_evs=len(self.vpp.evs),
                     vpp_charging_power_kw=self.vpp.capacity(),
-                    vpp_charged_kwh=self.vpp.total_charged,
-                    balance_eur=self.account.balance,
-                    imbalance_kw=self.vpp.imbalance,
-                    rental_profits=self.account.rental_profits,
                 )
             )
 
