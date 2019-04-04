@@ -17,7 +17,6 @@ class SimulationConfig:
     charging_power: float = 3.6
     ev_capacity: float = 17.6
     industry_tariff: float = 150
-    save_stats: bool = False
 
 
 class Simulation:
@@ -58,8 +57,7 @@ class Simulation:
         )
         logger.info("Total balance: %.2fEUR" % self.account.balance)
 
-        if self.cfg.save_stats is True:
-            self.save_stats("./logs/stats-%s.csv" % self.cfg.name)
+        self.write_stats("./logs/stats-%s.csv" % self.cfg.name)
 
     def step(self, risk=None, minutes=5):
         if risk:
@@ -129,21 +127,20 @@ class Simulation:
             # NOTE: Wait 1 sec later let all trips start first
             yield self.env.timeout(1)
 
-            # 5. Save simulation stats if enabled
-            if self.cfg.save_stats:
-                self.stats.append(
-                    [
-                        self.env.now - 1,
-                        int(len(evs)),
-                        round(self._fleet_soc(evs), 2),
-                        int(len(self.vpp.evs)),
-                        round(self.vpp.avg_soc(), 2),
-                        round(self.vpp.capacity(), 2),
-                        round(self.vpp.total_charged, 2),
-                        round(self.account.balance, 2),
-                        round(self.vpp.imbalance, 2),
-                    ]
-                )
+            # 5. Save simulation stats
+            self.stats.append(
+                [
+                    self.env.now - 1,
+                    int(len(evs)),
+                    round(self._fleet_soc(evs), 2),
+                    int(len(self.vpp.evs)),
+                    round(self.vpp.avg_soc(), 2),
+                    round(self.vpp.capacity(), 2),
+                    round(self.vpp.total_charged, 2),
+                    round(self.account.balance, 2),
+                    round(self.vpp.imbalance, 2),
+                ]
+            )
 
             # 6. Centrally control charging
             self.controller.charge_fleet(self.env.now - 1)
@@ -161,7 +158,7 @@ class Simulation:
 
         return round(soc / len(evs), 2)
 
-    def save_stats(self, filename):
+    def write_stats(self, filename):
         df_stats = pd.DataFrame(
             data=self.stats,
             columns=[

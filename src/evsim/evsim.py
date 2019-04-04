@@ -96,11 +96,6 @@ def cli(ctx, debug, name, logs):
     default=True,
     help="Refuses rentals of EV that are commited to VPP.",
 )
-@click.option(
-    "--stats/--no-stats",
-    default=True,
-    help="Save logs to file. Turning off improves speed.",
-)
 def simulate(
     ctx,
     ev_capacity,
@@ -110,7 +105,6 @@ def simulate(
     refuse_rentals,
     accuracy,
     risk,
-    stats,
 ):
     click.echo("--- Simulation Settings: ---")
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
@@ -133,7 +127,7 @@ def simulate(
         s = strategy.integrated
 
     cfg = SimulationConfig(
-        ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff, stats
+        ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff
     )
 
     controller = Controller(
