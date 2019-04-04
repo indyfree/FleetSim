@@ -107,6 +107,7 @@ class EV:
         # 4. Drive for the trip duration
         # NOTE: Arrive one second early, to be able to start again
         yield self.env.timeout((duration * 60) - 1)  # seconds
+        account.rental(trip_price)
 
         # 5. Adjust SoC
         self.log(

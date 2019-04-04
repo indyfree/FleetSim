@@ -139,6 +139,7 @@ class Simulation:
                     round(self.vpp.total_charged, 2),
                     round(self.account.balance, 2),
                     round(self.vpp.imbalance, 2),
+                    round(self.account.rental_profits, 2),
                 ]
             )
 
