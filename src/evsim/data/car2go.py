@@ -327,11 +327,20 @@ def _clean_trips(df, duration_threshold):
           - Higher SoC in Sim than in the real data, since trips has been removed.
     """
     logger.info("Cleaning trips...")
+    # 1. Incorrectly charged
     df = _remove_incorrect_charged_evs(df, 20)
+
+    # 2. Adjust charging at previous trip
     df = _end_charging_previous_trip(df, duration_threshold)
+
+    # 3. Remove service trips
     df_service = df.loc[df["trip_duration"] > duration_threshold]
     df.drop(df_service.index, inplace=True)
     logger.info("Removed %d trips that were longer than 2 days." % len(df_service))
+
+    # 4. Remove outliers
+    outliers = ["S-GO2331", "S-GO2644", "S-GO2262", "B-GO8954E"]
+    df = df[~df["EV"].isin(outliers)]
 
     return df
 
