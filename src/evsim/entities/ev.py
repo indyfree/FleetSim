@@ -16,6 +16,9 @@ class EV:
 
         self.charging_step = self._charging_step(battery_capacity, charging_speed, 5)
 
+        self.available = True
+        self.charging = False
+
         self.log("Added to fleet!")
 
     def __repr__(self):
@@ -106,8 +109,11 @@ class EV:
 
         # 4. Drive for the trip duration
         # NOTE: Arrive one second early, to be able to start again
+        self.available = False
+        self.charging = False
         yield self.env.timeout((duration * 60) - 1)  # seconds
         account.rental(trip_price)
+        self.available = True
 
         # 5. Adjust SoC
         self.log(
@@ -120,6 +126,7 @@ class EV:
         # 6. Add to VPP when parked at charger
         if end_charger == 1:
             self.log("At a charging station!")
+            self.charging = True
 
             # Only add to VPP if enough battery capacity to charge next timeslot
             if self.battery.capacity - self.battery.level >= self.charging_step:

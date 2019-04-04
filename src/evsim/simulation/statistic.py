@@ -10,6 +10,7 @@ class Entry:
     timestamp: int = 0
     fleet_evs: float = 0
     fleet_soc: float = 0
+    available_evs: int = 0
     charging_evs: int = 0
     vpp_evs: int = 0
     vpp_soc: float = 0
@@ -32,6 +33,7 @@ class Statistic:
             "timestamp",
             "fleet_evs",
             "fleet_soc",
+            "available_evs",
             "charging_evs",
             "vpp_evs",
             "vpp_soc",

@@ -134,7 +134,8 @@ class Simulation:
                     timestamp=self.env.now - 1,
                     fleet_evs=len(evs),
                     fleet_soc=self._fleet_soc(evs),
-                    charging_evs=0,
+                    available_evs=self._fleet_available(evs),
+                    charging_evs=self._fleet_charging(evs),
                     vpp_soc=self.vpp.avg_soc(),
                     vpp_evs=len(self.vpp.evs),
                     vpp_charging_power_kw=self.vpp.capacity(),
@@ -160,3 +161,21 @@ class Simulation:
             soc += ev.battery.level
 
         return soc / len(evs)
+
+    def _fleet_available(self, evs):
+        if len(evs) == 0:
+            return 0
+        available = 0
+        for ev in evs.values():
+            if ev.available:
+                available += 1
+        return available
+
+    def _fleet_charging(self, evs):
+        if len(evs) == 0:
+            return 0
+        charging = 0
+        for ev in evs.values():
+            if ev.charging:
+                charging += 1
+        return charging
