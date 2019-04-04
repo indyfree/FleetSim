@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import simpy
 
-from . import Account
+from . import Account, Statistic, Entry
 from evsim import entities
 from evsim.data import load
 
@@ -25,10 +25,11 @@ class Simulation:
         self.cfg = cfg
 
         self.account = Account()
+        self.stats = Statistic()
+
         self.controller = controller
 
         self.trips = load.car2go_trips(False)
-        self.stats = list()
 
         self.env = simpy.Environment(initial_time=self.trips.start_time.min())
         self.vpp = entities.VPP(
@@ -57,7 +58,7 @@ class Simulation:
         )
         logger.info("Total balance: %.2fEUR" % self.account.balance)
 
-        self.write_stats("./logs/stats-%s.csv" % self.cfg.name)
+        self.stats.write("./logs/stats-%s.csv" % self.cfg.name)
 
     def step(self, risk=None, minutes=5):
         if risk:
@@ -128,19 +129,20 @@ class Simulation:
             yield self.env.timeout(1)
 
             # 5. Save simulation stats
-            self.stats.append(
-                [
-                    self.env.now - 1,
-                    int(len(evs)),
-                    round(self._fleet_soc(evs), 2),
-                    int(len(self.vpp.evs)),
-                    round(self.vpp.avg_soc(), 2),
-                    round(self.vpp.capacity(), 2),
-                    round(self.vpp.total_charged, 2),
-                    round(self.account.balance, 2),
-                    round(self.vpp.imbalance, 2),
-                    round(self.account.rental_profits, 2),
-                ]
+            self.stats.add(
+                Entry(
+                    timestamp=self.env.now - 1,
+                    fleet_evs=len(evs),
+                    fleet_soc=self._fleet_soc(evs),
+                    charging_evs=0,
+                    vpp_soc=self.vpp.avg_soc(),
+                    vpp_evs=len(self.vpp.evs),
+                    vpp_charging_power_kw=self.vpp.capacity(),
+                    vpp_charged_kwh=self.vpp.total_charged,
+                    balance_eur=self.account.balance,
+                    imbalance_kw=self.vpp.imbalance,
+                    rental_profits=self.account.rental_profits,
+                )
             )
 
             # 6. Centrally control charging
@@ -157,24 +159,4 @@ class Simulation:
         for ev in evs.values():
             soc += ev.battery.level
 
-        return round(soc / len(evs), 2)
-
-    def write_stats(self, filename):
-        df_stats = pd.DataFrame(
-            data=self.stats,
-            columns=[
-                "timestamp",
-                "fleet",
-                "fleet_soc",
-                "ev_vpp",
-                "vpp_soc",
-                "vpp_capacity_kw",
-                "vpp_charged_kwh",
-                "balance_eur",
-                "imbalance_kw",
-            ],
-        )
-        df_stats = df_stats.groupby("timestamp").last()
-        df_stats = df_stats.reset_index()
-        df_stats.to_csv(filename, index=False)
-        df_stats.to_csv("./logs/stats.csv", index=False)
+        return soc / len(evs)

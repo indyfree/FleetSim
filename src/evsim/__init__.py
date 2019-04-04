@@ -1,5 +1,6 @@
 # flake8: noqa
 import evsim.simulation
+from evsim.simulation import statistic
 
 from gym.envs.registration import register
 
