@@ -32,6 +32,10 @@ class Statistic:
     def add(self, entry):
         self.stats.append(asdict(entry))
 
+    def sum(self):
+        df_stats = pd.DataFrame(data=self.stats)
+        return df_stats.sum()
+
     def write(self, filename):
         df_stats = pd.DataFrame(data=self.stats)
         df_stats = df_stats.round(2)

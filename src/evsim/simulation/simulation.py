@@ -51,11 +51,16 @@ class Simulation:
             self.step()
 
         logger.info("---- RESULTS: %s -----" % self.cfg.name)
-        logger.info("Energy charged as VPP: %.2fMWh" % (self.vpp.total_charged / 1000))
+
+        results = self.results.sum()
+        logger.info("Energy charged as VPP: %.2fMWh" % (results.charged_vpp_kwh / 1000))
         logger.info(
-            "Energy that couldn't be charged : %.2fMWh" % (self.vpp.imbalance / 1000)
+            "Energy charged regularly: %.2fMWh" % (results.charged_regular_kwh / 1000)
         )
-        logger.info("Total balance: %.2fEUR" % self.controller.account.balance)
+        logger.info(
+            "Energy that couldn't be charged : %.2fMWh" % (results.imbalance_kwh / 1000)
+        )
+        logger.info("Total balance: %.2fEUR" % results.balance_eur)
 
         self.stats.write("./logs/stats-%s.csv" % self.cfg.name)
         self.results.write("./data/results/%s.csv" % self.cfg.name)
