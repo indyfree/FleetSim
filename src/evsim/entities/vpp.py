@@ -12,8 +12,6 @@ class VPP:
 
         self.evs = dict()
         self.commited_capacity = 0
-        self.imbalance = 0
-        self.total_charged = 0
 
     def log(self, message):
         self.logger.info(
