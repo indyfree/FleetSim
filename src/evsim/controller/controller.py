@@ -110,7 +110,7 @@ class Controller:
             "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs))
         )
         self.dispatch(available_evs)
-        regular_charged_kwh = self._evs_to_kwh(available_evs)
+        regular_charged_kwh = self._evs_to_kwh(len(available_evs))
 
         # 5. Execute Bidding strategy
         profit = self.strategy(self, timeslot, self.risk, self.accuracy)
@@ -159,7 +159,7 @@ class Controller:
             % (len(plan_evs), len(self.vpp.evs), plan.name)
         )
         self.dispatch(plan_evs)
-        charged_kwh = self._evs_to_kwh(plan_evs)
+        charged_kwh = self._evs_to_kwh(len(plan_evs))
 
         rest_evs = available_evs[num_plan_evs:]
         return rest_evs, charged_kwh, imbalance_kwh
@@ -217,11 +217,8 @@ class Controller:
 
         return market.clearing_price(timeslot)
 
-    def _evs_to_kwh(self, evs):
-        if not evs:
-            return 0
-        else:
-            return (len(evs) * self.cfg.charging_power) * (15 / 60)
+    def _evs_to_kwh(self, nb_evs):
+        return (nb_evs * self.cfg.charging_power) * (15 / 60)
 
 
 class ConsumptionPlan:
