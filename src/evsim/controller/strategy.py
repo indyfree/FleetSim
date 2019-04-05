@@ -9,113 +9,21 @@ def regular(controller, timeslot, risk, accuracy=100):
     return 0
 
 
-# TODO: Change for weekly bids!
-def balancing_real(controller, timeslot, risk, accuracy=100):
-    """ Benchmark bidding strategy for balancing market only"""
-
-    # Bid for every 15-minute slot of the next day at 16:00
-    dt = datetime.fromtimestamp(timeslot)
-    if dt.time() != time(16, 0):
-        controller.log("Not a bidding period at balancing market.")
-        return
-
-    tomorrow = dt.date() + timedelta(days=1)
-    market_periods = pd.date_range(
-        start=tomorrow, end=tomorrow + timedelta(days=1), freq="15min"
-    )[:-1]
-
-    for m in market_periods:
-        try:
-            ts = m.to_pydatetime().timestamp()
-            available_capacity = controller.predict_min_capacity(ts, accuracy)
-            quantity = available_capacity * (1 - risk)
-            controller.log(
-                "Bidding for timeslot %s at balancing market."
-                % datetime.fromtimestamp(ts)
-            )
-
-            bid = _update_consumption_plan(
-                controller,
-                controller.balancing,
-                controller.balancing_plan,
-                ts,
-                quantity,
-            )
-            profit = _account_bid(controller, bid)
-            return profit
-        except ValueError as e:
-            controller.warning("Could not update consumption plan: %s." % e)
-
-
 def balancing(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for balancing market only"""
 
-    # Bid for 15-min market period 'm' one week ahead
-    # Assumption: Always get accepted with a bidding price >= clearing price
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
-    m = timeslot + (7 * (60 * 60 * 24))
-    if int((m / 60)) % 15 != 0:
-        return 0
-
-    controller.log(
-        "Bidding for timeslot %s at balancing market." % datetime.fromtimestamp(m)
-    )
-    try:
-        available_capacity = controller.predict_min_capacity(m, accuracy)
-        controller.log(
-            "Predicted %.2f available charging power at %s."
-            % (available_capacity, datetime.fromtimestamp(m))
-        )
-        quantity = available_capacity * (1 - risk)
-        controller.log(
-            "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
-            % (quantity, datetime.fromtimestamp(m), risk)
-        )
-        bid = _update_consumption_plan(
-            controller, controller.balancing, controller.balancing_plan, m, quantity
-        )
-        profit = _account_bid(controller, bid)
-        return profit
-    except ValueError as e:
-        controller.warning(e)
-        return 0
+    # 7 days lead time
+    leadtime = 7 * (60 * 60 * 24)
+    return market(controller, timeslot, leadtime, risk, accuracy)
 
 
 def intraday(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for intraday market only"""
 
-    # Bid for 15-min market period m 30 min ahead
-    # NOTE: Assumption: 30min(!) ahead we can always procure
-    # with a bidding price >= clearing price
-    m = timeslot + (60 * 30)
-    if int((m / 60)) % 15 != 0:
-        controller.log("Not a bidding period at intraday market.")
-        return 0
-
-    controller.log(
-        "Bidding for timeslot %s at intraday market." % datetime.fromtimestamp(m)
-    )
-    try:
-        available_capacity = controller.predict_min_capacity(m, accuracy)
-        controller.log(
-            "Predicted %.2f available charging power at %s."
-            % (available_capacity, datetime.fromtimestamp(m))
-        )
-        charging_balancing = controller.balancing_plan.get(m)
-        quantity = (available_capacity - charging_balancing) * (1 - risk)
-        controller.log(
-            "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
-            % (quantity, datetime.fromtimestamp(m), risk)
-        )
-        bid = _update_consumption_plan(
-            controller, controller.intraday, controller.intraday_plan, m, quantity
-        )
-        profit = _account_bid(controller, bid) if bid else 0
-        return profit
-
-    except ValueError as e:
-        controller.warning(e)
-        return 0
+    # 30 minute lead time
+    leadtime = 60 * 30
+    return market(controller, timeslot, leadtime, risk, accuracy)
 
 
 def integrated(controller, timeslot, risk, accuracy=100):
@@ -131,6 +39,42 @@ def integrated(controller, timeslot, risk, accuracy=100):
     profit += balancing(controller, timeslot, risk=risk)
     profit += intraday(controller, timeslot, risk=0)
     return profit
+
+
+def market(controller, timeslot, leadtime, risk, accuracy):
+    market_period = timeslot + leadtime
+
+    if int(market_period / 60) % 15 != 0:
+        controller.log("Not a bidding period.")
+        return 0
+
+    controller.log(
+        "Bidding for timeslot %s at balancing market."
+        % datetime.fromtimestamp(market_period)
+    )
+    try:
+        available_capacity = controller.predict_min_capacity(market_period, accuracy)
+        controller.log(
+            "Predicted %.2f available charging power at %s."
+            % (available_capacity, datetime.fromtimestamp(market_period))
+        )
+        quantity = available_capacity * (1 - risk)
+        controller.log(
+            "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
+            % (quantity, datetime.fromtimestamp(market_period), risk)
+        )
+        bid = _update_consumption_plan(
+            controller,
+            controller.balancing,
+            controller.balancing_plan,
+            market_period,
+            quantity,
+        )
+        profit = _account_bid(controller, bid)
+        return profit
+    except ValueError as e:
+        controller.warning(e)
+        return 0
 
 
 def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
