@@ -15,18 +15,14 @@ class SimEntry:
     vpp_evs: int = 0
     vpp_soc: float = 0
     vpp_charging_power_kw: float = 0
-    vpp_charged_kwh: float = 0
-    balance_eur: float = 0
-    imbalance_kw: float = 0
-    rental_profits: float = 0
 
 
-@dataclass(frozen=True)
+@dataclass()
 class ResultEntry:
-    charged_kwh: float = 0
     balance_eur: float = 0
-    imbalance_kw: float = 0
-    rental_profits: float = 0
+    charged_kwh: float = 0
+    charged_vpp_kwh: float = 0
+    imbalance_kwh: float = 0
 
 
 class Statistic:
