@@ -67,6 +67,9 @@ class Controller:
             )
         self._risk = value
 
+    def planned_kw(self, t):
+        return self.balancing_plan.get(t) + self.intraday_plan.get(t)
+
     def charge_fleet(self, timeslot):
         """ Perform a charging operation on the fleet for a given timeslot.
             Takes a a list of EVs as input and charges given its strategy.
