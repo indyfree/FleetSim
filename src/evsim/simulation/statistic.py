@@ -19,6 +19,7 @@ class SimEntry:
 
 @dataclass()
 class ResultEntry:
+    timestamp: int = 0
     balance_eur: float = 0
     charged_regular_kwh: float = 0
     charged_vpp_kwh: float = 0

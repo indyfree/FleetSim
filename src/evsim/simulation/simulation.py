@@ -147,6 +147,7 @@ class Simulation:
             b, vpp, r, i = self.controller.charge_fleet(self.env.now - 1)
             self.results.add(
                 ResultEntry(
+                    timestamp=self.env.now - 1,
                     balance_eur=b,
                     charged_regular_kwh=r,
                     charged_vpp_kwh=vpp,
