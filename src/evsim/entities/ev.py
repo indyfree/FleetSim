@@ -76,7 +76,7 @@ class EV:
 
         # 1. Check if enough battery for trip left
         if trip_charge > 0 and self.battery.level < trip_charge:
-            self.log("Not enough battery for the planned trip %d!" % rental)
+            self.error("Not enough battery for the planned trip %d!" % rental)
             self.log(
                 "Account for lost profits of %.2f EUR. Current balance %.2f EUR."
                 % (trip_price, account.balance)
