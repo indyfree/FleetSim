@@ -82,6 +82,7 @@ class EV:
                 % (trip_price, account.balance)
             )
             account.subtract(trip_price)
+            account.lost_rental(trip_price)
             return
 
         # 2. Refuse rental if other EVs in VPP can not substitute capacity
@@ -101,6 +102,7 @@ class EV:
                 % (trip_price, account.balance)
             )
             account.subtract(trip_price)
+            account.lost_rental(trip_price)
             return
 
         # 3. Remove EV from VPP if allocated to it

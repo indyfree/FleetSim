@@ -145,15 +145,22 @@ class Simulation:
 
             # 6. Centrally control charging
             b, vpp, r, i = self.controller.charge_fleet(self.env.now - 1)
+
+            # NOTE: Think of other way to pass rental costs back from EV
+            lost_rentals_eur = self.controller.account.lost_rental
+            self.controller.account.lost_rental = 0
+
             self.results.add(
                 ResultEntry(
                     timestamp=self.env.now - 1,
-                    balance_eur=b,
+                    balance_eur=b - lost_rentals_eur,
                     charged_regular_kwh=r,
                     charged_vpp_kwh=vpp,
                     imbalance_kwh=i,
                 )
             )
+            # NOTE: Think of other way to pass rental costs back from EV
+            self.controller.account.lost_rental = 0
 
             # 7. Wait 5 min timestep
             yield self.env.timeout((5 * 60) - 1)
