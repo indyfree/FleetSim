@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import simpy
 
-from . import Account, Statistic, SimEntry
+from . import Statistic, SimEntry, ResultEntry
 from evsim import entities
 from evsim.data import load
 
@@ -24,7 +24,6 @@ class Simulation:
 
         self.cfg = cfg
 
-        self.account = Account()
         self.stats = Statistic()
         self.results = Statistic()
 
@@ -41,7 +40,6 @@ class Simulation:
 
         # Pass references to controller
         self.controller.env = self.env
-        self.controller.account = self.account
         self.controller.vpp = self.vpp
 
         # Start lifecycle
@@ -57,9 +55,10 @@ class Simulation:
         logger.info(
             "Energy that couldn't be charged : %.2fMWh" % (self.vpp.imbalance / 1000)
         )
-        logger.info("Total balance: %.2fEUR" % self.account.balance)
+        logger.info("Total balance: %.2fEUR" % self.controller.account.balance)
 
         self.stats.write("./logs/stats-%s.csv" % self.cfg.name)
+        self.results.write("./data/results/%s.csv" % self.cfg.name)
 
     def step(self, risk=None, minutes=5):
         if risk:
@@ -70,7 +69,7 @@ class Simulation:
         else:
             self.env.run(until=(self.env.now + (60 * minutes)))
 
-        return self.account.balance, self.done
+        return self.controller.account.balance, self.done
 
     def lifecycle(self):
         evs = {}
@@ -121,7 +120,7 @@ class Simulation:
                         trip.start_soc - trip.end_soc,
                         trip.end_charging,
                         trip.trip_price,
-                        account=self.account,
+                        account=self.controller.account,
                         refuse=self.controller.refuse_rentals,
                     )
                 )
@@ -144,7 +143,15 @@ class Simulation:
             )
 
             # 6. Centrally control charging
-            self.controller.charge_fleet(self.env.now - 1)
+            b, vpp, r, i = self.controller.charge_fleet(self.env.now - 1)
+            self.results.add(
+                ResultEntry(
+                    balance_eur=b,
+                    charged_regular_kwh=r,
+                    charged_vpp_kwh=vpp,
+                    imbalance_kwh=i,
+                )
+            )
 
             # 7. Wait 5 min timestep
             yield self.env.timeout((5 * 60) - 1)
