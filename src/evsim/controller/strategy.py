@@ -6,7 +6,7 @@ from evsim.market import Bid
 
 def regular(controller, timeslot, risk, accuracy=100):
     """ Charge all EVs at regular prices"""
-    pass
+    return 0
 
 
 # TODO: Change for weekly bids!
@@ -67,13 +67,16 @@ def balancing(controller, timeslot, risk, accuracy=100):
                 "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
                 % (quantity, datetime.fromtimestamp(m), risk)
             )
-            _update_consumption_plan(
+            bid = _update_consumption_plan(
                 controller, controller.balancing, controller.balancing_plan, m, quantity
             )
+            profit = _account_bid(controller, bid)
+            return profit
         except ValueError as e:
             controller.warning(e)
     else:
         controller.log("Not a bidding period at balancing market.")
+    return 0
 
 
 def intraday(controller, timeslot, risk, accuracy=100):
@@ -91,13 +94,17 @@ def intraday(controller, timeslot, risk, accuracy=100):
             available_capacity = controller.predict_min_capacity(m, accuracy)
             charging_balancing = controller.balancing_plan.get(m)
             quantity = (available_capacity - charging_balancing) * (1 - risk)
-            _update_consumption_plan(
+            bid = _update_consumption_plan(
                 controller, controller.intraday, controller.intraday_plan, m, quantity
             )
+            profit = _account_bid(controller, bid)
+            return profit
+
         except ValueError as e:
             controller.warning(e)
     else:
         controller.log("Not a bidding period at intraday market.")
+    return 0
 
 
 def integrated(controller, timeslot, risk, accuracy=100):
@@ -109,8 +116,10 @@ def integrated(controller, timeslot, risk, accuracy=100):
 
     """
     # TODO: Skip bidding balancing if intraday price better
-    balancing(controller, timeslot, risk=risk)
-    intraday(controller, timeslot, risk=0)
+    profit = 0
+    profit += balancing(controller, timeslot, risk=risk)
+    profit += intraday(controller, timeslot, risk=0)
+    return profit
 
 
 def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
@@ -130,7 +139,6 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         )
         return None
 
-    # NOTE: Simple strategy to always bid at predicted clearing price
     bid = Bid(timeslot, predicted_clearing_price, quantity)
     try:
         successful = market.place_bid(bid)
@@ -156,12 +164,12 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
             )
         )
 
-        _account_bid(controller, bid)
-
         # TODO: Better data structure to save 15 min consumption plan
         for t in [0, 5, 10]:
             time = bid.marketperiod + (60 * t)
             consumption_plan.add(time, bid.quantity)
+
+        return bid
 
 
 def _account_bid(controller, bid):
@@ -169,13 +177,13 @@ def _account_bid(controller, bid):
     quantity_mwh = bid.quantity * (15 / 60) / 1000
     costs = quantity_mwh * bid.price
     regular_costs = quantity_mwh * controller.cfg.industry_tariff
-    revenue = regular_costs - costs
+    profit = regular_costs - costs
 
     costs = (bid.quantity * (15 / 60) / 1000) * (
         controller.cfg.industry_tariff - bid.price
     )
-    controller.account.add(revenue)
     controller.log(
         "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
         % (costs, controller.account.balance)
     )
+    return profit
