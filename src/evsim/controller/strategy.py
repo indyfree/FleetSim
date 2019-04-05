@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta, time
-import pandas as pd
-
+from datetime import datetime
 from evsim.market import Bid
 
 
@@ -15,7 +13,15 @@ def balancing(controller, timeslot, risk, accuracy=100):
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
     # 7 days lead time
     leadtime = 7 * (60 * 60 * 24)
-    return market(controller, timeslot, leadtime, risk, accuracy)
+    return market_strategy(
+        controller,
+        controller.balancing_market,
+        controller.balancing_plan,
+        timeslot,
+        leadtime,
+        risk,
+        accuracy,
+    )
 
 
 def intraday(controller, timeslot, risk, accuracy=100):
@@ -23,7 +29,15 @@ def intraday(controller, timeslot, risk, accuracy=100):
 
     # 30 minute lead time
     leadtime = 60 * 30
-    return market(controller, timeslot, leadtime, risk, accuracy)
+    return market_strategy(
+        controller,
+        controller.intraday_market,
+        controller.intraday_plan,
+        timeslot,
+        leadtime,
+        risk,
+        accuracy,
+    )
 
 
 def integrated(controller, timeslot, risk, accuracy=100):
@@ -41,7 +55,7 @@ def integrated(controller, timeslot, risk, accuracy=100):
     return profit
 
 
-def market(controller, timeslot, leadtime, risk, accuracy):
+def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy):
     market_period = timeslot + leadtime
 
     if int(market_period / 60) % 15 != 0:
@@ -64,13 +78,10 @@ def market(controller, timeslot, leadtime, risk, accuracy):
             % (quantity, datetime.fromtimestamp(market_period), risk)
         )
         bid = _update_consumption_plan(
-            controller,
-            controller.balancing,
-            controller.balancing_plan,
-            market_period,
-            quantity,
+            controller, market, plan, market_period, quantity
         )
-        profit = _account_bid(controller, bid)
+
+        profit = _bid_profit(bid, controller.cfg.industry_tariff) if bid else 0
         return profit
     except ValueError as e:
         controller.warning(e)
@@ -127,18 +138,8 @@ def _update_consumption_plan(controller, market, consumption_plan, timeslot, qua
         return bid
 
 
-def _account_bid(controller, bid):
-    # Quantity MWh: (kw * h / 1000)
-    quantity_mwh = bid.quantity * (15 / 60) / 1000
-    costs = quantity_mwh * bid.price
-    regular_costs = quantity_mwh * controller.cfg.industry_tariff
-    profit = regular_costs - costs
-
-    costs = (bid.quantity * (15 / 60) / 1000) * (
-        controller.cfg.industry_tariff - bid.price
-    )
-    controller.log(
-        "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
-        % (costs, controller.account.balance)
-    )
+def _bid_profit(bid, industry_tariff):
+    # Quantity MWh * (cheaper tariff)
+    profit = (bid.quantity * (15 / 60) / 1000) * (industry_tariff - bid.price)
+    profit = round(profit, 2)
     return profit

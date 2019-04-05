@@ -22,8 +22,8 @@ class Controller:
         # NOTE: When regular strategy no need for capacity and price data
         if strategy.__name__ != "regular":
             self.fleet_capacity = load.simulation_baseline()
-            self.balancing = Market(load.balancing_prices())
-            self.intraday = Market(load.intraday_prices())
+            self.balancing_market = Market(load.balancing_prices())
+            self.intraday_market = Market(load.intraday_prices())
 
         # Risk parameter set from outside, i.e. RL Agent
         self._risk = risk
@@ -110,6 +110,11 @@ class Controller:
         imbalance_eur = imbalance_kwh * 1000
         balance_eur = profit - imbalance_eur
         self.account.add(balance_eur)
+        if profit != 0:
+            self.log(
+                "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
+                % (profit, self.account.balance)
+            )
 
         return balance_eur, vpp_charged_kwh, regular_charged_kwh, imbalance_kwh
 
