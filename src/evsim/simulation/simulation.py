@@ -58,7 +58,7 @@ class Simulation:
             "Energy charged regularly: %.2fMWh" % (results.charged_regular_kwh / 1000)
         )
         logger.info(
-            "Energy that couldn't be charged : %.2fMWh" % (results.imbalance_kwh / 1000)
+            "Energy that couldn't be charged: %.2fMWh" % (results.imbalance_kwh / 1000)
         )
         logger.info("Total balance: %.2fEUR" % results.balance_eur)
 
