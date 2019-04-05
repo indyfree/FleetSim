@@ -8,7 +8,15 @@ from evsim.market import Market
 
 
 class Controller:
-    def __init__(self, cfg, strategy, accuracy=100, risk=0, refuse_rentals=True):
+    def __init__(
+        self,
+        cfg,
+        strategy,
+        accuracy=100,
+        risk=0,
+        imbalance_costs=1000,
+        refuse_rentals=True,
+    ):
         self.logger = logging.getLogger(__name__)
 
         self.cfg = cfg
@@ -27,6 +35,8 @@ class Controller:
 
         # Risk parameter set from outside, i.e. RL Agent
         self._risk = risk
+        # Imbalance Costs for learning
+        self.imbalance_costs = imbalance_costs
 
         # Reference simulation objects
         self.env = None
@@ -106,17 +116,16 @@ class Controller:
         profit = self.strategy(self, timeslot, self.risk, self.accuracy)
 
         # 6. Account for cost and profits
-        # NOTE: Assume artificially high imbalance costs of 1000EUR/MWh
-        imbalance_eur = imbalance_kwh * 1000
-        balance_eur = profit - imbalance_eur
-        self.account.add(balance_eur)
-        if profit != 0:
-            self.log(
-                "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
-                % (profit, self.account.balance)
-            )
+        imbalance_eur = imbalance_kwh * self.imbalance_costs
+        self.account.subtract(imbalance_eur)
+        self.account.add(profit)
 
-        return balance_eur, vpp_charged_kwh, regular_charged_kwh, imbalance_kwh
+        self.log(
+            "Charge for %.2f EUR less than regularly. Current balance: %.2f EUR."
+            % (profit, self.account.balance)
+        )
+
+        return profit, vpp_charged_kwh, regular_charged_kwh, imbalance_kwh
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
@@ -239,6 +248,8 @@ class Account:
     def __init__(self, balance=0):
         self.balance = balance
         self.rental_profits = 0
+        self.lost_rental_eur = 0
+        self.lost_rental_nb = 0
 
     def add(self, amount):
         self.balance += amount
@@ -248,3 +259,11 @@ class Account:
 
     def rental(self, price):
         self.rental_profits += price
+
+    def lost_rental(self, price):
+        self.lost_rental_eur += price
+        self.lost_rental_nb += 1
+
+    def lost_rental_reset(self):
+        self.lost_rental_eur = 0
+        self.lost_rental_nb = 0
