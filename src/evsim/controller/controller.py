@@ -218,7 +218,10 @@ class Controller:
         return market.clearing_price(timeslot)
 
     def _evs_to_kwh(self, evs):
-        return (len(evs) * self.cfg.charging_power) * (15 / 60)
+        if not evs:
+            return 0
+        else:
+            return (len(evs) * self.cfg.charging_power) * (15 / 60)
 
 
 class ConsumptionPlan:
