@@ -58,9 +58,14 @@ class Simulation:
             "Energy charged regularly: %.2fMWh" % (results.charged_regular_kwh / 1000)
         )
         logger.info(
-            "Energy that couldn't be charged: %.2fMWh" % (results.imbalance_kwh / 1000)
+            "Energy that couldn't be charged (imbalance): %.2fMWh"
+            % (results.imbalance_kwh / 1000)
         )
-        logger.info("Total balance: %.2fEUR" % results.balance_eur)
+        logger.info("Total charging profits: %.2fEUR" % results.profit_eur)
+        logger.info(
+            "Total lost rental costs: %.2fEUR (%d rentals)"
+            % (results.lost_rentals_eur, results.lost_rentals_nb)
+        )
 
         self.stats.write("./logs/stats-%s.csv" % self.cfg.name)
         self.results.write("./data/results/%s.csv" % self.cfg.name)
@@ -144,23 +149,24 @@ class Simulation:
             )
 
             # 6. Centrally control charging
-            b, vpp, r, i = self.controller.charge_fleet(self.env.now - 1)
+            p, vpp, r, i = self.controller.charge_fleet(self.env.now - 1)
 
             # NOTE: Think of other way to pass rental costs back from EV
-            lost_rentals_eur = self.controller.account.lost_rental
-            self.controller.account.lost_rental = 0
+            lost_rentals_eur = self.controller.account.lost_rental_eur
+            lost_rentals_nb = self.controller.account.lost_rental_nb
+            self.controller.account.lost_rental_reset()
 
             self.results.add(
                 ResultEntry(
                     timestamp=self.env.now - 1,
-                    balance_eur=b - lost_rentals_eur,
+                    profit_eur=p,
+                    lost_rentals_eur=lost_rentals_eur,
+                    lost_rentals_nb=lost_rentals_nb,
                     charged_regular_kwh=r,
                     charged_vpp_kwh=vpp,
                     imbalance_kwh=i,
                 )
             )
-            # NOTE: Think of other way to pass rental costs back from EV
-            self.controller.account.lost_rental = 0
 
             # 7. Wait 5 min timestep
             yield self.env.timeout((5 * 60) - 1)

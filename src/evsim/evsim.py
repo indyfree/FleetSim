@@ -147,9 +147,14 @@ def simulate(
         "Energy charged regularly: %.2fMWh" % (results.charged_regular_kwh / 1000)
     )
     click.echo(
-        "Energy that couldn't be charged: %.2fMWh" % (results.imbalance_kwh / 1000)
+        "Energy that couldn't be charged (imbalance): %.2fMWh"
+        % (results.imbalance_kwh / 1000)
     )
-    click.echo("Total balance: %.2fEUR" % results.balance_eur)
+    click.echo("Total charging profits: %.2fEUR" % results.profit_eur)
+    click.echo(
+        "Total lost rental costs: %.2fEUR (%d rentals)"
+        % (results.lost_rentals_eur, results.lost_rentals_nb)
+    )
     click.echo("Elapsed time %.2f minutes" % ((time.time() - start) / 60))
 
 
