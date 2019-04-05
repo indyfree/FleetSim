@@ -20,7 +20,7 @@ class SimEntry:
 @dataclass()
 class ResultEntry:
     balance_eur: float = 0
-    charged_kwh: float = 0
+    charged_regular_kwh: float = 0
     charged_vpp_kwh: float = 0
     imbalance_kwh: float = 0
 

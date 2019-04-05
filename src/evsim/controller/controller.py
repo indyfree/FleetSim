@@ -12,6 +12,7 @@ class Controller:
         self.logger = logging.getLogger(__name__)
 
         self.cfg = cfg
+        self.account = Account()
         self.strategy = strategy
         self.accuracy = accuracy
 
@@ -29,7 +30,6 @@ class Controller:
 
         # Reference simulation objects
         self.env = None
-        self.account = None
         self.vpp = None
 
         # Strategy specific optionals
@@ -73,24 +73,42 @@ class Controller:
         """
 
         # 1. Sort according to charging priority
-        # TODO: Improve dispatch order
         available_evs = sorted(
             self.vpp.evs.values(), key=attrgetter("battery.level"), reverse=True
         )
 
         # 2. Charge balancing
-        available_evs = self.charge_plan(timeslot, available_evs, self.balancing_plan)
+        vpp_charged_kwh, imbalance_kwh = 0, 0
+        available_evs, charged, imbalance = self.charge_plan(
+            timeslot, available_evs, self.balancing_plan
+        )
+        vpp_charged_kwh += charged
+        imbalance_kwh += imbalance
+
         # 3. Charge intraday
-        available_evs = self.charge_plan(timeslot, available_evs, self.intraday_plan)
+        available_evs, charged, imbalance = self.charge_plan(
+            timeslot, available_evs, self.intraday_plan
+        )
+        vpp_charged_kwh += charged
+        imbalance_kwh += imbalance
 
         # 4. Charge remaining EVs regulary
         self.log(
             "Charging %d/%d EVs regulary." % (len(available_evs), len(self.vpp.evs))
         )
         self.dispatch(available_evs)
+        regular_charged_kwh = self._evs_to_kwh(available_evs)
 
         # 5. Execute Bidding strategy
-        self.strategy(self, timeslot, self.risk, self.accuracy)
+        profit = self.strategy(self, timeslot, self.risk, self.accuracy)
+
+        # 6. Account for cost and profits
+        # NOTE: Assume artificially high imbalance costs of 1000EUR/MWh
+        imbalance_eur = imbalance_kwh * 1000
+        balance_eur = profit - imbalance_eur
+        self.account.add(balance_eur)
+
+        return balance_eur, vpp_charged_kwh, regular_charged_kwh, imbalance_kwh
 
     def charge_plan(self, timeslot, available_evs, plan):
         """ Charge according to a predifined consumption plan"""
@@ -103,13 +121,9 @@ class Controller:
         )
 
         # 1. Handle overcommitments
+        imbalance_kwh = 0
         if num_plan_evs > len(available_evs):
-            imbalance_kwh = (
-                (num_plan_evs - len(available_evs))
-                * self.cfg.charging_power
-                * (15 / 60)
-            )
-            self.vpp.imbalance += imbalance_kwh
+            imbalance_kwh = self._evs_to_kwh(num_plan_evs - len(available_evs))
             self.warning(
                 (
                     "Commited %d EVs, but only %d available,  "
@@ -117,8 +131,6 @@ class Controller:
                 )
                 % (num_plan_evs, len(available_evs), imbalance_kwh)
             )
-            # NOTE: Assume artificially high imbalance costs of 1000EUR/MWh
-            self.account.subtract(imbalance_kwh * 1000)
 
             # Charge remaining available EVs
             num_plan_evs = len(available_evs)
@@ -130,18 +142,15 @@ class Controller:
             % (len(plan_evs), len(self.vpp.evs), plan.name)
         )
         self.dispatch(plan_evs)
-        self.vpp.total_charged += (len(plan_evs) * self.cfg.charging_power) * (15 / 60)
+        charged_kwh = self._evs_to_kwh(plan_evs)
 
         rest_evs = available_evs[num_plan_evs:]
-        return rest_evs
+        return rest_evs, charged_kwh, imbalance_kwh
 
     def dispatch(self, evs):
         """Dispatches EVs to charging"""
         for ev in evs:
             ev.action = ev.charge_timestep()
-
-    def planned_kw(self, t):
-        return self.balancing_plan.get(t) + self.intraday_plan.get(t)
 
     # TODO: Better distort data for prediction
     def predict_capacity(self, timeslot, accuracy=100):
@@ -190,6 +199,9 @@ class Controller:
         """
 
         return market.clearing_price(timeslot)
+
+    def _evs_to_kwh(self, evs):
+        return (len(evs) * self.cfg.charging_power) * (15 / 60)
 
 
 class ConsumptionPlan:
