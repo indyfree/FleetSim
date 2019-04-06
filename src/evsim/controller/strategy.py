@@ -77,6 +77,8 @@ def integrated(controller, timeslot, risk, accuracy=100):
 
 
 def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy):
+    assert 0 <= risk and risk <= 1
+
     market_period = timeslot + leadtime
     mp_dt = datetime.fromtimestamp(market_period)
 
