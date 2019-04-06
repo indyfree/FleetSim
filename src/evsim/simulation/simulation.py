@@ -68,7 +68,7 @@ class Simulation:
         )
 
         self.stats.write("./logs/stats-%s.csv" % self.cfg.name)
-        self.results.write("./data/results/%s.csv" % self.cfg.name)
+        self.results.write("./results/%s.csv" % self.cfg.name)
 
     def step(self, risk=None, minutes=5):
         if risk:
