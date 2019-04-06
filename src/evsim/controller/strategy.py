@@ -1,6 +1,11 @@
 from datetime import datetime
 from evsim.market import Bid
 
+minute = 60
+hour = minute * 60
+day = hour * 24
+week = day * 7
+
 
 def regular(controller, timeslot, risk, accuracy=100):
     """ Charge all EVs at regular prices"""
@@ -12,7 +17,7 @@ def balancing(controller, timeslot, risk, accuracy=100):
 
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
     # 7 days lead time
-    leadtime = 7 * (60 * 60 * 24)
+    leadtime = week
     return market_strategy(
         controller,
         controller.balancing_market,
@@ -28,7 +33,7 @@ def intraday(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for intraday market only"""
 
     # 30 minute lead time
-    leadtime = 60 * 30
+    leadtime = 30 * minute
     return market_strategy(
         controller,
         controller.intraday_market,
@@ -43,27 +48,30 @@ def intraday(controller, timeslot, risk, accuracy=100):
 def integrated(controller, timeslot, risk, accuracy=100):
     """ Charge predicted available EVs according to an integrated strategy:
 
-    1. Charge predicted amount from balancing one week ahead if cheaper than intraday
+    1. Charge predicted amount from balancing one week ahead if
+       cheaper than intraday one week
     2. Charge predicted rest from intraday 30-min ahead
-    3. Charge rest regulary(?)
 
     """
+    profit = 0
     pb, pi = None, None
+
     try:
-        pb = controller.predict_clearing_price(controller.balancing_market, timeslot)
+        pb = controller.balancing_market.clearing_price(timeslot + week)
     except ValueError as e:
         controller.warning(e)
     try:
-        pi = controller.predict_clearing_price(controller.intraday_market, timeslot)
+        pi = controller.intraday_market.clearing_price(timeslot + week)
     except ValueError as e:
         controller.warning(e)
 
-    profit = 0
-    if pb and pi and (pi > pb):
+    # Only buy from balancing if cheaper than intraday
+    if pb and pi and (pb < pi):
         profit += balancing(controller, timeslot, risk=risk)
     elif pb:
         profit += balancing(controller, timeslot, risk=risk)
 
+    # Always buy (rest) from intraday
     profit += intraday(controller, timeslot, risk=0)
     return profit
 
