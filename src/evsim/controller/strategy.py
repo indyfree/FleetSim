@@ -72,6 +72,7 @@ def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy
             "Predicted %.2f available charging power at %s."
             % (available_capacity, datetime.fromtimestamp(market_period))
         )
+        available_capacity = available_capacity - controller.planned_kw(market_period)
         quantity = available_capacity * (1 - risk)
         controller.log(
             "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
