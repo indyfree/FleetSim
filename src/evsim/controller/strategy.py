@@ -48,10 +48,21 @@ def integrated(controller, timeslot, risk, accuracy=100):
     3. Charge rest regulary(?)
 
     """
-    # TODO: Skip bidding balancing if intraday price better
+    pb, pi = None, None
+    try:
+        pb = controller.predict_clearing_price(controller.balancing_market, timeslot)
+    except ValueError as e:
+        controller.warning(e)
+    try:
+        pi = controller.predict_clearing_price(controller.intraday_market, timeslot)
+    except ValueError as e:
+        controller.warning(e)
+
     profit = 0
-    profit += balancing(controller, timeslot, risk=risk)
-    profit += intraday(controller, timeslot, risk=0)
+    if pb and pi and (pi > pb):
+        profit += balancing(controller, timeslot, risk=risk)
+    elif pi:
+        profit += intraday(controller, timeslot, risk=0)
     return profit
 
 
