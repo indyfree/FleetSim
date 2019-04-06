@@ -253,7 +253,7 @@ def balancing_prices():
 @click.pass_context
 def controller(ctx):
     cfg = SimulationConfig()
-    c = Controller(cfg, strategy.regular)
+    c = Controller(cfg, strategy.intraday)
     ctx.obj["CONTROLLER"] = c
     return True
 
@@ -316,13 +316,13 @@ def clearing_price(ctx, timeslot, market):
     controller = ctx.obj["CONTROLLER"]
 
     if market == "intraday":
-        market = controller.intraday
+        market = controller.intraday_market
     elif market == "balancing":
-        market = controller.balancing
+        market = controller.balancing_market
 
     try:
         ts = int(datetime.fromisoformat(timeslot).timestamp())
-        click.echo("%.2f EUR/MWh" % controller.predict_clearing_price(market, ts))
+        click.echo("%.2f EUR/MWh" % market.clearing_price(ts))
     except ValueError as e:
         logger.error(e)
 
