@@ -61,93 +61,76 @@ def integrated(controller, timeslot, risk, accuracy=100):
     profit = 0
     if pb and pi and (pi > pb):
         profit += balancing(controller, timeslot, risk=risk)
-    elif pi:
-        profit += intraday(controller, timeslot, risk=0)
+    elif pb:
+        profit += balancing(controller, timeslot, risk=risk)
+
+    profit += intraday(controller, timeslot, risk=0)
     return profit
 
 
 def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy):
     market_period = timeslot + leadtime
+    mp_dt = datetime.fromtimestamp(market_period)
 
     if int(market_period / 60) % 15 != 0:
         controller.log("Not a bidding period.")
         return 0
 
-    controller.log(
-        "Bidding for timeslot %s at balancing market."
-        % datetime.fromtimestamp(market_period)
-    )
-    try:
-        available_capacity = controller.predict_min_capacity(market_period, accuracy)
-        controller.log(
-            "Predicted %.2f available charging power at %s."
-            % (available_capacity, datetime.fromtimestamp(market_period))
-        )
-        available_capacity = available_capacity - controller.planned_kw(market_period)
-        quantity = available_capacity * (1 - risk)
-        controller.log(
-            "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
-            % (quantity, datetime.fromtimestamp(market_period), risk)
-        )
-        bid = _update_consumption_plan(
-            controller, market, plan, market_period, quantity
-        )
-
-        profit = _bid_profit(bid, controller.cfg.industry_tariff) if bid else 0
-        return profit
-    except ValueError as e:
-        controller.warning(e)
+    if plan.get(market_period) != 0:
+        controller.log("Already bid for %s in %s"(market.__name__, mp_dt))
         return 0
 
-
-def _update_consumption_plan(controller, market, consumption_plan, timeslot, quantity):
-    """ Updates the consumption plan for a given timeslot (POSIX timestamp)
-    """
-
+    # Predict clearing price
     try:
-        predicted_clearing_price = controller.predict_clearing_price(market, timeslot)
+        cp = market.clearing_price(market_period)
     except ValueError as e:
-        controller.warning(e)
-        return None
+        controller.warning("Not bidding: %s" % e)
+        return 0
 
-    if predicted_clearing_price > controller.cfg.industry_tariff:
+    if cp > controller.cfg.industry_tariff:
         controller.log(
             "The industry tariff is cheaper (%.2f > %.2f)"
-            % (predicted_clearing_price, controller.cfg.industry_tariff)
+            % (cp, controller.cfg.industry_tariff)
         )
-        return None
+        return 0
 
-    bid = Bid(timeslot, predicted_clearing_price, quantity)
+    # Predict available charging power
     try:
-        successful = market.place_bid(bid)
+        charging_power = controller.predict_min_capacity(market_period, accuracy)
     except ValueError as e:
-        controller.warning(e)
-        return None
+        controller.warning("Not bidding: %s" % e)
+        return 0
+    controller.log(
+        "Predicted %.2f available charging power at %s." % (charging_power, mp_dt)
+    )
 
-    if successful is False:
-        controller.log("Bid unsuccessful")
-        return None
-    elif consumption_plan.get(timeslot) != 0:
-        raise ValueError(
-            "%s was already in consumption plan"
-            % datetime.fromtimestamp(bid.marketperiod)
-        )
-    else:
+    # Reduce quantity if already something bought
+    quantity = charging_power - controller.planned_kw(market_period)
+    # Deduct risk factor from quantity
+    quantity = quantity * (1 - risk)
+
+    # Actual Bidding
+    controller.log(
+        "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
+        % (quantity, mp_dt, risk)
+    )
+    bid = Bid(market_period, cp, quantity)
+    successful = market.place_bid(bid)
+    if successful:
         controller.log(
             "Bought %.2f kWh for %.2f EUR/MWh for 15-min timeslot %s"
-            % (
-                bid.quantity * (15 / 60),
-                bid.price,
-                datetime.fromtimestamp(bid.marketperiod),
-            )
+            % (bid.quantity * (15 / 60), bid.price, mp_dt)
         )
+    else:
+        controller.log("Bid unsuccessful")
+        return 0
 
-        # TODO: Better data structure to save 15 min consumption plan
-        for t in [0, 5, 10]:
-            time = bid.marketperiod + (60 * t)
-            consumption_plan.add(time, bid.quantity)
+    # Update consumption plan for control periods
+    for t in [0, 5, 10]:
+        plan.add(bid.marketperiod + (60 * t), bid.quantity)
 
-        return bid
+    profit = _bid_profit(bid, controller.cfg.industry_tariff)
+    return profit
 
 
 def _bid_profit(bid, industry_tariff):
