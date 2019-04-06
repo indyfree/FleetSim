@@ -209,14 +209,6 @@ class Controller:
             )
         return cap
 
-    def predict_clearing_price(self, market, timeslot, accuracy=100):
-        """ Predict the clearing price for a 15-min contract at a given timeslot.
-        Takes a dataframe and timeslot (POSIX timestamp) as input.
-        Returns the predicted price in EUR/MWh.
-        """
-
-        return market.clearing_price(timeslot)
-
     def _evs_to_kwh(self, nb_evs):
         return (nb_evs * self.cfg.charging_power) * (15 / 60)
 
