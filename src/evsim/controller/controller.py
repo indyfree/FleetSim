@@ -18,6 +18,7 @@ class Controller:
         refuse_rentals=True,
     ):
         self.logger = logging.getLogger(__name__)
+        random.seed(123)
 
         self.cfg = cfg
         self.account = Account()
