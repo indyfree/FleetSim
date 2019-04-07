@@ -72,10 +72,11 @@ class Controller:
 
     @risk.setter
     def risk(self, value):
-        if 0 > value or value > 1:
-            raise ValueError(
-                "Only risk factors between 0 and 1 are valid: %.2f" % value
-            )
+        b, i = value
+        if 0 > b or b > 1:
+            raise ValueError("Only risk factors between 0 and 1 are valid: %s" % b)
+        if 0 > i or i > 1:
+            raise ValueError("Only risk factors between 0 and 1 are valid: %s" % i)
         self._risk = value
 
     def planned_kw(self, t):

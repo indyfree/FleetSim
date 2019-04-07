@@ -87,8 +87,9 @@ def cli(ctx, debug, name, logs):
 @click.option(
     "-r",
     "--risk",
-    default=0.0,
+    type=(float, float),
     help="Bidding risk to account for uncertainty",
+    default=(0.0, 0.0),
     show_default=True,
 )
 @click.option(
@@ -115,7 +116,7 @@ def simulate(
     click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
     click.echo("Charging strategy is set to %s" % charging_strategy)
     click.echo("Prediction accuracy is set to %d%%." % accuracy)
-    click.echo("Bidding risk is set to %.2f." % risk)
+    click.echo("Bidding risk is set to (%.2f, %.2f)." % risk)
 
     if charging_strategy == "regular":
         s = strategy.regular

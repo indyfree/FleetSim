@@ -15,6 +15,9 @@ def regular(controller, timeslot, risk, accuracy=100):
 def balancing(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for balancing market only"""
 
+    # Unpack risk parameter tuple (bal, intr)
+    r, _ = risk
+
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
     # 7 days lead time
     leadtime = week
@@ -24,13 +27,16 @@ def balancing(controller, timeslot, risk, accuracy=100):
         controller.balancing_plan,
         timeslot,
         leadtime,
-        risk,
+        r,
         accuracy,
     )
 
 
 def intraday(controller, timeslot, risk, accuracy=100):
     """ Benchmark bidding strategy for intraday market only"""
+
+    # Unpack risk parameter tuple (bal, intr)
+    _, r = risk
 
     # 30 minute lead time
     leadtime = 30 * minute
@@ -40,7 +46,7 @@ def intraday(controller, timeslot, risk, accuracy=100):
         controller.intraday_plan,
         timeslot,
         leadtime,
-        risk,
+        r,
         accuracy,
     )
 
@@ -72,7 +78,7 @@ def integrated(controller, timeslot, risk, accuracy=100):
         profit += balancing(controller, timeslot, risk=risk)
 
     # Always buy (rest) from intraday
-    profit += intraday(controller, timeslot, risk=0)
+    profit += intraday(controller, timeslot, risk=risk)
     return profit
 
 
