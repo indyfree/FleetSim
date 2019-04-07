@@ -7,16 +7,17 @@ day = hour * 24
 week = day * 7
 
 
-def regular(controller, timeslot, risk, accuracy=100):
+def regular(controller, timeslot, risk, accuracy):
     """ Charge all EVs at regular prices"""
     return 0
 
 
-def balancing(controller, timeslot, risk, accuracy=100):
+def balancing(controller, timeslot, risk, accuracy):
     """ Benchmark bidding strategy for balancing market only"""
 
-    # Unpack risk parameter tuple (bal, intr)
+    # Unpack parameter tuples (bal, intr)
     r, _ = risk
+    acc, _ = accuracy
 
     # NOTE: Bidding for 1 timeslot exactly 1 week ahead, not for whole week
     # 7 days lead time
@@ -28,15 +29,16 @@ def balancing(controller, timeslot, risk, accuracy=100):
         timeslot,
         leadtime,
         r,
-        accuracy,
+        acc,
     )
 
 
-def intraday(controller, timeslot, risk, accuracy=100):
+def intraday(controller, timeslot, risk, accuracy):
     """ Benchmark bidding strategy for intraday market only"""
 
-    # Unpack risk parameter tuple (bal, intr)
+    # Unpack parameter tuples (bal, intr)
     _, r = risk
+    _, acc = accuracy
 
     # 30 minute lead time
     leadtime = 30 * minute
@@ -47,11 +49,11 @@ def intraday(controller, timeslot, risk, accuracy=100):
         timeslot,
         leadtime,
         r,
-        accuracy,
+        acc,
     )
 
 
-def integrated(controller, timeslot, risk, accuracy=100):
+def integrated(controller, timeslot, risk, accuracy):
     """ Charge predicted available EVs according to an integrated strategy:
 
     1. Charge predicted amount from balancing one week ahead if
@@ -59,9 +61,12 @@ def integrated(controller, timeslot, risk, accuracy=100):
     2. Charge predicted rest from intraday 30-min ahead
 
     """
+    if int(timeslot / 60) % 15 != 0:
+        controller.log("Not a bidding period.")
+        return 0
+
     profit = 0
     pb, pi = None, None
-
     try:
         pb = controller.balancing_market.clearing_price(timeslot + week)
     except ValueError as e:
@@ -72,13 +77,16 @@ def integrated(controller, timeslot, risk, accuracy=100):
         controller.warning(e)
 
     # Only buy from balancing if cheaper than intraday
-    if pb and pi and (pb < pi):
-        profit += balancing(controller, timeslot, risk=risk)
+    if pb and pi and (pb >= pi):
+        controller.log(
+            "Not bidding at balancing market for %s. Intraday price cheaper!"
+            % datetime.fromtimestamp(timeslot)
+        )
     elif pb:
-        profit += balancing(controller, timeslot, risk=risk)
+        profit += balancing(controller, timeslot, risk, accuracy)
 
     # Always buy (rest) from intraday
-    profit += intraday(controller, timeslot, risk=risk)
+    profit += intraday(controller, timeslot, risk, accuracy)
     return profit
 
 
@@ -116,9 +124,6 @@ def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy
     except ValueError as e:
         controller.warning("Not bidding: %s" % e)
         return 0
-    controller.log(
-        "Predicted %.2f available charging power at %s." % (charging_power, mp_dt)
-    )
 
     # Reduce quantity if already something bought
     quantity = charging_power - controller.planned_kw(market_period)
@@ -127,8 +132,8 @@ def market_strategy(controller, market, plan, timeslot, leadtime, risk, accuracy
 
     # Actual Bidding
     controller.log(
-        "Bidding for %.2f charging power at %s. Evaluated risk %.2f"
-        % (quantity, mp_dt, risk)
+        "Bidding for %.2fkw charging power at %s. Evaluated risk %.2f%%"
+        % (quantity, mp_dt, risk * 100)
     )
     bid = Bid(market_period, cp, quantity)
     successful = market.place_bid(bid)

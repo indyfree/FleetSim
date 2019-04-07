@@ -12,8 +12,8 @@ class Controller:
         self,
         cfg,
         strategy,
-        accuracy=100,
-        risk=0,
+        accuracy=(100, 100),
+        risk=(0, 0),
         imbalance_costs=1000,
         refuse_rentals=True,
     ):
@@ -180,7 +180,7 @@ class Controller:
         df = self.fleet_capacity
         try:
 
-            # NOTE: Simple uniform distorion.
+            # NOTE: Simple uniform distortion.
             # Improve by gaussian with mean = accuracy
             range = 1 - (accuracy / 100)
             distortion = random.uniform(1 - range, 1 + range)  # e.g. [0.9, 1.1]
@@ -209,6 +209,11 @@ class Controller:
                 "Capacity prediction failed: 15 min timeslot %s is not in data."
                 % datetime.fromtimestamp(timeslot)
             )
+
+        self.log(
+            "Predicted %.2fkw available charging power at %s with %d%% accuracy."
+            % (cap, datetime.fromtimestamp(timeslot), accuracy)
+        )
         return cap
 
     def _evs_to_kwh(self, nb_evs):

@@ -82,7 +82,12 @@ def cli(ctx, debug, name, logs):
     show_default=True,
 )
 @click.option(
-    "-a", "--accuracy", default=100, help="Prediction accuracy.", show_default=True
+    "-a",
+    "--accuracy",
+    type=(int, int),
+    help="Prediction accuracy.",
+    default=(100, 100),
+    show_default=True,
 )
 @click.option(
     "-r",
@@ -115,7 +120,7 @@ def simulate(
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
     click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
     click.echo("Charging strategy is set to %s" % charging_strategy)
-    click.echo("Prediction accuracy is set to %d%%." % accuracy)
+    click.echo("Prediction accuracy is set to (%d%%, %d%%)." % accuracy)
     click.echo("Bidding risk is set to (%.2f, %.2f)." % risk)
 
     if charging_strategy == "regular":
