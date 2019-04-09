@@ -16,6 +16,20 @@ import seaborn as sns
 from evsim.data import load_car2go_trips, load_car2go_capacity
 
 
+# In[17]:
+
+
+pb = 1
+pi = 1
+
+if pi and pb and (pb > pi):
+    print("Intraday cheaper")
+elif pb:
+    print("Charge balancing")
+    
+print("Charge Intraday")
+
+
 # In[21]:
 
 
