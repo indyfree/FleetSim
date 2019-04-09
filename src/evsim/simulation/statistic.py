@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from pathlib import Path
 import logging
 import pandas as pd
 
@@ -40,6 +41,8 @@ class Statistic:
         return df_stats.sum()
 
     def write(self, filename):
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
         df_stats = pd.DataFrame(data=self.stats)
         df_stats = df_stats.round(2)
         df_stats.to_csv(filename, index=False)
