@@ -63,10 +63,15 @@ class DDQN:
         return model
 
     def run(self):
-        # Okay, now it's time to learn something! We visualize the training here for show, but this
-        # slows down training quite a lot. You can always safely abort the training prematurely using
-        # Ctrl + C.
-        self.dqn.fit(self.env, nb_steps=100000, visualize=False, verbose=2)
+        log_filename = "dqn_{}_log.json".format(self.env.spec.id)
+        callbacks = [FileLogger(log_filename, interval=10)]
+        self.dqn.fit(
+            self.env,
+            callbacks=callbacks,
+            nb_steps=20000,
+            visualize=False,
+            log_interval=100,
+        )
         # After training is done, we save the final weights.
         self.dqn.save_weights(
             "dqn_{}_weights.h5f".format(self.env.spec.id), overwrite=True

@@ -17,9 +17,7 @@ class FleetEnv(gym.Env):
     def __init__(self):
 
         # Initialize evsim
-        cfg = SimulationConfig()
-        self.controller = Controller(cfg, strategy.intraday)
-        self.sim = Simulation(cfg, self.controller)
+        self.init_sim()
 
         # Define what the agent can do:
         # Set Risk factors from lambda = [0.0, 0.1, ..., 1.0]
@@ -34,39 +32,20 @@ class FleetEnv(gym.Env):
         self.curr_balance = 0
         self._realtime = self.sim.env.now
 
+        self.episode = 0
+
     @property
     def realtime(self):
         return datetime.fromtimestamp(self._realtime)
 
+    def init_sim(self):
+        cfg = SimulationConfig()
+        self.controller = Controller(cfg, strategy.intraday)
+        self.sim = Simulation(cfg, self.controller)
+
     def step(self, action):
-        """
-        The agent takes a step in the environment.
-        Parameters
-        ----------
-        action : int
-        Returns
-        -------
-        ob, reward, episode_over, info : tuple
-            ob (object) :
-                an environment-specific object representing your observation of
-                the environment.
-            reward (float) :
-                amount of reward achieved by the previous action. The scale
-                varies between environments, but the goal is always to increase
-                your total reward.
-            episode_over (bool) :
-                whether it's time to reset the environment again. Most (but not
-                all) tasks are divided up into well-defined episodes, and done
-                being True indicates the episode has terminated. (For example,
-                perhaps the pole tipped too far, or you lost your last life.)
-            info (dict) :
-                 diagnostic information useful for debugging. It can sometimes
-                 be useful for learning (for example, it might contain the raw
-                 probabilities behind the environment's last state change).
-                 However, official evaluations of your agent are not allowed to
-                 use this for learning.
-        """
-        balance, done = self.sim.step(action / 10, minutes=15)
+        # TODO: Make actions tuples
+        balance, done = self.sim.step(risk=(0, action / 10), minutes=15)
         reward = balance - self.curr_balance
 
         self.curr_balance = balance
@@ -78,11 +57,23 @@ class FleetEnv(gym.Env):
         return ob, reward, done, {}
 
     def reset(self):
-        del self.sim
-        self.sim = Simulation(SimulationConfig(), self.controller)
-        self._realtime = self.sim.env.now
+        """ Returns observation """
+
+        # Save simulation results
+        if self.episode > 0:
+            self.save_results("./results/sim_result_ep_{}.csv".format(self.episode))
+
+        self.episode += 1
         self.curr_balance = 0
+
+        del self.sim
+        self.init_sim()
+
+        self._realtime = self.sim.env.now
         return [self.realtime.hour]
+
+    def save_results(self, filename):
+        self.sim.results.write(filename)
 
     def render(self, mode="human", close=False):
         print(self.sim.env.now)
