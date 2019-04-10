@@ -156,6 +156,7 @@ class Simulation:
             lost_rentals_nb = self.controller.account.lost_rental_nb
             self.controller.account.lost_rental_reset()
 
+            rb, ri = self.controller.risk
             self.results.add(
                 ResultEntry(
                     timestamp=self.env.now - 1,
@@ -165,6 +166,8 @@ class Simulation:
                     charged_regular_kwh=r,
                     charged_vpp_kwh=vpp,
                     imbalance_kwh=i,
+                    risk_bal=rb,
+                    risk_intr=ri,
                 )
             )
 
