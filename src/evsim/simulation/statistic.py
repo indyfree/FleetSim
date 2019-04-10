@@ -27,6 +27,8 @@ class ResultEntry:
     charged_regular_kwh: float = 0
     charged_vpp_kwh: float = 0
     imbalance_kwh: float = 0
+    risk_bal: float = 0
+    risk_intr: float = 0
 
 
 class Statistic:
