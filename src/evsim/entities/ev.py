@@ -85,11 +85,12 @@ class EV:
             account.lost_rental(trip_price)
             return
 
+        # TODO: Check overcommitments with perfect benchmark strategy
         # 2. Refuse rental if other EVs in VPP can not substitute capacity
         if (
             refuse
             and self.vpp.contains(self)
-            and self.vpp.commited_capacity >= self.vpp.capacity()
+            and self.vpp.commited_capacity > self.vpp.capacity()
         ):
             self.log(
                 (

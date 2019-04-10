@@ -53,6 +53,7 @@ def intraday(controller, timeslot, risk, accuracy):
     )
 
 
+# TODO: Check benchmark
 def integrated(controller, timeslot, risk, accuracy):
     """ Charge predicted available EVs according to an integrated strategy:
 
