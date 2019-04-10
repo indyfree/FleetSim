@@ -5,9 +5,10 @@ from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam
 
 from rl.agents.dqn import DQNAgent
-from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
+from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy, BoltzmannQPolicy
 
-# from rl.policy import BoltzmannQPolicy,
+from rl.callbacks import FileLogger
+
 from rl.memory import SequentialMemory
 
 
@@ -15,6 +16,9 @@ class DDQN:
     def __init__(self, env):
         # Get the environment and extract the number of actions.
         self.env = env
+
+        self.log_filename = "./logs/dqn_{}_log.json".format(self.env.spec.id)
+        self.weights_filename = "./results/dqn_{}_weights.h5f".format(self.env.spec.id)
 
         # self.env.seed(123)
         np.random.seed(123)
@@ -62,21 +66,20 @@ class DDQN:
         model.add(Activation("linear"))
         return model
 
-    def run(self):
-        log_filename = "dqn_{}_log.json".format(self.env.spec.id)
-        callbacks = [FileLogger(log_filename, interval=10)]
+    def run(self, steps):
+        callbacks = [FileLogger(self.log_filename, interval=10)]
         self.dqn.fit(
             self.env,
             callbacks=callbacks,
-            nb_steps=20000,
+            nb_steps=steps,
             visualize=False,
-            log_interval=100,
+            verbose=2,
+            log_interval=1000,
         )
         # After training is done, we save the final weights.
-        self.dqn.save_weights(
-            "dqn_{}_weights.h5f".format(self.env.spec.id), overwrite=True
-        )
+        self.dqn.save_weights(self.weights_filename, overwrite=True)
 
     def test(self):
-        # Finally, evaluate our algorithm for 1 simulation run.
+        self.dqn.load_weights(self.weights_filename)
         self.dqn.test(self.env, nb_episodes=1, visualize=False)
+        self.env.save_results("./results/sim_result_ep_{}.csv".format("test"))
