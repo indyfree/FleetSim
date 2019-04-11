@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -16,6 +17,7 @@ class DDQN:
         self.env = env
         self.env.seed(123)
         np.random.seed(123)
+        random.seed(123)
 
         self.log_filename = "./logs/dqn_{}_log.json".format(self.env.spec.id)
         self.weights_filename = "./results/dqn_{}_weights.h5f".format(self.env.spec.id)
