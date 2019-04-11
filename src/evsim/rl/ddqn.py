@@ -5,40 +5,39 @@ from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam
 
 from rl.agents.dqn import DQNAgent
-from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy, BoltzmannQPolicy
-
+from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
 from rl.callbacks import FileLogger
-
 from rl.memory import SequentialMemory
 
 
 class DDQN:
     def __init__(self, env):
-        # Get the environment and extract the number of actions.
+        # Set fixed seet for the environment
         self.env = env
+        self.env.seed(123)
+        np.random.seed(123)
 
         self.log_filename = "./logs/dqn_{}_log.json".format(self.env.spec.id)
         self.weights_filename = "./results/dqn_{}_weights.h5f".format(self.env.spec.id)
 
-        # self.env.seed(123)
-        np.random.seed(123)
-
-        nb_actions = self.env.action_space.n
+        # Extract the number of actions form the environment
+        nb_action = self.env.action_space.spaces[0].n
+        nb_actions = nb_action ** len(self.env.action_space.spaces)
         nb_states = self.env.observation_space.shape
 
         # Next, we build a very simple model.
         model = self._build_nn(nb_states, nb_actions)
 
+        # Next, we define the replay memorey
         memory = SequentialMemory(limit=50000, window_length=1)
 
-        # policy = BoltzmannQPolicy()
         policy = LinearAnnealedPolicy(
             EpsGreedyQPolicy(),
             attr="eps",
-            value_max=1.0,
-            value_min=0.1,
-            value_test=0.1,
-            nb_steps=40000,
+            nb_steps=50000,
+            value_max=1.0,  # Start with full random
+            value_min=0.1,  # After nb_steps arrivate at 10% random
+            value_test=0.0,  # (Don't) pick random action when testing
         )
 
         # Configure and compile our agent:
@@ -47,7 +46,10 @@ class DDQN:
             model=model,
             nb_actions=nb_actions,
             memory=memory,
-            nb_steps_warmup=100,
+            nb_steps_warmup=1000,
+            enable_dueling_network=True,  # Enable dueling
+            dueling_type="avg",
+            enable_double_dqn=True,  # Enable double dqn
             target_model_update=1e-2,
             policy=policy,
         )
