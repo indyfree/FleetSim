@@ -31,12 +31,12 @@ class DDQN:
         model = self._build_nn(nb_states, nb_actions)
 
         # Next, we define the replay memorey
-        memory = SequentialMemory(limit=50000, window_length=1)
+        memory = SequentialMemory(limit=100000, window_length=1)
 
         policy = LinearAnnealedPolicy(
             EpsGreedyQPolicy(),
             attr="eps",
-            nb_steps=50000,
+            nb_steps=100000,
             value_max=1.0,  # Start with full random
             value_min=0.1,  # After nb_steps arrivate at 10% random
             value_test=0.0,  # (Don't) pick random action when testing
@@ -48,7 +48,7 @@ class DDQN:
             model=model,
             nb_actions=nb_actions,
             memory=memory,
-            nb_steps_warmup=1000,
+            nb_steps_warmup=10000,
             enable_dueling_network=True,  # Enable dueling
             dueling_type="avg",
             enable_double_dqn=True,  # Enable double dqn
