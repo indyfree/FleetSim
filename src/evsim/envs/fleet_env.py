@@ -47,6 +47,9 @@ class FleetEnv(gym.Env):
         )
         self.sim = Simulation(cfg, self.controller)
 
+    def imbalance_costs(self, cost):
+        self.controller.imbalance_costs = cost
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
