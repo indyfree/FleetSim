@@ -12,7 +12,7 @@ from rl.memory import SequentialMemory
 
 
 class DDQN:
-    def __init__(self, env):
+    def __init__(self, env, memory_limit=10000, nb_eps=10000, nb_warmup=100):
         # Set fixed seet for the environment
         self.env = env
         self.env.seed(123)
@@ -31,12 +31,12 @@ class DDQN:
         model = self._build_nn(nb_states, nb_actions)
 
         # Next, we define the replay memorey
-        memory = SequentialMemory(limit=100000, window_length=1)
+        memory = SequentialMemory(limit=memory_limit, window_length=1)
 
         policy = LinearAnnealedPolicy(
             EpsGreedyQPolicy(),
             attr="eps",
-            nb_steps=100000,
+            nb_steps=nb_eps,
             value_max=1.0,  # Start with full random
             value_min=0.1,  # After nb_steps arrivate at 10% random
             value_test=0.0,  # (Don't) pick random action when testing
@@ -48,7 +48,7 @@ class DDQN:
             model=model,
             nb_actions=nb_actions,
             memory=memory,
-            nb_steps_warmup=10000,
+            nb_steps_warmup=nb_warmup,
             enable_dueling_network=True,  # Enable dueling
             dueling_type="avg",
             enable_double_dqn=True,  # Enable double dqn
