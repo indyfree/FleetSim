@@ -43,7 +43,7 @@ class FleetEnv(gym.Env):
     def init_sim(self):
         cfg = SimulationConfig()
         self.controller = Controller(
-            cfg, strategy.integrated, accuracy=(70, 90), imbalance_costs=3000
+            cfg, strategy.integrated, accuracy=(80, 95), imbalance_costs=3000
         )
         self.sim = Simulation(cfg, self.controller)
 
