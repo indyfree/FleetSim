@@ -9,13 +9,7 @@ from evsim.market import Market
 
 class Controller:
     def __init__(
-        self,
-        cfg,
-        strategy,
-        accuracy=(100, 100),
-        risk=(0, 0),
-        imbalance_costs=1000,
-        refuse_rentals=True,
+        self, cfg, strategy, accuracy=(100, 100), risk=(0, 0), imbalance_costs=1000
     ):
         self.logger = logging.getLogger(__name__)
 
@@ -41,9 +35,6 @@ class Controller:
         # Reference simulation objects
         self.env = None
         self.vpp = None
-
-        # Strategy specific optionals
-        self.refuse_rentals = refuse_rentals
 
     def log(self, message, level=None):
         if level is None:

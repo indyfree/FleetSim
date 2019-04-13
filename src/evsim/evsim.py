@@ -97,20 +97,8 @@ def cli(ctx, debug, name, logs):
     default=(0.0, 0.0),
     show_default=True,
 )
-@click.option(
-    "--refuse-rentals/--no-refuse-rentals",
-    default=True,
-    help="Refuses rentals of EV that are commited to VPP.",
-)
 def simulate(
-    ctx,
-    ev_capacity,
-    charging_speed,
-    charging_strategy,
-    industry_tariff,
-    refuse_rentals,
-    accuracy,
-    risk,
+    ctx, ev_capacity, charging_speed, charging_strategy, industry_tariff, accuracy, risk
 ):
     click.echo("--- Simulation Settings: ---")
     click.echo("Debug is %s." % (ctx.obj["DEBUG"] and "on" or "off"))
@@ -118,7 +106,6 @@ def simulate(
     click.echo("EV battery capacity is set to %skWh." % ev_capacity)
     click.echo("Charging speed is set to %skW." % charging_speed)
     click.echo("Industry electricity tariff is set to %sEUR/MWh." % industry_tariff)
-    click.echo("Refusing rentals is set to %s." % (refuse_rentals and "on" or "off"))
     click.echo("Charging strategy is set to %s" % charging_strategy)
     click.echo("Prediction accuracy is set to (%d%%, %d%%)." % accuracy)
     click.echo("Bidding risk is set to (%.2f, %.2f)." % risk)
@@ -136,9 +123,7 @@ def simulate(
         ctx.obj["NAME"], charging_speed, ev_capacity, industry_tariff
     )
 
-    controller = Controller(
-        cfg, s, accuracy=accuracy, risk=risk, refuse_rentals=refuse_rentals
-    )
+    controller = Controller(cfg, s, accuracy=accuracy, risk=risk)
     sim = Simulation(cfg, controller)
 
     click.echo("--- Starting Simulation: ---")

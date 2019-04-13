@@ -127,7 +127,6 @@ class Simulation:
                         trip.end_charging,
                         trip.trip_price,
                         account=self.controller.account,
-                        refuse=self.controller.refuse_rentals,
                     )
                 )
 
