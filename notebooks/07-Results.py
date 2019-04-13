@@ -6,7 +6,7 @@
 
 # ## Imports and Data loading
 
-# In[3]:
+# In[1]:
 
 
 # Display plots inline
@@ -17,7 +17,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[13]:
+# In[2]:
 
 
 from datetime import datetime
@@ -29,7 +29,7 @@ import seaborn as sns
 from evsim.data import load
 
 
-# In[14]:
+# In[3]:
 
 
 pd.set_option('display.float_format', '{:.4f}'.format)
@@ -47,7 +47,7 @@ def read_results(path):
 
 # ## Regular Profit
 
-# In[15]:
+# In[4]:
 
 
 df_car2go = pd.read_pickle("../data/processed/trips_big.pkl")
@@ -59,7 +59,7 @@ df_car2go["trip_price"].sum()/1000
 
 # ## Charging Stations
 
-# In[17]:
+# In[5]:
 
 
 df_c = df_car2go.loc[df_car2go["end_charging"] == 1, ["end_lat", "end_lon"]].round(3)
@@ -69,7 +69,7 @@ len(df_c["stations"].unique())
 
 # # Baseline Charging
 
-# In[11]:
+# In[6]:
 
 
 df = read_results("../results/baseline.csv")
@@ -80,7 +80,7 @@ df.sum()/1000
 
 # ## Benchmark
 
-# In[4]:
+# In[7]:
 
 
 df_i = read_results("../results/intraday-benchmark.csv")
@@ -89,7 +89,7 @@ df_i.sum()/1000
 
 # ## Risk Averse (r=0.3, acc=90)
 
-# In[5]:
+# In[8]:
 
 
 df_i = read_results("../results/intraday-risk-averse.csv")
@@ -100,7 +100,7 @@ df_i.sum()/1000
 
 # ## Benchmark
 
-# In[6]:
+# In[9]:
 
 
 df_b = read_results("../results/balancing-benchmark.csv")
@@ -109,7 +109,7 @@ df_b.sum()/1000
 
 # ## Risk Averse (r=0.5, acc=70)
 
-# In[7]:
+# In[10]:
 
 
 df_b = read_results("../results/balancing-risk-averse.csv")
@@ -118,25 +118,32 @@ df_b.sum()/1000
 
 # # Integrated
 
-# In[21]:
+# In[33]:
 
 
 df_in = read_results("../results/integrated-benchmark-acc-1.csv")
 df_in.sum()/1000
 
 
+# In[43]:
+
+
+df_in = read_results("../results/integrated-rl-1.csv")
+df_in.sum()/1000
+
+
 # ## Risk Averse (r=0.5,0.3, acc=70,90)
 
-# In[20]:
+# In[17]:
 
 
 df_in = read_results("../results/integrated-risk-averse.csv")
-df_in.sum()/1000
+len(df_in)
 
 
 # ## Risk Seeking (r=0.2,0.00, acc=70,90)
 
-# In[9]:
+# In[32]:
 
 
 df_in = read_results("../results/integrated-risk-seeking.csv")
@@ -147,7 +154,7 @@ df_in.sum()/1000
 
 # ## Style
 
-# In[9]:
+# In[14]:
 
 
 sns.set(rc={'figure.figsize':(10,6)})
@@ -166,7 +173,7 @@ sns.palplot(palette)
 
 # ## Fleet Utilization
 
-# In[10]:
+# In[42]:
 
 
 df_stats = read_results("../results/stats-baseline.csv")
@@ -181,11 +188,11 @@ def labels(y):
 
 Y = ["available_evs", "charging_evs", "vpp_evs"]
 for y in Y:
-    ax = sns.lineplot(x="hour", y=y, ci="sd", data=df_stats, label=labels(y))
+    ax = sns.lineplot(x="hour", y=y, ci="sd", markers=['X'], data=df_stats, label=labels(y))
     
 sns.despine(offset=10)
 ax.set(xlabel='Hour', ylabel='Number EVs')
-plt.xticks(np.arange(0, 24, 2));
+plt.xticks(np.arange(0, 24, 2), rotation=90);
 plt.yticks(np.arange(0, 500, 50));
 plt.savefig("../results/fig/fleet-utilization.png")
 

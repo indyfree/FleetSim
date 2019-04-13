@@ -6,7 +6,7 @@
 
 # ## Imports and Data loading
 
-# In[13]:
+# In[1]:
 
 
 # Display plots inline
@@ -17,79 +17,145 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[14]:
+# In[2]:
 
 
+from datetime import datetime
+import json
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-
-
-# In[16]:
-
-
-import evsim
+import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
+import os
+import seaborn as sns
+
 import gym
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.optimizers import Adam
+from evsim.rl import DDQN
+from evsim.simulation import Simulation, SimulationConfig
+from evsim.controller import Controller, strategy
 
-from rl.agents.dqn import DQNAgent
-from rl.policy import BoltzmannQPolicy
-from rl.memory import SequentialMemory
+logger = logging.getLogger(__name__)
 
 
-ENV_NAME = 'evsim-v0'
+# In[3]:
 
 
-# Get the environment and extract the number of actions.
-env = gym.make(ENV_NAME)
-np.random.seed(123)
-env.seed(123)
-nb_actions = env.action_space.n
+def visualize_log(filename, figsize=None, output=None):
+    with open(filename, 'r') as f:
+        data = json.load(f)
+    if 'episode' not in data:
+        raise ValueError('Log file "{}" does not contain the "episode" key.'.format(filename))
+    episodes = data['episode']
 
-# Set the prediction accuracy of simulation
-env.prediction_accuracy(10)
+    # Get value keys. The x axis is shared and is the number of episodes.
+    keys = sorted(list(set(data.keys()).difference(set(['episode']))))
 
-# Next, we build a very simple model.
-model = Sequential()
-model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions))
-model.add(Activation('linear'))
-print(model.summary())
+    if figsize is None:
+        figsize = (15., 5. * len(keys))
+    f, axarr = plt.subplots(len(keys), sharex=True, figsize=figsize)
+    for idx, key in enumerate(keys):
+        axarr[idx].plot(episodes, data[key])
+        axarr[idx].set_ylabel(key)
+    plt.xlabel('episodes')
+    plt.tight_layout()
+    if output is None:
+        plt.show()
+    else:
+        plt.savefig(output)
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-# even the metrics!
-memory = SequentialMemory(limit=50000, window_length=1)
-policy = BoltzmannQPolicy()
-dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-               target_model_update=1e-2, policy=policy)
-dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+        
+def setup_logger(name, write=True):
+    f = logging.Formatter("%(levelname)-7s %(message)s")
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
+    sh = logging.StreamHandler()
+    sh.setFormatter(f)
+    sh.setLevel(logging.ERROR)
+    handlers = [sh]
 
-dqn.fit(env, nb_steps=6700, visualize=False, verbose=1, log_interval=100)
+    if write:
+        os.makedirs("./logs", exist_ok=True)
+        fh = logging.FileHandler("./logs/%s.log" % name, mode="w")
+        fh.setFormatter(f)
+        fh.setLevel(logging.DEBUG)
+        handlers = [sh, fh]
 
-# After training is done, we save the final weights.
-
-dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
-
-# Finally, evaluate our algorithm for 5 episodes.
-
-dqn.test(env, nb_episodes=1, visualize=False)
-
-
-# In[ ]:
+    logging.basicConfig(
+        level=logging.DEBUG, datefmt="%d.%m. %H:%M:%S", handlers=handlers
+    )
 
 
+# In[4]:
 
+
+episode_steps = 6429
+
+setup_logger("FleetSim-RL", write=False)
+env = gym.make("evsim-v0") 
+
+env.imbalance_costs(8000)
+
+dqqn = DDQN(env, memory_limit=50000, nb_eps=50000, nb_warmup=1000)
+dqqn.run(10 * episode_steps)
+
+
+# In[5]:
+
+
+visualize_log(dqqn.log_filename)
+
+
+# In[6]:
+
+
+result_filename = "./results/sim_result_ep_{}.csv"
+
+def results(filename):
+    start = "2016-06-01"
+    end = "2018-01-01"
+
+    df = pd.read_csv(filename)
+    df = df.groupby(df.index // 3).agg({'timestamp': np.min,
+                                        'risk_bal': np.min,
+                                        'risk_intr': np.min,
+                                        'profit_eur': np.sum,
+                                        'imbalance_kwh': np.sum,
+                                        'lost_rentals_eur': np.sum,
+                                        'charged_vpp_kwh': np.sum,
+                                        })
+
+    df["timestamp"] = df["timestamp"].apply(lambda x : datetime.fromtimestamp(x))
+    df = df.set_index("timestamp")
+    df = df[start:end]
+
+    grouper = "week"
+    df[grouper] = df.index.week
+    
+    # sns.lineplot(x="week", y="profit_eur", data=df);
+    sns.lineplot(x=grouper, y="risk_bal", data=df, label="Balancing");
+    sns.lineplot(x=grouper, y="risk_intr", data=df, label="Intraday");
+
+    print("Profit {:d} EUR".format(int(df["profit_eur"].sum())))
+    print("Imbalance {} kWh".format(df["imbalance_kwh"].sum()))
+    print("Lost rentals {} EUR".format(df["lost_rentals_eur"].sum()))
+    print("Mean Risk Balancing={:.3}, Intraday={:.3}".format(df["risk_bal"].mean(), df["risk_intr"].mean()))
+    
+
+
+# In[7]:
+
+
+results(result_filename.format(env.episode-1))
+
+
+# In[8]:
+
+
+dqqn.test()
+
+
+# In[9]:
+
+
+results(result_filename.format("test"))
 
