@@ -12,7 +12,15 @@ from rl.memory import SequentialMemory
 
 
 class DDQN:
-    def __init__(self, env, memory_limit=10000, nb_eps=10000, nb_warmup=100):
+    def __init__(
+        self,
+        env,
+        memory_limit=10000,
+        nb_eps=10000,
+        nb_warmup=100,
+        dueling=True,
+        double=True,
+    ):
         # Set fixed seet for the environment
         self.env = env
         self.env.seed(123)
@@ -49,9 +57,9 @@ class DDQN:
             nb_actions=nb_actions,
             memory=memory,
             nb_steps_warmup=nb_warmup,
-            enable_dueling_network=True,  # Enable dueling
+            enable_dueling_network=dueling,  # Enable dueling
             dueling_type="avg",
-            enable_double_dqn=True,  # Enable double dqn
+            enable_double_dqn=double,  # Enable double dqn
             target_model_update=1e-2,
             policy=policy,
         )
