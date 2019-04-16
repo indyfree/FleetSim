@@ -85,7 +85,7 @@ def setup_logger(name, write=True):
     )
 
 
-# In[4]:
+# In[11]:
 
 
 episode_steps = 6429
@@ -93,9 +93,7 @@ episode_steps = 6429
 setup_logger("FleetSim-RL", write=False)
 env = gym.make("evsim-v0") 
 
-env.imbalance_costs(8000)
-
-dqqn = DDQN(env, memory_limit=50000, nb_eps=50000, nb_warmup=1000)
+dqqn = DDQN(env, memory_limit=50000, nb_eps=50000, nb_warmup=1000, double=True, dueling=False)
 dqqn.run(10 * episode_steps)
 
 
@@ -105,7 +103,7 @@ dqqn.run(10 * episode_steps)
 visualize_log(dqqn.log_filename)
 
 
-# In[6]:
+# In[12]:
 
 
 result_filename = "./results/sim_result_ep_{}.csv"
@@ -127,6 +125,8 @@ def results(filename):
     df["timestamp"] = df["timestamp"].apply(lambda x : datetime.fromtimestamp(x))
     df = df.set_index("timestamp")
     df = df[start:end]
+    
+    print(df.describe())
 
     grouper = "week"
     df[grouper] = df.index.week
@@ -142,7 +142,7 @@ def results(filename):
     
 
 
-# In[7]:
+# In[13]:
 
 
 results(result_filename.format(env.episode-1))
@@ -154,7 +154,7 @@ results(result_filename.format(env.episode-1))
 dqqn.test()
 
 
-# In[9]:
+# In[14]:
 
 
 results(result_filename.format("test"))
