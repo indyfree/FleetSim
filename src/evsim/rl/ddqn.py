@@ -79,14 +79,14 @@ class DDQN:
         return model
 
     def run(self, steps):
-        callbacks = [FileLogger(self.log_filename, interval=10)]
+        callbacks = [FileLogger(self.log_filename)]
         self.dqn.fit(
             self.env,
             callbacks=callbacks,
             nb_steps=steps,
             visualize=False,
-            verbose=2,
-            log_interval=1000,
+            verbose=1,
+            log_interval=10000,
         )
         # After training is done, we save the final weights.
         self.dqn.save_weights(self.weights_filename, overwrite=True)
