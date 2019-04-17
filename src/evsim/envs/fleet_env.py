@@ -43,7 +43,7 @@ class FleetEnv(gym.Env):
     def init_sim(self):
         cfg = SimulationConfig()
         self.controller = Controller(
-            cfg, strategy.integrated, accuracy=(70, 90), imbalance_costs=3000
+            cfg, strategy.integrated, accuracy=(70, 90), imbalance_costs=8000
         )
         self.sim = Simulation(cfg, self.controller)
 
@@ -56,8 +56,8 @@ class FleetEnv(gym.Env):
 
     def step(self, action):
         # Transform "flat" action back to tuple
-        rb = 0.5 + (action // 11) / 20
-        ri = 0.5 + (action % 11) / 20
+        rb = (action // 11) / 20
+        ri = (action % 11) / 20
 
         balance, done = self.sim.step(risk=(rb, ri), minutes=15)
         reward = balance - self.curr_balance
