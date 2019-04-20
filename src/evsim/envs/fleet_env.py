@@ -18,6 +18,7 @@ class FleetEnv(gym.Env):
     def __init__(self):
 
         # Initialize evsim
+        self.accuracy = (70, 90)
         self.init_sim()
 
         # Define what the agent can do:
@@ -43,7 +44,7 @@ class FleetEnv(gym.Env):
     def init_sim(self):
         cfg = SimulationConfig()
         self.controller = Controller(
-            cfg, strategy.integrated, accuracy=(70, 90), imbalance_costs=8000
+            cfg, strategy.integrated, accuracy=self.accuracy, imbalance_costs=8000
         )
         self.sim = Simulation(cfg, self.controller)
 
@@ -97,4 +98,5 @@ class FleetEnv(gym.Env):
         pass
 
     def prediction_accuracy(self, accuracy):
-        self.controller.accuracy = accuracy
+        self.accuracy = accuracy
+        self.controller.accuracy = self.accuracy
