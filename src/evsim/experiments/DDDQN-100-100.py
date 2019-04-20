@@ -14,7 +14,13 @@ env = gym.make("evsim-v0")
 env.imbalance_costs(5000)
 env.prediction_accuracy((100, 100))
 
-dqqn = DDQN(env, name, memory_limit=episode_steps, nb_eps=episode_steps, nb_warmup=1000)
+dqqn = DDQN(
+    env,
+    name,
+    memory_limit=(episodes * episode_steps),
+    nb_eps=(1.5 * episode_steps),
+    nb_warmup=1000,
+)
 dqqn.run(episodes * episode_steps)
 
 dqqn.test()
