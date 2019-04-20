@@ -9,7 +9,7 @@ name = "DDDQN-100-100"
 episodes = 2
 episode_steps = 65334
 
-setup_logger("sim-{}".format(name), write=True)
+setup_logger("sim-{}".format(name), write=False)
 env = gym.make("evsim-v0")
 env.imbalance_costs(5000)
 env.prediction_accuracy((100, 100))
