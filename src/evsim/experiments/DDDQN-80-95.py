@@ -5,7 +5,7 @@ import gym
 from evsim.experiments import setup_logger
 from evsim.rl import DDQN
 
-name = "DDDQN-100-100"
+name = "DDDQN-80-95"
 episodes = 2
 episode_steps = 65334
 
