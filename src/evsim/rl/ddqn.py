@@ -15,6 +15,7 @@ class DDQN:
     def __init__(
         self,
         env,
+        name,
         memory_limit=10000,
         nb_eps=10000,
         nb_warmup=100,
@@ -27,8 +28,10 @@ class DDQN:
         np.random.seed(123)
         random.seed(123)
 
-        self.log_filename = "./logs/dqn_{}_log.json".format(self.env.spec.id)
-        self.weights_filename = "./results/dqn_{}_weights.h5f".format(self.env.spec.id)
+        self.name = name
+        self.log_filename = "./logs/{}_log.json".format(self.name)
+        self.weights_filename = "./results/{}_weights.h5f".format(self.name)
+        self.result_filename = "./results/{}_result.csv".format(self.name)
 
         # Extract the number of actions form the environment
         nb_action = self.env.action_space.spaces[0].n
@@ -94,4 +97,4 @@ class DDQN:
     def test(self):
         self.dqn.load_weights(self.weights_filename)
         self.dqn.test(self.env, nb_episodes=1, visualize=False)
-        self.env.save_results("./results/sim_result_ep_{}.csv".format("test"))
+        self.env.save_results(self.result_filename)
