@@ -57,6 +57,23 @@ class Controller:
         self.log(message, self.logger.warning)
 
     @property
+    def accuracy(self):
+        return self._accuracy
+
+    @accuracy.setter
+    def accuracy(self, value):
+        b, i = value
+        if 0 > b or b > 100:
+            raise ValueError(
+                "Only accuracy levels between 0 and 100%% are valid: %s" % b
+            )
+        if 0 > i or i > 100:
+            raise ValueError(
+                "Only accuracy levels between 0 and 100%% are valid: %s" % i
+            )
+        self._accuracy = value
+
+    @property
     def risk(self):
         return self._risk
 
