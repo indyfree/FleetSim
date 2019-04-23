@@ -57,8 +57,8 @@ class FleetEnv(gym.Env):
 
     def step(self, action):
         # Transform "flat" action back to tuple
-        rb = (action // 11) / 20
-        ri = (action % 11) / 20
+        rb = (action // 11) / 10
+        ri = (action % 11) / 10
 
         balance, done = self.sim.step(risk=(rb, ri), minutes=15)
         reward = balance - self.curr_balance
