@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # <h1>Table of Contents &lt;br&gt;&lt;/br&gt;<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-0.1"><span class="toc-item-num">0.1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li><li><span><a href="#Regular-Profit" data-toc-modified-id="Regular-Profit-0.2"><span class="toc-item-num">0.2&nbsp;&nbsp;</span>Regular Profit</a></span></li><li><span><a href="#Charging-Stations" data-toc-modified-id="Charging-Stations-0.3"><span class="toc-item-num">0.3&nbsp;&nbsp;</span>Charging Stations</a></span></li></ul></li><li><span><a href="#Baseline-Charging" data-toc-modified-id="Baseline-Charging-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Baseline Charging</a></span></li><li><span><a href="#Intraday" data-toc-modified-id="Intraday-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Intraday</a></span><ul class="toc-item"><li><span><a href="#Benchmark" data-toc-modified-id="Benchmark-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Benchmark</a></span></li><li><span><a href="#Risk-Averse-(r=0.3,-acc=90)" data-toc-modified-id="Risk-Averse-(r=0.3,-acc=90)-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Risk Averse (r=0.3, acc=90)</a></span></li></ul></li><li><span><a href="#Balancing" data-toc-modified-id="Balancing-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Balancing</a></span><ul class="toc-item"><li><span><a href="#Benchmark" data-toc-modified-id="Benchmark-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Benchmark</a></span></li><li><span><a href="#Risk-Averse-(r=0.5,-acc=70)" data-toc-modified-id="Risk-Averse-(r=0.5,-acc=70)-3.2"><span class="toc-item-num">3.2&nbsp;&nbsp;</span>Risk Averse (r=0.5, acc=70)</a></span></li></ul></li><li><span><a href="#Integrated" data-toc-modified-id="Integrated-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Integrated</a></span><ul class="toc-item"><li><span><a href="#Risk-Averse-(r=0.5,0.3,-acc=70,90)" data-toc-modified-id="Risk-Averse-(r=0.5,0.3,-acc=70,90)-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Risk Averse (r=0.5,0.3, acc=70,90)</a></span></li><li><span><a href="#Risk-Seeking-(r=0.2,0.00,-acc=70,90)" data-toc-modified-id="Risk-Seeking-(r=0.2,0.00,-acc=70,90)-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Risk Seeking (r=0.2,0.00, acc=70,90)</a></span></li><li><span><a href="#RL-(acc=70,90)" data-toc-modified-id="RL-(acc=70,90)-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>RL (acc=70,90)</a></span></li><li><span><a href="#RL-(acc=80,95)" data-toc-modified-id="RL-(acc=80,95)-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>RL (acc=80,95)</a></span></li></ul></li><li><span><a href="#Plots" data-toc-modified-id="Plots-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Plots</a></span><ul class="toc-item"><li><span><a href="#Style" data-toc-modified-id="Style-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Style</a></span></li><li><span><a href="#Fleet-Utilization" data-toc-modified-id="Fleet-Utilization-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Fleet Utilization</a></span></li></ul></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><ul class="toc-item"><li><span><a href="#Imports-and-Data-loading" data-toc-modified-id="Imports-and-Data-loading-0.1"><span class="toc-item-num">0.1&nbsp;&nbsp;</span>Imports and Data loading</a></span></li><li><span><a href="#Regular-Profit" data-toc-modified-id="Regular-Profit-0.2"><span class="toc-item-num">0.2&nbsp;&nbsp;</span>Regular Profit</a></span></li><li><span><a href="#Charging-Stations" data-toc-modified-id="Charging-Stations-0.3"><span class="toc-item-num">0.3&nbsp;&nbsp;</span>Charging Stations</a></span></li></ul></li><li><span><a href="#Baseline-Charging" data-toc-modified-id="Baseline-Charging-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Baseline Charging</a></span></li><li><span><a href="#Intraday" data-toc-modified-id="Intraday-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Intraday</a></span><ul class="toc-item"><li><span><a href="#Benchmark" data-toc-modified-id="Benchmark-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Benchmark</a></span></li><li><span><a href="#Risk-Averse-(r=0.3,-acc=90)" data-toc-modified-id="Risk-Averse-(r=0.3,-acc=90)-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Risk Averse (r=0.3, acc=90)</a></span></li></ul></li><li><span><a href="#Balancing" data-toc-modified-id="Balancing-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Balancing</a></span><ul class="toc-item"><li><span><a href="#Benchmark" data-toc-modified-id="Benchmark-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Benchmark</a></span></li><li><span><a href="#Risk-Averse-(r=0.5,-acc=70)" data-toc-modified-id="Risk-Averse-(r=0.5,-acc=70)-3.2"><span class="toc-item-num">3.2&nbsp;&nbsp;</span>Risk Averse (r=0.5, acc=70)</a></span></li></ul></li><li><span><a href="#Integrated" data-toc-modified-id="Integrated-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Integrated</a></span><ul class="toc-item"><li><span><a href="#Risk-Averse-(r=0.5,0.3,-acc=70,90)" data-toc-modified-id="Risk-Averse-(r=0.5,0.3,-acc=70,90)-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Risk Averse (r=0.5,0.3, acc=70,90)</a></span></li><li><span><a href="#Risk-Seeking-(r=0.2,0.00,-acc=70,90)" data-toc-modified-id="Risk-Seeking-(r=0.2,0.00,-acc=70,90)-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Risk Seeking (r=0.2,0.00, acc=70,90)</a></span></li><li><span><a href="#RL-(acc=50,60)" data-toc-modified-id="RL-(acc=50,60)-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>RL (acc=50,60)</a></span></li><li><span><a href="#RL-(acc=70,90)" data-toc-modified-id="RL-(acc=70,90)-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>RL (acc=70,90)</a></span></li><li><span><a href="#RL-(acc=80,95)" data-toc-modified-id="RL-(acc=80,95)-4.5"><span class="toc-item-num">4.5&nbsp;&nbsp;</span>RL (acc=80,95)</a></span></li><li><span><a href="#RL-(acc=90,99)" data-toc-modified-id="RL-(acc=90,99)-4.6"><span class="toc-item-num">4.6&nbsp;&nbsp;</span>RL (acc=90,99)</a></span></li><li><span><a href="#RL-(acc=100,100)" data-toc-modified-id="RL-(acc=100,100)-4.7"><span class="toc-item-num">4.7&nbsp;&nbsp;</span>RL (acc=100,100)</a></span></li></ul></li><li><span><a href="#Plots" data-toc-modified-id="Plots-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Plots</a></span><ul class="toc-item"><li><span><a href="#Style" data-toc-modified-id="Style-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Style</a></span></li><li><span><a href="#Fleet-Utilization" data-toc-modified-id="Fleet-Utilization-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Fleet Utilization</a></span></li></ul></li></ul></div>
 
 # ## Imports and Data loading
 
@@ -89,7 +89,7 @@ df_i.sum()/1000
 
 # ## Risk Averse (r=0.3, acc=90)
 
-# In[15]:
+# In[8]:
 
 
 df_i = read_results("../results/intraday-risk-averse.csv")
@@ -123,6 +123,14 @@ profit_bal = df_b["profit_eur"].sum() / 1000
 # In[11]:
 
 
+df_in = read_results("../results/integrated-benchmark.csv")
+print(df_in.sum()/1000)
+profit_bench = df_in["profit_eur"].sum() / 1000
+
+
+# In[12]:
+
+
 df_in = read_results("../results/integrated-benchmark-acc-1.csv")
 print(df_in.sum()/1000)
 profit_bench = df_in["profit_eur"].sum() / 1000
@@ -130,7 +138,7 @@ profit_bench = df_in["profit_eur"].sum() / 1000
 
 # ## Risk Averse (r=0.5,0.3, acc=70,90)
 
-# In[12]:
+# In[13]:
 
 
 df_in = read_results("../results/integrated-risk-averse.csv")
@@ -140,22 +148,43 @@ profit_in = df_in["profit_eur"].sum() / 1000
 
 # ## Risk Seeking (r=0.2,0.00, acc=70,90)
 
-# In[13]:
+# In[14]:
 
 
 df_in = read_results("../results/integrated-risk-seeking.csv")
 df_in.sum()/1000
 
 
+# ## RL (acc=50,60)
+
+# In[15]:
+
+
+df_rl = read_results("../results/accuracy/DDDQN-50-60_result.csv")
+print(df_rl.sum()/1000)
+profit_rl = df_rl["profit_eur"].sum() / 1000
+print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_rl["risk_bal"].mean(), df_rl["risk_intr"].mean()))
+
+print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:+.0%}, , Benchmark: {:+.0%}".format(
+            profit_rl / profit_bal,
+            profit_rl / profit_intr,
+            profit_rl / profit_in,
+            profit_rl / profit_bench
+            )
+
+     )
+
+
 # ## RL (acc=70,90)
 
-# In[24]:
+# In[16]:
 
 
-df_in = read_results("../results/integrated-rl-1.csv")
-print(df_in.sum()/1000)
-profit_rl = df_in["profit_eur"].sum() / 1000
-print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_in["risk_bal"].mean(), df_in["risk_intr"].mean()))
+df_rl = read_results("../results/accuracy/DDDQN-70-90_result.csv")
+#df_rl = read_results("~/Downloads/DDDQN-70-90_result.csv")
+print(df_rl.sum()/1000)
+profit_rl = df_rl["profit_eur"].sum() / 1000
+print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_rl["risk_bal"].mean(), df_rl["risk_intr"].mean()))
 
 print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:+.0%}, , Benchmark: {:+.0%}".format(
             profit_rl / profit_bal,
@@ -168,28 +197,73 @@ print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:
 
 # ## RL (acc=80,95)
 
-# In[27]:
+# In[17]:
 
 
-df_in = read_results("../results/integrated-rl-80-95.csv")
-print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_in["risk_bal"].mean(), df_in["risk_intr"].mean()))
-df_in.sum()/1000
+df_rl = read_results("../results/accuracy/DDDQN-80-95_result.csv")
+print(df_rl.sum()/1000)
+profit_rl = df_rl["profit_eur"].sum() / 1000
+print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_rl["risk_bal"].mean(), df_rl["risk_intr"].mean()))
+
+print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:+.0%}, , Benchmark: {:+.0%}".format(
+            profit_rl / profit_bal,
+            profit_rl / profit_intr,
+            profit_rl / profit_in,
+            profit_rl / profit_bench
+            )
+      )
+
+
+# ## RL (acc=90,99)
+
+# In[18]:
+
+
+df_rl = read_results("../results/accuracy/DDDQN-90-99_result.csv")
+print(df_rl.sum()/1000)
+profit_rl = df_rl["profit_eur"].sum() / 1000
+print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_rl["risk_bal"].mean(), df_rl["risk_intr"].mean()))
+
+print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:+.0%}, , Benchmark: {:+.0%}".format(
+            profit_rl / profit_bal,
+            profit_rl / profit_intr,
+            profit_rl / profit_in,
+            profit_rl / profit_bench
+            )
+      )
+
+
+# ## RL (acc=100,100)
+
+# In[19]:
+
+
+df_rl = read_results("../results/accuracy/DDDQN-100-100_result.csv")
+print(df_rl.sum()/1000)
+profit_rl = df_rl["profit_eur"].sum() / 1000
+print("Risk factors - Balancing: {:.2f}. Intraday:{:.2f}".format(df_rl["risk_bal"].mean(), df_rl["risk_intr"].mean()))
+
+print("Profit comparison - Balancing: {:+.0%}, Intraday: {:+.0%}, Integrated: {:+.0%}, , Benchmark: {:+.0%}".format(
+            profit_rl / profit_bal,
+            profit_rl / profit_intr,
+            profit_rl / profit_in,
+            profit_rl / profit_bench
+            )
+      )
 
 
 # # Plots
 
 # ## Style
 
-# In[ ]:
+# In[20]:
 
 
 sns.set(rc={'figure.figsize':(10,6)})
-
-sns.set_context("paper", font_scale=1.3)
+sns.set_context("paper", font_scale=1.3, rc={"lines.linewidth": 1.5, "lines.markersize": 7})
 
 sns.set_style("white")
 sns.set_style("ticks")
-
 
 palette = sns.cubehelix_palette(5, start=.5, rot=-.75, reverse=True)
 sns.set_palette(palette)
@@ -199,26 +273,25 @@ sns.palplot(palette)
 
 # ## Fleet Utilization
 
-# In[ ]:
+# In[30]:
 
 
 df_stats = read_results("../results/stats-baseline.csv")
-df_stats["hour"] = df_stats.index.hour
-df_stats.head()
 
-def labels(y):
-    label = y.split("_")[0].title()
-    label = "Connected" if label == "Charging" else label
-    label = label.upper() if label == "Vpp" else label
-    return label
+df_stats = df_stats[["available_evs", "charging_evs", "vpp_evs"]]
+df_stats.columns = ["Available", "Connected", "VPP"]
 
-Y = ["available_evs", "charging_evs", "vpp_evs"]
-for y in Y:
-    ax = sns.lineplot(x="hour", y=y, ci="sd", markers=['X'], data=df_stats, label=labels(y))
-    
+x = "Hour"
+value_name = "Number EVs"
+var_name = "Status"
+
+df_stats[x] = df_stats.index.hour
+df_stats = pd.melt(df_stats, id_vars=x, var_name=var_name, value_name=value_name) 
+
+sns.set_palette(sns.cubehelix_palette(4, start=.5, rot=-.75, reverse=True))
+sns.lineplot(x=x, y=value_name, hue=var_name, style=var_name, ci="sd", markers=False, data=df_stats)
+
 sns.despine(offset=10)
-ax.set(xlabel='Hour', ylabel='Number EVs')
 plt.xticks(np.arange(0, 24, 2));
 plt.yticks(np.arange(0, 500, 50));
-plt.savefig("../results/fig/fleet-utilization.png")
 

@@ -72,7 +72,7 @@ sns.set_palette(palette)
 sns.palplot(palette)
 
 
-# In[57]:
+# In[58]:
 
 
 df_bal = load.balancing_prices()
@@ -89,7 +89,7 @@ df_prices[x] = df_prices[x].dt.hour
 df_prices = pd.melt(df_prices, id_vars=x, var_name=var_name, value_name=value_name) 
 
 sns.set_palette(sns.cubehelix_palette(4, start=.5, rot=-.75, reverse=True))
-sns.lineplot(x=x, y=value_name, hue=var_name, style=var_name, ci="sd", markers=True, data=df_prices)
+sns.lineplot(x=x, y=value_name, hue=var_name, style=var_name, ci="sd", markers=False, data=df_prices)
 
 sns.despine(offset=10)
 plt.xticks(np.arange(0, 24, 2));
