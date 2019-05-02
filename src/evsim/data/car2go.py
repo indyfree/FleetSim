@@ -101,10 +101,6 @@ def _determine_charging_stations(df):
     return df_stations
 
 
-# TODO: When distance < 0, then returned earlier at charging station
-# Calculate this special case according to Kahlen:
-# [285 min - (98%-20%)* 300 min] * 0.29 $/min= $14.79
-# TODO: Check for long distances
 def _calculate_price(df, car2go_price):
     logger.info("Infering trip prices...")
     df["trip_price"] = df["trip_duration"] * car2go_price / 100
@@ -304,8 +300,6 @@ def calculate_trips(df_car, ev_range):
     )
 
 
-# TODO: When negative charge, calculate distance according to Kahlen
-# Driven distance: (42%-20%) * 70 miles = 15.4 miles
 def _trip_distance(trip_charge, ev_range):
     # EV has been charged on the trip. Not possible to infer distance
     if trip_charge < 0:

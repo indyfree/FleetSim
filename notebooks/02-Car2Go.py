@@ -107,7 +107,7 @@ print("%d EVs charged without beeing at charger behaviour %d times." % (len(erro
 
 # **Comment**: Some EVs increase in SoC even if not beeing at a charging station (according to data)
 # 
-# **Simulation Solution**: TODO: Remove from dataset
+# **Simulation Solution**: Remove from dataset
 
 # ## EV lost Charge at Charger
 

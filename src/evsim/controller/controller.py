@@ -178,7 +178,6 @@ class Controller:
         for ev in evs:
             ev.action = ev.charge_timestep()
 
-    # TODO: Better distort data for prediction
     def predict_capacity(self, timeslot, accuracy=100):
         """ Predict the available capacity for a given 5min timeslot.
         Takes a dataframe and timeslot (POSIX timestamp) as input.
