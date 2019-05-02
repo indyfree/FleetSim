@@ -1,5 +1,5 @@
 [![CircleCI](https://circleci.com/gh/indyfree/FleetSim.svg?style=svg)](https://circleci.com/gh/indyfree/FleetSim) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-# FleetSim 
+# FleetSim
 _An event-based electric vehicle fleet charging simulation to create virtual power plants in smart sustainable markets._
 ## Requirements
 - python 3.6 or higher
@@ -60,19 +60,21 @@ Usage: evsim simulate [OPTIONS]
   Start the EV Simulation.
 
 Options:
-  -n, --name TEXT                Name of the Simulation.
-  -c, --ev-capacity FLOAT        Battery capacity of EV in kWh.  [default: 17.6]
-  -r, --ev-range INTEGER         Maximal Range of EV in km.  [default: 160]
-  -s, --charging-speed FLOAT     Charging power in kW.  [default: 3.6]
-  --charging-strategy [regular]  Charging strategy  [default: regular]
-  --stats / --no-stats           Save logs to file. Turning off improves speed.
-  --help                         Show this message and exit.
+  -c, --ev-capacity FLOAT           Battery capacity of EV in kWh.  [default:
+                                    17.6]
+  -i, --industry-tariff INTEGER     Flat industry tariff, which the fleet can
+                                    charge regularly.  [default: 150]
+  -s, --charging-speed FLOAT        Charging power in kW.  [default: 3.6]
+  --charging-strategy               [regular|balancing|intraday|integrated]
+                                    Charging strategy  [default: regular]
+  -a, --accuracy <INTEGER INTEGER>  Prediction accuracy.  [default: 100, 100]
+  -r, --risk <FLOAT FLOAT>...       Bidding risk [default: 0.0, 0.0]
 ```
 
 E.g.:
 
 ```
-> evsim --name=intraday --debug simulate --charging-strategy=intraday                                                       
+> evsim --name=intraday --debug simulate --charging-strategy=intraday
 --- Simulation Settings: ---
 Debug is on.
 Writing Logs to file is on.
