@@ -56,7 +56,7 @@ sns.violinplot(x="hour", y="clearing_price_mwh", data=df, ax=ax2);
 
 # ## Market comparison
 
-# In[45]:
+# In[4]:
 
 
 sns.set(rc={'figure.figsize':(10,6)})
@@ -72,11 +72,20 @@ sns.set_palette(palette)
 sns.palplot(palette)
 
 
-# In[58]:
+# In[24]:
 
+
+start = "2016-06-01"
+end = "2018-01-01"
 
 df_bal = load.balancing_prices()
+df_bal = df_bal.set_index("product_time")[start:end].reset_index()
+print("begin:{}, end:{}, len:{}".format(df_bal.iloc[0]["product_time"], df_bal.iloc[-1]["product_time"], len(df_bal)))
+print(df_bal.describe())
+
 df_in = load.intraday_prices()
+df_in = df_in.set_index("product_time")[start:end].reset_index()
+print("begin:{}, end:{}, len:{}".format(df_in.iloc[0]["product_time"], df_in.iloc[-1]["product_time"], len(df_in)))
 
 x = "Hour"
 var_name = "Market"
